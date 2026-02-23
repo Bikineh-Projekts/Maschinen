@@ -1,0 +1,77 @@
+﻿@using MaschinenDataein.Helper
+@using MaschinenDataein.Models.ModelView
+@using MaschinenDataein.Models.PaginatedModel
+
+@model List<TemperaturdatenModelView>
+
+@{
+    bool IsShowId = Convert.ToBoolean(ViewData["IsShowId"]);
+    PaginatedListItem paginatedListItem = ViewData["PaginatedListItem"] as PaginatedListItem;
+}
+
+@if (Model != null && Model.Count > 0)
+{
+    <table class="table table-bordered table-striped table-hover shadow">
+        <thead class="table-dark">
+            <tr>
+                @if (IsShowId)
+                {
+                    <th>ID</th>
+                }
+                <th>Zeitstempel</th>
+                <th>Maschine</th>
+                <th>PR-Name</th>
+                <th>SollTemp1</th>
+                <th>Unterfolie (Isstemp1)</th>
+                <th>SollTemp2</th>
+                <th>Oberfolie (Isstemp2)</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var TemperaturDaten in Model)
+            {
+                <tr>
+                    @if (IsShowId)
+                    {
+                        <td>@TemperaturDaten.Id</td>
+                    }
+                    <td>@TemperaturDaten.Timestamp.ToString("yyyy-MM-dd HH:mm:ss")</td>
+                    <td>@TemperaturDaten.Maschine</td>
+                    <td>@TemperaturDaten.Name</td>
+
+                    <td>
+                        @(TemperaturDaten.MaschinenId == 4
+                            ? TemperaturDaten.Solltemp1.ToString() + " °C"
+                            : SiteHelper.ConvertTemperaturToString(TemperaturDaten.Solltemp1) + " °C")
+                    </td>
+                    <td>
+                        @(TemperaturDaten.MaschinenId == 4
+                            ? TemperaturDaten.Isstemp1.ToString() + " °C"
+                            : SiteHelper.ConvertTemperaturToString(TemperaturDaten.Isstemp1) + " °C")
+                    </td>
+                    <td>
+                        @(TemperaturDaten.MaschinenId == 4
+                            ? TemperaturDaten.Solltemp2.ToString() + " °C"
+                            : SiteHelper.ConvertTemperaturToString(TemperaturDaten.Solltemp2) + " °C")
+                    </td>
+                    <td>
+                        @(TemperaturDaten.MaschinenId == 4
+                            ? TemperaturDaten.Isstemp2.ToString() + " °C"
+                            : SiteHelper.ConvertTemperaturToString(TemperaturDaten.Isstemp2) + " °C")
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    @if (paginatedListItem != null)
+    {
+        @await Html.PartialAsync("_PaginatedItem", paginatedListItem)
+    }
+}
+else
+{
+    <div class="alert alert-info text-center">
+        <strong>ℹ️ Bitte setzen Sie einen Filter, um die Temperaturdaten anzuzeigen.</strong>
+    </div>
+}

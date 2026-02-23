@@ -1,0 +1,47 @@
+﻿@using MaschinenDataein.Models.Data
+
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewData["actionForm"] = "Data";
+   
+}
+
+@model List<StoerungsDaten>
+
+<div class="container mt-4">
+    <h1 class="mb-4 text-center">Störung</h1>
+ 
+    @await Html.PartialAsync("_PartialFilter")
+
+
+    @if(Model != null && Model.Count > 0)
+    {
+        <table class="table table-bordered table-striped table-hover shadow">
+            <thead class="table-dark">
+                <tr>
+                    <th>ID</th>
+                    <th>Zeitstempel</th>
+                    <th>Maschine</th>
+                    <th>Meldung</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model)
+                {
+                    <tr>
+                        <td>@item.Id</td>
+                        <td>@item.Timestamp.ToString("yyyy-MM-dd HH:mm:ss")</td>
+                        <td>@item.Maschine?.Bezeichnung</td>
+                        <td>@item.Stoerungsmeldung.Meldung</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+    else
+    {
+    <div class="alert alert-info text-center">
+        <strong>ℹ️ Bitte setzen Sie einen Filter, um die Störungsdaten anzuzeigen.</strong>
+    </div>
+    }  
+</div>

@@ -1,0 +1,493 @@
+﻿@using MaschinenDataein.Models.Data
+@model List<Planungs>
+
+@{
+    ViewData["Title"] = "Produktionsplanung";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var datum = ViewBag.Datum as string ?? DateTime.Today.ToString("yyyy-MM-dd");
+    var maschinenId = (long)(ViewBag.MaschinenId ?? 0L);
+}
+
+@section Styles {
+    <style>
+        :root {
+            --hdr-1: #0ea5e9;
+            --hdr-2: #0369a1;
+            --erf-1: #3b82f6;
+            --erf-2: #1e40af;
+            --prod-1: #22c55e;
+            --prod-2: #15803d;
+            --st-1: #f97316;
+            --st-2: #b45309;
+            --group-radius: 16px;
+        }
+
+        .btn-modern {
+            color: #fff;
+            font-weight: 500;
+            border: none;
+            border-radius: 12px;
+            padding: .6rem 1rem;
+            display: inline-flex;
+            align-items: center;
+            gap: .5rem;
+            box-shadow: 0 4px 10px rgba(0,0,0,.15);
+            transition: transform .2s ease, box-shadow .2s ease, opacity .2s ease;
+            cursor: pointer;
+        }
+
+            .btn-modern:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 8px 16px rgba(0,0,0,.25);
+            }
+
+        .btn-icon i {
+            font-size: 1rem;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 12px;
+            margin: 12px 0 20px;
+            flex-wrap: wrap;
+        }
+
+        .group {
+            border-radius: var(--group-radius);
+            padding: 1rem;
+            margin-block: 1rem 1.5rem;
+            border-left: 6px solid transparent;
+            background: #fff;
+        }
+
+        /* HEADER */
+        .group--header {
+            background: linear-gradient(135deg, var(--hdr-1), var(--hdr-2));
+            color: #fff;
+        }
+
+            .group--header .page-title, .group--header .page-subtitle {
+                color: #fff;
+                margin: 0;
+            }
+
+        .page-title {
+            font-size: 1.6rem;
+            font-weight: 700;
+        }
+
+        .page-subtitle {
+            opacity: .9;
+        }
+
+        .btn-header {
+            background: linear-gradient(135deg, var(--hdr-1), var(--hdr-2));
+            box-shadow: 0 4px 10px rgba(3,105,161,.25);
+        }
+
+        .btn-header-alt {
+            background: linear-gradient(135deg, #6f42c1, #563d7c);
+            box-shadow: 0 4px 10px rgba(86,61,124,.25);
+        }
+
+        /* FILTER */
+        .group--filter {
+            background: linear-gradient(180deg, #f8fafc, #ffffff);
+            border-left-color: #94a3b8;
+            box-shadow: 0 2px 8px rgba(0,0,0,.06);
+        }
+
+        /* ERFASSUNG */
+        .group--erfassung {
+            background: linear-gradient(180deg, #eff6ff, #ffffff);
+            border-left-color: var(--erf-1);
+            box-shadow: 0 2px 8px rgba(59,130,246,.10);
+        }
+
+            .group--erfassung .modern-card-body {
+                background: #fff;
+                border-radius: 12px;
+                padding: 1rem;
+                box-shadow: 0 2px 10px rgba(59,130,246,.08);
+            }
+
+            .group--erfassung label.form-label i {
+                color: var(--erf-1);
+            }
+
+            .group--erfassung .form-control:focus, .group--erfassung .form-select:focus {
+                border-color: var(--erf-1);
+                box-shadow: 0 0 0 0.25rem rgba(59,130,246,.25);
+            }
+
+        /* PRODUKTION */
+        .group--produktion {
+            border-left-color: var(--prod-1);
+            background: linear-gradient(180deg, #f0fdf4, #ffffff);
+        }
+
+            .group--produktion .modern-card-body {
+                background: #fff;
+                border-radius: 12px;
+                padding: 1rem;
+                box-shadow: 0 2px 10px rgba(21,128,61,.10);
+            }
+
+        .btn-produktion {
+            background: linear-gradient(135deg, var(--prod-1), var(--prod-2));
+            box-shadow: 0 4px 10px rgba(21,128,61,.25);
+        }
+
+        /* STÖRUNG */
+        .group--stoerung {
+            border-left-color: var(--st-1);
+            background: linear-gradient(180deg, #fff7ed, #ffffff);
+        }
+
+            .group--stoerung .modern-card-body {
+                background: #fff;
+                border-radius: 12px;
+                padding: 1rem;
+                box-shadow: 0 2px 10px rgba(180,83,9,.12);
+            }
+
+        .btn-stoerung {
+            background: linear-gradient(135deg, var(--st-1), var(--st-2));
+            box-shadow: 0 4px 10px rgba(180,83,9,.25);
+        }
+
+        /* BESTANDSLISTE */
+        .group--liste {
+            border-left-color: #8b5cf6;
+            background: linear-gradient(180deg, #f5f3ff, #ffffff);
+        }
+
+            .group--liste .modern-card-body {
+                background: #fff;
+                border-radius: 12px;
+                padding: 0;
+                box-shadow: 0 2px 10px rgba(139,92,246,.08);
+            }
+
+        .btn-delete {
+            background: linear-gradient(135deg, #ef4444, #b91c1c);
+            box-shadow: 0 4px 10px rgba(185,28,28,.25);
+        }
+
+        .modern-table thead th {
+            white-space: nowrap;
+        }
+
+        .group--produktion .modern-table thead th {
+            background: #ecfdf5;
+            border-bottom: 2px solid rgba(34,197,94,.35);
+        }
+
+        .group--stoerung .modern-table thead th {
+            background: #fff7ed;
+            border-bottom: 2px solid rgba(249,115,22,.35);
+        }
+
+        .group--liste .modern-table thead th {
+            background: #f5f3ff;
+            border-bottom: 2px solid rgba(139,92,246,.35);
+        }
+
+        .w-8rem {
+            width: 8rem;
+        }
+
+        .w-10rem {
+            width: 10rem;
+        }
+
+        .alert-success-custom {
+            background: #f0fdf4;
+            border: 1px solid #86efac;
+            color: #15803d;
+            border-radius: 12px;
+            padding: .75rem 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .alert-error-custom {
+            background: #fff7ed;
+            border: 1px solid #fdba74;
+            color: #b45309;
+            border-radius: 12px;
+            padding: .75rem 1rem;
+            margin-bottom: 1rem;
+        }
+
+        @@media print {
+            .no-print {
+                display: none !important;
+            }
+
+            table {
+                page-break-inside: auto;
+                width: 100%;
+            }
+
+            tr {
+                page-break-inside: avoid;
+                page-break-after: auto;
+            }
+
+            thead {
+                display: table-header-group;
+            }
+        }
+    </style>
+}
+
+<!-- ================= HEADER ================= -->
+<div class="group group--header">
+    <div class="container">
+        <h1 class="page-title">Produktionsplanung</h1>
+        <p class="page-subtitle">Zeiterfassung Verpackung &amp; Störzeiten</p>
+        <div class="button-group">
+            <button type="button" class="btn btn-modern btn-header" onclick="document.getElementById('frmSave').submit()">
+                <i class="fas fa-save"></i> Speichern
+            </button>
+            <button type="button" class="btn btn-modern btn-header-alt" onclick="window.print()">
+                <i class="fas fa-print"></i> Drucken
+            </button>
+        </div>
+    </div>
+</div>
+
+@if (TempData["Success"] != null)
+{
+    <div class="alert-success-custom"><i class="fas fa-check-circle me-2"></i>@TempData["Success"]</div>
+}
+@if (TempData["Error"] != null)
+{
+    <div class="alert-error-custom"><i class="fas fa-exclamation-circle me-2"></i>@TempData["Error"]</div>
+}
+
+<!-- ================= ERFASSUNG ================= -->
+<form id="frmSave" asp-action="Save" asp-controller="Planung" method="post">
+    @Html.AntiForgeryToken()
+
+    <div class="group group--erfassung">
+        <div class="container-fluid">
+            <div class="modern-card-body">
+                <div class="row g-4">
+                    <div class="col-lg-3 col-md-6">
+                        <label class="form-label">
+                            <i class="fas fa-calendar me-1"></i> Datum der Erfassung
+                        </label>
+                        <input id="datumVonId" type="date" name="datum" class="form-control" value="@datum" />
+                    </div>
+                    <div class="col-lg-3 col-md-6">
+                        <label class="form-label">
+                            <i class="fas fa-cog me-1"></i> Maschine
+                        </label>
+                        <select id="maschineId" name="maschinenId" class="form-select">
+                            @foreach (var m in (IEnumerable<Microsoft.AspNetCore.Mvc.Rendering.SelectListItem>)(ViewBag.Maschinen ?? new List<Microsoft.AspNetCore.Mvc.Rendering.SelectListItem>()))
+                            {
+                                <option value="@m.Value" @(m.Value == maschinenId.ToString() ? "selected" : "")>@m.Text</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="col-lg-3 col-md-6">
+                        <label class="form-label">
+                            <i class="fas fa-users me-1"></i> Personalstärke Soll
+                        </label>
+                        <input id="personalStaerkeSoll" type="number" name="personalsoll" min="0" class="form-control" placeholder="z.B. 4 Personen" />
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label">
+                            <i class="fas fa-list me-1"></i> Eingesetztes Personal
+                        </label>
+                        <textarea id="personalListe" name="personalnamen" class="form-control" rows="2" placeholder="Namen der eingesetzten Mitarbeiter..."></textarea>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= PRODUKTION ================= -->
+    <div class="group group--produktion">
+        <div class="d-flex flex-wrap gap-3 mb-4 no-print">
+            <button type="button" class="btn btn-modern btn-produktion btn-icon" id="btnAddRow">
+                <i class="fas fa-plus"></i> Produktionszeile hinzufügen
+            </button>
+        </div>
+        <div class="modern-card-body p-0">
+            <div class="table-responsive">
+                <table id="tblPlanung" class="table modern-table mb-0">
+                    <thead>
+                        <tr>
+                            <th class="w-8rem">Artikel-Nr.</th>
+                            <th class="w-8rem">Soll-Menge</th>
+                            <th class="w-8rem">Von</th>
+                            <th class="w-8rem">Bis</th>
+                            <th class="w-8rem">Pause (Min)</th>
+                            <th class="w-10rem">MHD</th>
+                            <th class="w-10rem">Kartons/E2</th>
+                            <th class="w-8rem">Personal Ist</th>
+                            <th class="w-8rem">Fertigware</th>
+                            <th class="w-8rem no-print">Aktionen</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tbodyPlanung">
+                        <!-- erste leere Zeile damit Speichern sofort funktioniert -->
+                        <tr>
+                            <td><input name="artikel" class="form-control" placeholder="Art.-Nr." /></td>
+                            <td><input name="sollmenge" class="form-control" type="number" min="0" placeholder="Menge" /></td>
+                            <td><input name="starten" class="form-control" type="time" /></td>
+                            <td><input name="stoppen" class="form-control" type="time" /></td>
+                            <td><input name="pause" class="form-control" type="number" min="0" placeholder="0" /></td>
+                            <td><input name="mhd" class="form-control" type="date" /></td>
+                            <td><input name="kartonsanzahl" class="form-control" placeholder="E2 à 70 pk" /></td>
+                            <td><input name="personalIst" class="form-control" type="number" min="0" /></td>
+                            <td><input name="fertigware" class="form-control" type="number" min="0" /></td>
+                            <td class="no-print">
+                                <button type="button" class="btn btn-modern btn-stoerung btn-icon btn-remove-row">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="d-flex justify-content-end mb-3 no-print">
+        <button type="submit" class="btn btn-modern btn-produktion">
+            <i class="fas fa-save"></i> Eintrag speichern
+        </button>
+    </div>
+</form>
+
+<!-- ================= STÖRUNG / STILLSTAND ================= -->
+<div class="group group--stoerung">
+    <div class="d-flex flex-wrap gap-3 mb-3 no-print">
+        <button type="button" class="btn btn-modern btn-stoerung btn-icon" id="btnAddStoerung">
+            <i class="fas fa-exclamation-triangle"></i> Störungszeile hinzufügen
+        </button>
+    </div>
+    <div class="modern-card-body p-0">
+        <div class="table-responsive">
+            <table class="table modern-table mb-0">
+                <thead>
+                    <tr>
+                        <th class="w-10rem">Von</th>
+                        <th class="w-10rem">Bis</th>
+                        <th>Grund der Störung/des Stillstands</th>
+                        <th class="w-8rem no-print">Aktionen</th>
+                    </tr>
+                </thead>
+                <tbody id="tbodyStoerung"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- ================= BESTANDSLISTE ================= -->
+    <div class="modern-card-body">
+        @if (Model.Any())
+        {
+            <div class="table-responsive">
+                <table class="table modern-table mb-0">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Maschine</th>
+                            <th>Artikel</th>
+                            <th>Soll</th>
+                            <th>Von</th>
+                            <th>Bis</th>
+                            <th>Pause</th>
+                            <th>MHD</th>
+                            <th>Kartons</th>
+                            <th>P-Ist</th>
+                            <th>Fertigware</th>
+                            <th class="no-print">Aktion</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model)
+                        {
+                            <tr>
+                                <td>@item.Id</td>
+                                <td>@(item.Maschine?.Bezeichnung ?? "—")</td>
+                                <td>@(item.Artikel ?? "—")</td>
+                                <td>@(item.Sollmenge?.ToString() ?? "—")</td>
+                                <td>@(item.Starten?.ToString(@"hh\:mm") ?? "—")</td>
+                                <td>@(item.Stoppen?.ToString(@"hh\:mm") ?? "—")</td>
+                                <td>@(item.Pause.HasValue? item.Pause + " Min" : "—")</td>
+                                <td>@(item.MHD?.ToString("dd.MM.yy") ?? "—")</td>
+                                <td>@(item.Kartonsanzahl ?? "—")</td>
+                                <td>@(item.PersonalIst?.ToString() ?? "—")</td>
+                                <td>@(item.Fertigware?.ToString() ?? "—")</td>
+                                <td class="no-print">
+                                    <form asp-action="Delete" asp-controller="Planung" method="post" style="display:inline">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="id" value="@item.Id" />
+                                        <button type="submit" class="btn btn-modern btn-delete btn-icon"
+                                                onclick="return confirm('Eintrag #@item.Id löschen?')">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+
+
+@section Scripts {
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <script>
+        var planRowIndex = 0;
+        var stoerRowIndex = 0;
+
+        // Datum: heute als Standard
+        $('#datumVonId').val($('#datumVonId').val() || new Date().toISOString().split('T')[0]);
+
+        // ── Produktionszeile hinzufügen ──
+        $('#btnAddRow').on('click', function () {
+            var tr = $('<tr>' +
+                '<td><input name="artikel"       class="form-control" placeholder="Art.-Nr." /></td>' +
+                '<td><input name="sollmenge"     class="form-control" type="number" min="0" placeholder="Menge" /></td>' +
+                '<td><input name="starten"       class="form-control" type="time" /></td>' +
+                '<td><input name="stoppen"       class="form-control" type="time" /></td>' +
+                '<td><input name="pause"         class="form-control" type="number" min="0" placeholder="0" /></td>' +
+                '<td><input name="mhd"           class="form-control" type="date" /></td>' +
+                '<td><input name="kartonsanzahl" class="form-control" placeholder="E2 à 70 pk" /></td>' +
+                '<td><input name="personalIst"   class="form-control" type="number" min="0" /></td>' +
+                '<td><input name="fertigware"    class="form-control" type="number" min="0" /></td>' +
+                '<td class="no-print"><button type="button" class="btn btn-modern btn-stoerung btn-icon btn-remove-row"><i class="fas fa-trash"></i></button></td>' +
+                '</tr>');
+            tr.css({ opacity: 0 }).appendTo('#tbodyPlanung').animate({ opacity: 1 }, 220);
+            planRowIndex++;
+        });
+
+        // ── Störungszeile hinzufügen ──
+        $('#btnAddStoerung').on('click', function () {
+            var tr = $('<tr>' +
+                '<td><input class="form-control" type="time" /></td>' +
+                '<td><input class="form-control" type="time" /></td>' +
+                '<td><input class="form-control" placeholder="Beschreibung der Störung..." /></td>' +
+                '<td class="no-print"><button type="button" class="btn btn-modern btn-stoerung btn-icon btn-remove-stoerung"><i class="fas fa-trash"></i></button></td>' +
+                '</tr>');
+            tr.css({ opacity: 0 }).appendTo('#tbodyStoerung').animate({ opacity: 1 }, 220);
+            stoerRowIndex++;
+        });
+
+        // ── Zeilen entfernen ──
+        $(document).on('click', '.btn-remove-row', function () {
+            $(this).closest('tr').fadeOut(200, function () { $(this).remove(); });
+        });
+        $(document).on('click', '.btn-remove-stoerung', function () {
+            $(this).closest('tr').fadeOut(200, function () { $(this).remove(); });
+        });
+    </script>
+}
