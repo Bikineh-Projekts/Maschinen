@@ -1,0 +1,143 @@
+﻿@using MaschinenDataein.Models.ModelView
+@{
+    FilterModelView filterModelView = ViewBag.FilterView as FilterModelView;
+}
+
+@if (filterModelView != null)
+{
+    <form asp-action="Filter" asp-controller="@filterModelView.ControllerName" method="post">
+        @Html.AntiForgeryToken()
+        @Html.Hidden("ActionForm", filterModelView.ActionForm ?? "Index")
+        @Html.Hidden("ControllerName", filterModelView.ControllerName)
+
+        <input type="hidden" id="DatumVon" name="DatumVon" value="@filterModelView.DatumVon.ToString("yyyy-MM-dd")" />
+        <input type="hidden" id="DatumBis" name="DatumBis" value="@filterModelView.DatumBis.ToString("yyyy-MM-dd")" />
+
+        <div class="row mb-3">
+
+            @* ── Maschine ── *@
+            <div class="col-md-4">
+                <label class="form-label">Maschinenauswahl</label>
+                @Html.DropDownList("MaschinenId",
+                (IEnumerable<SelectListItem>)(ViewBag.Maschinen ?? new List<SelectListItem>()),
+                        new { @class = "form-select" })
+        </div>
+
+        @* ── Startdatum ── *@
+        <div class="col-md-4">
+            <label class="form-label">Startdatum</label>
+            <div class="d-flex gap-1">
+                <select id="vonDay" class="form-select" onchange="updateDate('Von')">
+                    @for (int d = 1; d <= 31; d++)
+                        {
+                            if (d == filterModelView.DatumVon.Day)
+                            {
+                                <option value="@d" selected>@d.ToString("D2")</option>
+                            }
+                            else
+                            {
+                                <option value="@d">@d.ToString("D2")</option>
+                            }
+                        }
+                    </select>
+                    <select id="vonMonth" class="form-select" onchange="updateDate('Von')">
+                        @for (int m = 1; m <= 12; m++)
+                        {
+                            if (m == filterModelView.DatumVon.Month)
+                            {
+                                <option value="@m" selected>@m.ToString("D2")</option>
+                            }
+                            else
+                            {
+                                <option value="@m">@m.ToString("D2")</option>
+                            }
+                        }
+                    </select>
+                    <select id="vonYear" class="form-select" onchange="updateDate('Von')">
+                        @for (int y = DateTime.Now.Year - 3; y <= DateTime.Now.Year + 1; y++)
+                        {
+                            if (y == filterModelView.DatumVon.Year)
+                            {
+                                <option value="@y" selected>@y</option>
+                            }
+                            else
+                            {
+                                <option value="@y">@y</option>
+                            }
+                        }
+                    </select>
+                </div>
+            </div>
+
+            @* ── Enddatum ── *@
+            <div class="col-md-4">
+                <label class="form-label">Enddatum</label>
+                <div class="d-flex gap-1">
+                    <select id="bisDay" class="form-select" onchange="updateDate('Bis')">
+                        @for (int d = 1; d <= 31; d++)
+                        {
+                            if (d == filterModelView.DatumBis.Day)
+                            {
+                                <option value="@d" selected>@d.ToString("D2")</option>
+                            }
+                            else
+                            {
+                                <option value="@d">@d.ToString("D2")</option>
+                            }
+                        }
+                    </select>
+                    <select id="bisMonth" class="form-select" onchange="updateDate('Bis')">
+                        @for (int m = 1; m <= 12; m++)
+                        {
+                            if (m == filterModelView.DatumBis.Month)
+                            {
+                                <option value="@m" selected>@m.ToString("D2")</option>
+                            }
+                            else
+                            {
+                                <option value="@m">@m.ToString("D2")</option>
+                            }
+                        }
+                    </select>
+                    <select id="bisYear" class="form-select" onchange="updateDate('Bis')">
+                        @for (int y = DateTime.Now.Year - 3; y <= DateTime.Now.Year + 1; y++)
+                        {
+                            if (y == filterModelView.DatumBis.Year)
+                            {
+                                <option value="@y" selected>@y</option>
+                            }
+                            else
+                            {
+                                <option value="@y">@y</option>
+                            }
+                        }
+                    </select>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="mb-3 text-end">
+            <button type="submit" class="btn btn-primary">Filtern</button>
+            <a href="@Url.Action("Index", filterModelView.ControllerName)" class="btn btn-secondary">Zurücksetzen</a>
+        </div>
+    </form>
+}
+else
+{
+    <div class="alert alert-warning">
+        ⚠️ Filter konnte nicht geladen werden. Bitte Seite neu laden.
+    </div>
+}
+
+<script>
+    function updateDate(which) {
+        var prefix = which.toLowerCase();
+        var day   = parseInt(document.getElementById(prefix + 'Day').value);
+        var month = parseInt(document.getElementById(prefix + 'Month').value);
+        var year  = parseInt(document.getElementById(prefix + 'Year').value);
+        var mm = String(month).padStart(2, '0');
+        var dd = String(day).padStart(2, '0');
+        document.getElementById('Datum' + which).value = year + '-' + mm + '-' + dd;
+    }
+</script>

@@ -1,0 +1,46 @@
+﻿@using MaschinenDataein.Models.Data
+
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewData["actionForm"] = "Index";
+}
+
+@model List<ZustandsDaten>
+
+<div class="container mt-4">
+    <h1 class="mb-4 text-center">Zustand</h1>
+
+    @await Html.PartialAsync("_PartialFilter")
+
+    @if (Model != null && Model.Count > 0)
+    {
+        <table class="table table-bordered table-striped table-hover shadow">
+            <thead class="table-dark">
+                <tr>
+                    <th>ID</th>
+                    <th>Zeitstempel</th>
+                    <th>Maschine</th>
+                    <th>Meldung</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var zustandsDaten in Model)
+                {
+                    <tr>
+                        <td>@zustandsDaten.Id</td>
+                        <td>@zustandsDaten.Timestamp.ToString("yyyy-MM-dd HH:mm:ss")</td>
+                        <td>@zustandsDaten.Maschine?.Bezeichnung</td>
+                        <td>@zustandsDaten.Zustandsmeldung?.Meldung</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+    else
+    {
+        <div class="alert alert-info text-center">
+            <strong>ℹ️ Bitte setzen Sie einen Filter, um die Zustandsdaten anzuzeigen.</strong>
+        </div>
+    }
+</div>
+

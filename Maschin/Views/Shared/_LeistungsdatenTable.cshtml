@@ -1,0 +1,56 @@
+﻿@using MaschinenDataein.Helper
+@using MaschinenDataein.Models.ModelView
+@using MaschinenDataein.Models.PaginatedModel
+
+@model List<LeistungsdatenModelView>
+@{
+    bool IsShowId = Convert.ToBoolean(ViewData["IsShowId"]);
+    PaginatedListItem paginatedListItem = ViewData["PaginatedListItem"] as PaginatedListItem;
+}
+
+@if (Model != null && Model.Count > 0)
+{
+    <table class="table table-bordered table-striped table-hover shadow">
+        <thead class="table-dark">
+            <tr>
+                @if (IsShowId)
+                {
+                    <th>ID</th>
+                }
+                <th>Zeitstempel</th>
+                <th>Maschine</th>
+                <th>PR-Name</th>
+                <th>Tagestaktzähler</th>
+                <th>Maschinentakte</th>
+                <th>Packungszähler</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var LeistungsDaten in Model)
+            {
+                <tr>
+                    @if (IsShowId)
+                    {
+                        <td>@LeistungsDaten.Id</td>
+                    }
+                    <td>@LeistungsDaten.Timestamp.ToString("yyyy-MM-dd HH:mm:ss")</td>
+                    <td>@LeistungsDaten.Maschine</td>
+                    <td>@LeistungsDaten.Name</td>
+                    <td>@LeistungsDaten.Tagestaktzaehler Stück</td>
+                    <td>@LeistungsDaten.Maschinentakte Takte</td>
+                    <td>@LeistungsDaten.Packungszaehler Stück</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+    @if (paginatedListItem != null)
+    {
+        @await Html.PartialAsync("_PaginatedItem", paginatedListItem)
+    }
+}
+else
+{
+    <div class="alert alert-info text-center">
+        <strong>ℹ️ Bitte setzen Sie einen Filter, um die Leistungsdaten anzuzeigen.</strong>
+    </div>
+}

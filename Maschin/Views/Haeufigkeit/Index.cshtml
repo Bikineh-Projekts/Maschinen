@@ -1,0 +1,103 @@
+﻿@using MaschinenDataein.Models.ModelView
+@using MaschinenDataein.Helper
+@model HaeufigkeitModelView
+
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewData["actionForm"] = "Index";
+    ViewData["Title"] = "Top Häufige Meldungen";
+}
+
+<!-- Alarmmeldungen -->
+<div class="table-responsive mb-5">
+    <table class="table table-bordered table-striped table-hover shadow">
+        <thead class="table-dark text-center">
+            <tr>
+                <th>Alarmmeldung</th>
+                <th>Anzahl</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (Model.TopAlarmmeldungen != null && Model.TopAlarmmeldungen.Any())
+            {
+                foreach (var item in Model.TopAlarmmeldungen)
+                {
+                    var meldungNummerStr = item.Meldung?.Replace("AM", "");
+                    if (int.TryParse(meldungNummerStr, out int nummer))
+                    {
+                        <tr class="text-center">
+                            <td>@(AlarmnamenHelper.Alarmnamen.TryGetValue(nummer, out var meldung) ? meldung : $"Unbekannter Alarm {nummer}")</td>
+                            <td>@item.Anzahl</td>
+                        </tr>
+                    }
+                }
+            }
+            else
+            {
+                <tr class="text-center text-danger">
+                    <td colspan="2">Keine Alarmmeldungen verfügbar</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+<!-- Zustandsmeldungen -->
+<div class="table-responsive mb-5">
+    <table class="table table-bordered table-striped table-hover shadow">
+        <thead class="table-dark text-center">
+            <tr>
+                <th>Zustandsmeldung</th>
+                <th>Anzahl</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (Model.TopZustandsmeldungen != null && Model.TopZustandsmeldungen.Any())
+            {
+                foreach (var item in Model.TopZustandsmeldungen)
+                {
+                    <tr class="text-center">
+                        <td>@item.Meldung</td>
+                        <td>@item.Anzahl</td>
+                    </tr>
+                }
+            }
+            else
+            {
+                <tr class="text-center text-danger">
+                    <td colspan="2">Keine Zustandsmeldungen verfügbar</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+<!-- Störungsmeldungen -->
+<div class="table-responsive mb-5">
+    <table class="table table-bordered table-striped table-hover shadow">
+        <thead class="table-dark text-center">
+            <tr>
+                <th>Störungsmeldung</th>
+                <th>Anzahl</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (Model.TopStoerungsmeldungen != null && Model.TopStoerungsmeldungen.Any())
+            {
+                foreach (var item in Model.TopStoerungsmeldungen)
+                {
+                    <tr class="text-center">
+                        <td>@item.Meldung</td>
+                        <td>@item.Anzahl</td>
+                    </tr>
+                }
+            }
+            else
+            {
+                <tr class="text-center text-danger">
+                    <td colspan="2">Keine Störungsmeldungen verfügbar</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

@@ -1,0 +1,82 @@
+﻿@using MaschinenDataein.Models.Data
+@using MaschinenDataein.Helper
+
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewData["actionForm"] = "Data";
+}
+
+@model List<Alarmdaten>
+
+<div class="container mt-4">
+    <h1 class="mb-4 text-center">Alarm</h1>
+
+    @await Html.PartialAsync("_PartialFilter")
+
+    @if (Model != null && Model.Count > 0)
+    {
+        <div class="table-responsive">
+            <table class="table table-bordered table-striped table-hover shadow" style="width: 100%; font-size: 1.1rem;">
+                <thead class="table-dark text-center">
+                    <tr>
+                        <th>ID</th>
+                        <th>Zeitstempel</th>
+                        <th>Maschine</th>
+                        <th>Meldung</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model)
+                    {
+                        var aktiveMeldungen = new List<string>();
+
+                        for (int i = 1; i <= 94; i++)
+                        {
+                            var prop = item.GetType().GetProperty($"AM{i}");
+                            if (prop != null)
+                            {
+                                var value = prop.GetValue(item);
+
+                                if (value is bool boolValue && boolValue)
+                                {
+                                    if (AlarmnamenHelper.Alarmnamen.TryGetValue(i, out var meldung))
+                                    {
+                                        if (!aktiveMeldungen.Contains(meldung))
+                                        {
+                                            aktiveMeldungen.Add(meldung);
+                                        }
+                                    }
+                                    else
+                                    {
+                                        if (!aktiveMeldungen.Contains($"Unbekannter Alarm {i}"))
+                                        {
+                                            aktiveMeldungen.Add($"Unbekannter Alarm {i}");
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        if (aktiveMeldungen.Any())
+                        {
+                            <tr class="text-center">
+                                <td>@item.Id</td>
+                                <td>@item.Timestamp.ToString("yyyy-MM-dd HH:mm:ss")</td>
+                                <td>@item.Maschine?.Bezeichnung</td>
+                                <td>
+                                    @string.Join(", ", aktiveMeldungen)
+                                </td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+    else
+    {
+        <div class="alert alert-info text-center">
+            <strong>ℹ️ Bitte setzen Sie einen Filter, um die Alarmdaten anzuzeigen.</strong>
+        </div>
+    }
+</div>

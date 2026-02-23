@@ -1,0 +1,73 @@
+﻿@* Views/Shared/_Layout.cshtml *@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>@(ViewData["Title"] ?? "MaschinenDataein")</title>
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+
+    @await RenderSectionAsync("Styles", required: false)
+
+    <style type="text/css">
+        @@media print {
+            table {
+                page-break-inside: auto;
+                width: 100%;
+            }
+
+            tr {
+                page-break-inside: avoid;
+                page-break-after: auto;
+            }
+
+            thead {
+                display: table-header-group;
+            }
+
+            tfoot {
+                display: table-footer-group;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" asp-controller="Home" asp-action="Index">MaschinenDataein</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+                    aria-controls="navbarNav" aria-expanded="false" aria-label="Navigation umschalten">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item"><a class="nav-link" asp-controller="LeistungsDaten" asp-action="Index">Leistung</a></li>
+                    <li class="nav-item"><a class="nav-link" asp-controller="Abzugsdaten" asp-action="Index">Abzug</a></li>
+                    <li class="nav-item"><a class="nav-link" asp-controller="TemperaturDaten" asp-action="Index">Temperatur</a></li>
+                    <li class="nav-item"><a class="nav-link" asp-controller="AlarmDaten" asp-action="Index">Alarm</a></li>
+                    <li class="nav-item"><a class="nav-link" asp-controller="ZustandsDaten" asp-action="Index">Zustand</a></li>
+                    <li class="nav-item"><a class="nav-link" asp-controller="StoerungsDaten" asp-action="Index">Störung</a></li>
+                    <li class="nav-item"><a class="nav-link" asp-controller="Haeufigkeit" asp-action="Index">Häufige Meldungen</a></li>
+                    <li class="nav-item"><a class="nav-link" asp-controller="Planung" asp-action="Index">Planung</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container mt-4">
+        @RenderBody()
+    </main>
+
+    <footer class="text-center bg-dark text-white py-3 mt-5">
+        &copy; @DateTime.Now.Year MaschinenDataein. Alle Rechte vorbehalten.
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>
