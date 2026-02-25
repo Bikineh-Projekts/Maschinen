@@ -1,103 +1,642 @@
-﻿@using MaschinenDataein.Models.ModelView
+@using MaschinenDataein.Models.ModelView
 @using MaschinenDataein.Helper
 @model HaeufigkeitModelView
-
 @{
     Layout = "~/Views/Shared/_Layout.cshtml";
     ViewData["actionForm"] = "Index";
-    ViewData["Title"] = "Top Häufige Meldungen";
+    ViewData["Title"] = "Häufige Meldungen";
 }
 
-<!-- Alarmmeldungen -->
-<div class="table-responsive mb-5">
-    <table class="table table-bordered table-striped table-hover shadow">
-        <thead class="table-dark text-center">
-            <tr>
-                <th>Alarmmeldung</th>
-                <th>Anzahl</th>
-            </tr>
-        </thead>
-        <tbody>
-            @if (Model.TopAlarmmeldungen != null && Model.TopAlarmmeldungen.Any())
+@* ── Chart.js CDN ─────────────────────────────────────────────────────────── *@
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+
+<style>
+    /* ── Layout ──────────────────────────────────────────────────────────── */
+    .hf-page {
+        padding: 24px 8px;
+    }
+
+    .hf-section {
+        background: #0d1117;
+        border-radius: 14px;
+        padding: 22px 22px 18px;
+        margin-bottom: 28px;
+        color: #e6edf3;
+        font-family: 'Segoe UI', system-ui, sans-serif;
+    }
+
+    /* ── Header-Zeile mit Kategorie + Toggle ─────────────────────────────── */
+    .hf-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-bottom: 18px;
+    }
+
+    .hf-title {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 17px;
+        font-weight: 700;
+    }
+
+    .hf-badge {
+        font-size: 11px;
+        padding: 3px 10px;
+        border-radius: 20px;
+        font-weight: 600;
+        letter-spacing: 0.5px;
+    }
+
+    .hf-toggle {
+        display: flex;
+        gap: 4px;
+    }
+
+    .hf-toggle-btn {
+        padding: 6px 14px;
+        border-radius: 8px;
+        border: 1px solid #30363d;
+        background: transparent;
+        color: #8b949e;
+        cursor: pointer;
+        font-size: 12px;
+        transition: all 0.15s;
+        font-family: inherit;
+    }
+
+        .hf-toggle-btn.active {
+            font-weight: 600;
+        }
+
+    /* ── Stat-Zeile ──────────────────────────────────────────────────────── */
+    .hf-stats {
+        display: flex;
+        gap: 12px;
+        margin-bottom: 16px;
+        flex-wrap: wrap;
+    }
+
+    .hf-stat {
+        background: #1c2128;
+        border: 1px solid #30363d;
+        border-radius: 8px;
+        padding: 10px 16px;
+        font-size: 12px;
+        color: #8b949e;
+        min-width: 110px;
+    }
+
+        .hf-stat strong {
+            display: block;
+            font-size: 20px;
+            font-weight: 700;
+            font-family: 'Courier New', monospace;
+            margin-bottom: 2px;
+        }
+
+    /* ── Chart-Container ─────────────────────────────────────────────────── */
+    .hf-chart-wrap {
+        background: #161b22;
+        border: 1px solid #30363d;
+        border-radius: 10px;
+        padding: 14px;
+        margin-bottom: 14px;
+    }
+
+    /* ── Tabelle ─────────────────────────────────────────────────────────── */
+    .hf-table-wrap {
+        display: none;
+    }
+
+    .hf-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 13px;
+    }
+
+        .hf-table thead tr {
+            background: #1c2128;
+        }
+
+        .hf-table th {
+            padding: 10px 14px;
+            text-align: left;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            color: #8b949e;
+            border-bottom: 1px solid #30363d;
+        }
+
+        .hf-table td {
+            padding: 9px 14px;
+            border-bottom: 1px solid #21262d;
+            color: #e6edf3;
+        }
+
+        .hf-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .hf-table tr:hover td {
+            background: #1c2128;
+        }
+
+    /* Rank-Spalte */
+    .hf-rank {
+        width: 36px;
+        text-align: center;
+        font-family: 'Courier New', monospace;
+        font-size: 11px;
+        color: #555;
+    }
+
+    /* Fortschrittsbalken in Tabelle */
+    .hf-bar-cell {
+        min-width: 120px;
+    }
+
+    .hf-bar-bg {
+        height: 6px;
+        background: #21262d;
+        border-radius: 3px;
+        overflow: hidden;
+        margin-top: 4px;
+    }
+
+    .hf-bar-fill {
+        height: 100%;
+        border-radius: 3px;
+        transition: width 0.6s ease;
+    }
+
+    /* Top-3 Hervorhebung */
+    .hf-top1 td:first-child::before {
+        content: '🥇 ';
+    }
+
+    .hf-top2 td:first-child::before {
+        content: '🥈 ';
+    }
+
+    .hf-top3 td:first-child::before {
+        content: '🥉 ';
+    }
+
+    @@media (max-width: 640px) {
+        .hf-stats {
+            gap: 8px;
+        }
+
+        .hf-stat {
+            min-width: 90px;
+            padding: 8px 12px;
+        }
+    }
+</style>
+
+<div class="hf-page">
+    <h2 style="color:#e6edf3;font-family:'Segoe UI',sans-serif;margin-bottom:24px;font-size:22px;">
+        📊 Häufige Meldungen
+    </h2>
+
+    @* ════════════════════════════════════════════════════════
+       SEKTION 1 — ALARMMELDUNGEN
+       ════════════════════════════════════════════════════════ *@
+    @{
+        var alarme = Model.TopAlarmmeldungen ?? new List<HaeufigMeldung>();
+        var zustände = Model.TopZustandsmeldungen ?? new List<HaeufigMeldung>();
+        var störungen = Model.TopStoerungsmeldungen ?? new List<HaeufigMeldung>();
+        int alarmMax = alarme.Any() ? alarme.Max(x => x.Anzahl) : 1;
+        int zustandMax = zustände.Any() ? zustände.Max(x => x.Anzahl) : 1;
+        int störMax = störungen.Any() ? störungen.Max(x => x.Anzahl) : 1;
+        int alarmGes = alarme.Sum(x => x.Anzahl);
+        int zustandGes = zustände.Sum(x => x.Anzahl);
+        int störGes = störungen.Sum(x => x.Anzahl);
+    }
+
+    <div class="hf-section">
+        <div class="hf-header">
+            <div class="hf-title">
+                <span>🚨 Alarmmeldungen</span>
+                <span class="hf-badge" style="background:#f8514922;color:#f85149;border:1px solid #f8514944">
+                    @alarme.Count Typen
+                </span>
+            </div>
+            <div class="hf-toggle">
+                <button class="hf-toggle-btn active" id="alarm-btn-chart"
+                        onclick="hfToggle('alarm','chart')"
+                        style="background:#f8514922;border-color:#f85149;color:#f85149">
+                    📊 Diagramm
+                </button>
+                <button class="hf-toggle-btn" id="alarm-btn-table"
+                        onclick="hfToggle('alarm','table')">
+                    📋 Tabelle
+                </button>
+            </div>
+        </div>
+
+        <div class="hf-stats">
+            <div class="hf-stat">
+                <strong style="color:#f85149">@alarmGes</strong>
+                Alarme gesamt
+            </div>
+            <div class="hf-stat">
+                <strong style="color:#f0883e">@alarme.Count</strong>
+                Verschiedene Typen
+            </div>
+            @if (alarme.Any())
             {
-                foreach (var item in Model.TopAlarmmeldungen)
-                {
-                    var meldungNummerStr = item.Meldung?.Replace("AM", "");
-                    if (int.TryParse(meldungNummerStr, out int nummer))
+                <div class="hf-stat">
+                    <strong style="color:#e6edf3">
+                        @{
+                            var topAlarm = alarme.First();
+                            var topAlarmNummer = 0;
+                            int.TryParse(topAlarm.Meldung?.Replace("AM", ""), out topAlarmNummer);
+                        }
+                        @(AlarmnamenHelper.Alarmnamen.TryGetValue(topAlarmNummer, out var topAN) ? (topAN.Length > 22 ? topAN[..22] + "…" : topAN) : $"AM{topAlarmNummer}")
+                    </strong>
+                    Häufigster Alarm (@topAlarm.Anzahl×)
+                </div>
+            }
+        </div>
+
+        @* Chart *@
+        <div class="hf-chart-wrap" id="alarm-chart">
+            <div style="position:relative;height:@(Math.Min(alarme.Count * 32 + 40, 480))px">
+                <canvas id="alarmCanvas"></canvas>
+            </div>
+        </div>
+
+        @* Tabelle *@
+        <div class="hf-table-wrap" id="alarm-table">
+            <table class="hf-table">
+                <thead>
+                    <tr>
+                        <th class="hf-rank">#</th>
+                        <th>Alarmmeldung</th>
+                        <th style="text-align:right;width:80px">Anzahl</th>
+                        <th class="hf-bar-cell">Anteil</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @{
+                        int aRank = 0;
+                    }
+                    @foreach (var item in alarme)
                     {
-                        <tr class="text-center">
-                            <td>@(AlarmnamenHelper.Alarmnamen.TryGetValue(nummer, out var meldung) ? meldung : $"Unbekannter Alarm {nummer}")</td>
-                            <td>@item.Anzahl</td>
+                        aRank++;
+                        var nr = 0;
+                        int.TryParse(item.Meldung?.Replace("AM", ""), out nr);
+                        var name = AlarmnamenHelper.Alarmnamen.TryGetValue(nr, out var an) ? an : $"Unbekannt AM{nr}";
+                        var pct = alarmMax > 0 ? (int)(item.Anzahl * 100.0 / alarmMax) : 0;
+                        var rowCls = aRank == 1 ? "hf-top1" : aRank == 2 ? "hf-top2" : aRank == 3 ? "hf-top3" : "";
+                        <tr class="@rowCls">
+                            <td class="hf-rank">@aRank</td>
+                            <td>@name</td>
+                            <td style="text-align:right;font-family:'Courier New',monospace;font-weight:700;color:#f85149">
+                                @item.Anzahl
+                            </td>
+                            <td class="hf-bar-cell">
+                                <div style="font-size:10px;color:#8b949e">@pct%</div>
+                                <div class="hf-bar-bg">
+                                    <div class="hf-bar-fill" style="width:@pct%;background:#f85149"></div>
+                                </div>
+                            </td>
                         </tr>
                     }
-                }
-            }
-            else
-            {
-                <tr class="text-center text-danger">
-                    <td colspan="2">Keine Alarmmeldungen verfügbar</td>
-                </tr>
-            }
-        </tbody>
-    </table>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    @* ════════════════════════════════════════════════════════
+       SEKTION 2 — ZUSTANDSMELDUNGEN
+       ════════════════════════════════════════════════════════ *@
+    <div class="hf-section">
+        <div class="hf-header">
+            <div class="hf-title">
+                <span>🔵 Zustandsmeldungen</span>
+                <span class="hf-badge" style="background:#58a6ff22;color:#58a6ff;border:1px solid #58a6ff44">
+                    Top @zustände.Count
+                </span>
+            </div>
+            <div class="hf-toggle">
+                <button class="hf-toggle-btn active" id="zustand-btn-chart"
+                        onclick="hfToggle('zustand','chart')"
+                        style="background:#58a6ff22;border-color:#58a6ff;color:#58a6ff">
+                    📊 Diagramm
+                </button>
+                <button class="hf-toggle-btn" id="zustand-btn-table"
+                        onclick="hfToggle('zustand','table')">
+                    📋 Tabelle
+                </button>
+            </div>
+        </div>
+
+        <div class="hf-stats">
+            <div class="hf-stat">
+                <strong style="color:#58a6ff">@zustandGes</strong>
+                Einträge gesamt
+            </div>
+            <div class="hf-stat">
+                <strong style="color:#8b949e">@zustände.Count</strong>
+                Verschiedene Typen
+            </div>
+        </div>
+
+        <div class="hf-chart-wrap" id="zustand-chart">
+            <div style="position:relative;height:@(Math.Min(zustände.Count * 32 + 40, 420))px">
+                <canvas id="zustandCanvas"></canvas>
+            </div>
+        </div>
+
+        <div class="hf-table-wrap" id="zustand-table">
+            <table class="hf-table">
+                <thead>
+                    <tr>
+                        <th class="hf-rank">#</th>
+                        <th>Zustandsmeldung</th>
+                        <th style="text-align:right;width:80px">Anzahl</th>
+                        <th class="hf-bar-cell">Anteil</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @{
+                        int zRank = 0;
+                    }
+                    @foreach (var item in zustände)
+                    {
+                        zRank++;
+                        var pct = zustandMax > 0 ? (int)(item.Anzahl * 100.0 / zustandMax) : 0;
+                        var rowCls = zRank == 1 ? "hf-top1" : zRank == 2 ? "hf-top2" : zRank == 3 ? "hf-top3" : "";
+                        <tr class="@rowCls">
+                            <td class="hf-rank">@zRank</td>
+                            <td>@item.Meldung</td>
+                            <td style="text-align:right;font-family:'Courier New',monospace;font-weight:700;color:#58a6ff">
+                                @item.Anzahl
+                            </td>
+                            <td class="hf-bar-cell">
+                                <div style="font-size:10px;color:#8b949e">@pct%</div>
+                                <div class="hf-bar-bg">
+                                    <div class="hf-bar-fill" style="width:@pct%;background:#58a6ff"></div>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    @* ════════════════════════════════════════════════════════
+       SEKTION 3 — STÖRUNGSMELDUNGEN
+       ════════════════════════════════════════════════════════ *@
+    <div class="hf-section">
+        <div class="hf-header">
+            <div class="hf-title">
+                <span>⚠️ Störungsmeldungen</span>
+                <span class="hf-badge" style="background:#e3b34122;color:#e3b341;border:1px solid #e3b34144">
+                    Top @störungen.Count
+                </span>
+            </div>
+            <div class="hf-toggle">
+                <button class="hf-toggle-btn active" id="stoer-btn-chart"
+                        onclick="hfToggle('stoer','chart')"
+                        style="background:#e3b34122;border-color:#e3b341;color:#e3b341">
+                    📊 Diagramm
+                </button>
+                <button class="hf-toggle-btn" id="stoer-btn-table"
+                        onclick="hfToggle('stoer','table')">
+                    📋 Tabelle
+                </button>
+            </div>
+        </div>
+
+        <div class="hf-stats">
+            <div class="hf-stat">
+                <strong style="color:#e3b341">@störGes</strong>
+                Störungen gesamt
+            </div>
+            <div class="hf-stat">
+                <strong style="color:#8b949e">@störungen.Count</strong>
+                Verschiedene Typen
+            </div>
+        </div>
+
+        <div class="hf-chart-wrap" id="stoer-chart">
+            <div style="position:relative;height:@(Math.Min(störungen.Count * 32 + 40, 420))px">
+                <canvas id="stoerCanvas"></canvas>
+            </div>
+        </div>
+
+        <div class="hf-table-wrap" id="stoer-table">
+            <table class="hf-table">
+                <thead>
+                    <tr>
+                        <th class="hf-rank">#</th>
+                        <th>Störungsmeldung</th>
+                        <th style="text-align:right;width:80px">Anzahl</th>
+                        <th class="hf-bar-cell">Anteil</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @{
+                        int sRank = 0;
+                    }
+                    @foreach (var item in störungen)
+                    {
+                        sRank++;
+                        var pct = störMax > 0 ? (int)(item.Anzahl * 100.0 / störMax) : 0;
+                        var rowCls = sRank == 1 ? "hf-top1" : sRank == 2 ? "hf-top2" : sRank == 3 ? "hf-top3" : "";
+                        <tr class="@rowCls">
+                            <td class="hf-rank">@sRank</td>
+                            <td>@item.Meldung</td>
+                            <td style="text-align:right;font-family:'Courier New',monospace;font-weight:700;color:#e3b341">
+                                @item.Anzahl
+                            </td>
+                            <td class="hf-bar-cell">
+                                <div style="font-size:10px;color:#8b949e">@pct%</div>
+                                <div class="hf-bar-bg">
+                                    <div class="hf-bar-fill" style="width:@pct%;background:#e3b341"></div>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
 </div>
 
-<!-- Zustandsmeldungen -->
-<div class="table-responsive mb-5">
-    <table class="table table-bordered table-striped table-hover shadow">
-        <thead class="table-dark text-center">
-            <tr>
-                <th>Zustandsmeldung</th>
-                <th>Anzahl</th>
-            </tr>
-        </thead>
-        <tbody>
-            @if (Model.TopZustandsmeldungen != null && Model.TopZustandsmeldungen.Any())
-            {
-                foreach (var item in Model.TopZustandsmeldungen)
-                {
-                    <tr class="text-center">
-                        <td>@item.Meldung</td>
-                        <td>@item.Anzahl</td>
-                    </tr>
-                }
-            }
-            else
-            {
-                <tr class="text-center text-danger">
-                    <td colspan="2">Keine Zustandsmeldungen verfügbar</td>
-                </tr>
-            }
-        </tbody>
-    </table>
-</div>
+@* ════════════════════════════════════════════════════════════════════════════
+   JAVASCRIPT — Daten aus Razor ins JS übergeben + Charts aufbauen
+   ════════════════════════════════════════════════════════════════════════════ *@
+<script>
+    (function () {
 
-<!-- Störungsmeldungen -->
-<div class="table-responsive mb-5">
-    <table class="table table-bordered table-striped table-hover shadow">
-        <thead class="table-dark text-center">
-            <tr>
-                <th>Störungsmeldung</th>
-                <th>Anzahl</th>
-            </tr>
-        </thead>
-        <tbody>
-            @if (Model.TopStoerungsmeldungen != null && Model.TopStoerungsmeldungen.Any())
+        // ── Daten aus Razor serialisieren ────────────────────────────────────────
+        const ALARM_DATA = [
+            @foreach (var item in alarme)
             {
-                foreach (var item in Model.TopStoerungsmeldungen)
-                {
-                    <tr class="text-center">
-                        <td>@item.Meldung</td>
-                        <td>@item.Anzahl</td>
-                    </tr>
+                    var nr2 = 0;
+                    int.TryParse(item.Meldung?.Replace("AM", ""), out nr2);
+                    var label2 = AlarmnamenHelper.Alarmnamen.TryGetValue(nr2, out var an2) ? an2 : $"AM{nr2}";
+                    // Lange Labels kürzen
+                    var shortLabel = label2.Length > 35 ? label2[..35] + "…" : label2;
+                    <text>{ label: @Json.Serialize(shortLabel), value: @item.Anzahl },</text>
+            }
+        ];
+
+        const ZUSTAND_DATA = [
+            @foreach (var item in zustände)
+            {
+                    var lbl = item.Meldung ?? "";
+                    var sl = lbl.Length > 35 ? lbl[..35] + "…" : lbl;
+                    <text>{ label: @Json.Serialize(sl), value: @item.Anzahl },</text>
+            }
+        ];
+
+        const STOER_DATA = [
+            @foreach (var item in störungen)
+            {
+                    var lbl = item.Meldung ?? "";
+                    var sl = lbl.Length > 35 ? lbl[..35] + "…" : lbl;
+                    <text>{ label: @Json.Serialize(sl), value: @item.Anzahl },</text>
+            }
+        ];
+
+        // ── Farb-Paletten ────────────────────────────────────────────────────────
+        function makeGradient(ctx, color, count) {
+            // Erzeugt abgestufte Farben (stärkstes = dunkelster bis hellster Wert)
+            return Array.from({ length: count }, (_, i) => {
+                const alpha = 0.45 + (0.55 * (count - i) / count);
+                return color.replace(')', `, ${alpha.toFixed(2)})`).replace('rgb', 'rgba');
+            });
+        }
+
+        const COLORS = {
+            alarm:   'rgb(248, 81, 73)',
+            zustand: 'rgb(88, 166, 255)',
+            stoer:   'rgb(227, 179, 65)',
+            border:  '#30363d',
+            muted:   '#8b949e',
+            bg:      '#0d1117',
+        };
+
+        // ── Gemeinsame Chart-Optionen ────────────────────────────────────────────
+        function chartOpts(color) {
+            return {
+                indexAxis: 'y',          // ← horizontale Balken
+                responsive: true,
+                maintainAspectRatio: false,
+                animation: { duration: 600, easing: 'easeOutQuart' },
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        backgroundColor: '#161b22',
+                        borderColor: COLORS.border,
+                        borderWidth: 1,
+                        titleColor: COLORS.muted,
+                        bodyColor: '#e6edf3',
+                        callbacks: {
+                            label: c => `  Anzahl: ${c.parsed.x.toLocaleString('de-DE')}`
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        ticks: { color: COLORS.muted, font: { size: 10 } },
+                        grid:  { color: COLORS.border + '55' },
+                        border:{ color: COLORS.border }
+                    },
+                    y: {
+                        ticks: {
+                            color: '#e6edf3',
+                            font: { size: 11 },
+                            crossAlign: 'far',
+                        },
+                        grid:  { display: false },
+                        border:{ color: COLORS.border }
+                    }
                 }
+            };
+        }
+
+        // ── Chart erstellen ──────────────────────────────────────────────────────
+        function buildChart(canvasId, data, baseColor) {
+            const canvas = document.getElementById(canvasId);
+            if (!canvas || !data.length) return;
+
+            // Abgestufte Farben: erster Balken (größter Wert) am stärksten
+            const bgColors = data.map((_, i) => {
+                const alpha = 0.9 - (i / data.length) * 0.45;
+                const c = baseColor.match(/\d+/g);
+                return `rgba(${c[0]},${c[1]},${c[2]},${alpha.toFixed(2)})`;
+            });
+
+            new Chart(canvas.getContext('2d'), {
+                type: 'bar',
+                data: {
+                    labels:   data.map(d => d.label),
+                    datasets: [{
+                        data:            data.map(d => d.value),
+                        backgroundColor: bgColors,
+                        borderColor:     baseColor.replace(')', ', 1)').replace('rgb', 'rgba'),
+                        borderWidth:     1,
+                        borderRadius:    4,
+                        borderSkipped:   false,
+                    }]
+                },
+                options: chartOpts(baseColor)
+            });
+        }
+
+        // ── Alle 3 Charts initialisieren ─────────────────────────────────────────
+        Chart.defaults.color = COLORS.muted;
+
+        buildChart('alarmCanvas',   ALARM_DATA,   COLORS.alarm);
+        buildChart('zustandCanvas', ZUSTAND_DATA, COLORS.zustand);
+        buildChart('stoerCanvas',   STOER_DATA,   COLORS.stoer);
+
+        // ── Toggle: Diagramm ↔ Tabelle ───────────────────────────────────────────
+        window.hfToggle = function (prefix, mode) {
+            const chartEl = document.getElementById(prefix + '-chart');
+            const tableEl = document.getElementById(prefix + '-table');
+            const btnC    = document.getElementById(prefix + '-btn-chart');
+            const btnT    = document.getElementById(prefix + '-btn-table');
+
+            const colorMap = { alarm: '#f85149', zustand: '#58a6ff', stoer: '#e3b341' };
+            const col      = colorMap[prefix] || '#58a6ff';
+
+            if (mode === 'chart') {
+                chartEl.style.display = '';
+                tableEl.style.display = 'none';
+                btnC.style.background    = col + '22';
+                btnC.style.borderColor   = col;
+                btnC.style.color         = col;
+                btnC.style.fontWeight    = '600';
+                btnT.style.background    = '';
+                btnT.style.borderColor   = '#30363d';
+                btnT.style.color         = '#8b949e';
+                btnT.style.fontWeight    = '';
+            } else {
+                chartEl.style.display = 'none';
+                tableEl.style.display = '';
+                btnT.style.background    = col + '22';
+                btnT.style.borderColor   = col;
+                btnT.style.color         = col;
+                btnT.style.fontWeight    = '600';
+                btnC.style.background    = '';
+                btnC.style.borderColor   = '#30363d';
+                btnC.style.color         = '#8b949e';
+                btnC.style.fontWeight    = '';
             }
-            else
-            {
-                <tr class="text-center text-danger">
-                    <td colspan="2">Keine Störungsmeldungen verfügbar</td>
-                </tr>
-            }
-        </tbody>
-    </table>
-</div>
+        };
+
+    })();
+</script>
