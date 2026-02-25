@@ -161,57 +161,24 @@
     // ════════════════════════════════════════════════════════════════════════
     // Filter-Werte lesen
     //
-    // LÖSUNG: Razor bettet die Cookie-Werte direkt beim Rendern ins JS ein.
-    // Beim Klick auf "Filtern" speichert dein Controller den Cookie.
-    // Beim nächsten Rendern der Seite liest Razor den Cookie aus und
-    // schreibt ihn als JavaScript-Konstanten → kein DOM-Parsing nötig.
+    // _PartialFilter hat hidden fields:
+    //   <input type="hidden" id="DatumVon" value="yyyy-MM-dd" />
+    //   <input type="hidden" id="DatumBis" value="yyyy-MM-dd" />
+    //
+    // updateDate() in _PartialFilter aktualisiert diese automatisch
+    // wenn der User einen Dropdown ändert.
+    // Wir lesen einfach diese hidden fields — fertig, kein DOM-Raten mehr.
     // ════════════════════════════════════════════════════════════════════════
-    @{
-        // Razor liest den Cookie serverseitig — gleich wie im Controller
-        var _fc  = GetFilterModelViewCookie();
-        var _von = (_fc?.DatumVon != default && _fc.DatumVon != DateTime.MinValue)
-                    ? _fc.DatumVon.ToString("yyyy-MM-dd") : "";
-        var _bis = (_fc?.DatumBis != default && _fc.DatumBis != DateTime.MinValue)
-                    ? _fc.DatumBis.ToString("yyyy-MM-dd") : "";
-        var _mid = (_fc?.MaschinenId > 0) ? _fc.MaschinenId.ToString() : "0";
-    }
-    // Vom Server eingebettete Filter-Werte (aus Cookie, beim Seiten-Render gesetzt)
-    const _COOKIE_VON      = '@Html.Raw(_von)';
-    const _COOKIE_BIS      = '@Html.Raw(_bis)';
-    const _COOKIE_MASCHINE = '@Html.Raw(_mid)';
-
     function leseFilter() {
-        // 1. Priorität: Cookie-Werte die Razor eingebettet hat
-        let datumVon    = _COOKIE_VON;
-        let datumBis    = _COOKIE_BIS;
-        let maschinenId = _COOKIE_MASCHINE;
-
-        // 2. Fallback: Falls Cookie leer (erste Nutzung ohne Filter-Klick),
-        //    gezielt nach benannten Elementen suchen — KEIN generisches
-        //    querySelectorAll('select') mehr (das hatte Maschinen-Dropdown als
-        //    erstes Element und verschob alle Indizes → falsches Datum)
-        if (!datumVon || !datumBis) {
-            const vonTag  = document.querySelector('[name="DatumVon_Tag"]')?.value   || '';
-            const vonMon  = document.querySelector('[name="DatumVon_Monat"]')?.value || '';
-            const vonJahr = document.querySelector('[name="DatumVon_Jahr"]')?.value  || '';
-            const bisTag  = document.querySelector('[name="DatumBis_Tag"]')?.value   || '';
-            const bisMon  = document.querySelector('[name="DatumBis_Monat"]')?.value || '';
-            const bisJahr = document.querySelector('[name="DatumBis_Jahr"]')?.value  || '';
-
-            if (vonTag && vonMon && vonJahr)
-                datumVon = `${vonJahr}-${vonMon.padStart(2,'0')}-${vonTag.padStart(2,'0')}`;
-            if (bisTag && bisMon && bisJahr)
-                datumBis = `${bisJahr}-${bisMon.padStart(2,'0')}-${bisTag.padStart(2,'0')}`;
-
-            if (maschinenId === '0')
-                maschinenId = document.querySelector('[name="MaschinenId"]')?.value || '0';
-        }
+        // Hidden fields aus _PartialFilter direkt lesen
+        // Diese werden von updateDate() aktuell gehalten
+        const datumVon    = document.getElementById('DatumVon')?.value    || '';
+        const datumBis    = document.getElementById('DatumBis')?.value    || '';
+        const maschinenId = document.getElementById('MaschinenId')?.value || '0';
 
         return { datumVon, datumBis, maschinenId };
     }
 
-
-    // ════════════════════════════════════════════════════════════════════════
     // Daten laden — öffentliche Funktion, aufgerufen vom Tab-onclick
     // ════════════════════════════════════════════════════════════════════════
     window.ladeChartDaten = function (force) {
