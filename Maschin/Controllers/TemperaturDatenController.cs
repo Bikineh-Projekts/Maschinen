@@ -50,15 +50,15 @@ namespace MaschinenDataein.Controllers
             List<TemperaturdatenModelView> modelView = list
                 .Select(x => new TemperaturdatenModelView
                 {
-                    Id = x.Id,
+                    Id          = x.Id,
                     MaschinenId = x.MaschinenId,
-                    Maschine = x.Maschine?.Bezeichnung,
-                    Timestamp = x.Timestamp,
-                    Name = ProgrammnamenHelper.GetName(x.MaschinenId, x.PRnummer),
-                    Solltemp1 = x.Solltemp1,
-                    Isstemp1 = x.Isstemp1,
-                    Solltemp2 = x.Solltemp2,
-                    Isstemp2 = x.Isstemp2
+                    Maschine    = x.Maschine?.Bezeichnung,
+                    Timestamp   = x.Timestamp,
+                    Name        = ProgrammnamenHelper.GetName(x.MaschinenId, x.PRnummer),
+                    Solltemp1   = x.Solltemp1,
+                    Isstemp1    = x.Isstemp1,
+                    Solltemp2   = x.Solltemp2,
+                    Isstemp2    = x.Isstemp2
                 })
                 .ToList();
 
@@ -66,7 +66,7 @@ namespace MaschinenDataein.Controllers
                 pageNumber = 1;
 
             var pagedList = modelView.ToPagedList(pageNumber, 50);
-            modelView = pagedList.ToList();
+            modelView     = pagedList.ToList();
 
             PaginatedListItem paginatedListItem = new(
                 pagedList.PageNumber,
@@ -77,7 +77,7 @@ namespace MaschinenDataein.Controllers
             );
 
             ViewData["PaginatedListItem"] = paginatedListItem;
-            ViewData["IsShowId"] = true;
+            ViewData["IsShowId"]          = true;
 
             return View("Index", modelView);
         }
@@ -143,8 +143,8 @@ namespace MaschinenDataein.Controllers
                 (model.DatumVon, model.DatumBis) = (model.DatumBis, model.DatumVon);
 
             // Zeit-Anteil normalisieren (nur Datum zaehlt)
-            var vonStart = model.DatumVon.Date;
-            var bisEnd = model.DatumBis.Date.AddHours(23).AddMinutes(59).AddSeconds(59);
+            var vonStart  = model.DatumVon.Date;
+            var bisEnd    = model.DatumBis.Date.AddHours(23).AddMinutes(59).AddSeconds(59);
 
             // ── 4. Datenbankabfrage ────────────────────────────────────────────
             var query = _context.Temperaturdaten
@@ -158,18 +158,18 @@ namespace MaschinenDataein.Controllers
                 .ToList();
 
             // ── 5. Downsampling: max. 500 Punkte fuer Chart-Performance ────────
-            int step = Math.Max(1, list.Count / 500);
+            int step    = Math.Max(1, list.Count / 500);
             var sampled = list.Where((_, i) => i % step == 0).ToList();
 
             // ── 6. Chart-Datenpunkte ───────────────────────────────────────────
             var chartPoints = sampled.Select(x => new
             {
-                t = x.Timestamp.ToString("dd.MM HH:mm"),
-                soll1 = x.Solltemp1,
-                ist1 = x.Isstemp1,
+                t       = x.Timestamp.ToString("dd.MM HH:mm"),
+                soll1   = x.Solltemp1,
+                ist1    = x.Isstemp1,
                 fehler1 = x.Isstemp1 - x.Solltemp1,
-                soll2 = x.Solltemp2,
-                ist2 = x.Isstemp2,
+                soll2   = x.Solltemp2,
+                ist2    = x.Isstemp2,
                 fehler2 = x.Isstemp2 - x.Solltemp2
             }).ToList();
 
@@ -179,7 +179,7 @@ namespace MaschinenDataein.Controllers
 
             return Json(new
             {
-                punkte = chartPoints,
+                punkte    = chartPoints,
                 statistik = new
                 {
                     kanal1 = BerechneStatistik(f1),
@@ -187,13 +187,13 @@ namespace MaschinenDataein.Controllers
                 },
                 debug = new
                 {
-                    datumVonVerwendet = model.DatumVon.ToString("dd.MM.yyyy"),
-                    datumBisVerwendet = model.DatumBis.ToString("dd.MM.yyyy"),
-                    maschinenIdFilter = model.MaschinenId,
+                    datumVonVerwendet     = model.DatumVon.ToString("dd.MM.yyyy"),
+                    datumBisVerwendet     = model.DatumBis.ToString("dd.MM.yyyy"),
+                    maschinenIdFilter     = model.MaschinenId,
                     gesamtPunkteDatenbank = list.Count,
-                    dargestelltePunkte = sampled.Count,
-                    empfangenDatumVon = datumVon ?? "(aus Cookie)",
-                    empfangenDatumBis = datumBis ?? "(aus Cookie)"
+                    dargestelltePunkte    = sampled.Count,
+                    empfangenDatumVon     = datumVon ?? "(aus Cookie)",
+                    empfangenDatumBis     = datumBis ?? "(aus Cookie)"
                 }
             });
         }
@@ -250,20 +250,20 @@ namespace MaschinenDataein.Controllers
             if (fehler.Count == 0)
                 return new { bias = 0.0, rmse = 0.0, std = 0.0, maxFehler = 0.0, anzahl = 0 };
 
-            int n = fehler.Count;
-            double bias = fehler.Average();
-            double rmse = Math.Sqrt(fehler.Select(f => f * f).Average());
+            int    n        = fehler.Count;
+            double bias     = fehler.Average();
+            double rmse     = Math.Sqrt(fehler.Select(f => f * f).Average());
             double variance = fehler.Select(f => Math.Pow(f - bias, 2)).Average();
-            double std = Math.Sqrt(variance);
-            double maxAbs = fehler.Select(Math.Abs).Max();
+            double std      = Math.Sqrt(variance);
+            double maxAbs   = fehler.Select(Math.Abs).Max();
 
             return new
             {
-                bias = Math.Round(bias, 3),
-                rmse = Math.Round(rmse, 3),
-                std = Math.Round(std, 3),
+                bias      = Math.Round(bias,   3),
+                rmse      = Math.Round(rmse,   3),
+                std       = Math.Round(std,    3),
                 maxFehler = Math.Round(maxAbs, 3),
-                anzahl = n
+                anzahl    = n
             };
         }
     }
