@@ -16,21 +16,18 @@
         font-family: 'Segoe UI', system-ui, sans-serif;
         min-height: 400px;
     }
-
     .td-stat-grid {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(148px, 1fr));
         gap: 12px;
         margin-bottom: 20px;
     }
-
     .td-stat-card {
         background: #1c2128;
         border: 1px solid #30363d;
         border-radius: 10px;
         padding: 14px 18px;
     }
-
     .td-stat-label {
         font-size: 10px;
         color: #8b949e;
@@ -38,25 +35,13 @@
         letter-spacing: 1.1px;
         margin-bottom: 4px;
     }
-
     .td-stat-value {
         font-size: 26px;
         font-weight: 700;
         font-family: 'Courier New', monospace;
     }
-
-    .td-stat-unit {
-        font-size: 13px;
-        margin-left: 3px;
-        color: #8b949e;
-    }
-
-    .td-stat-sub {
-        font-size: 10px;
-        color: #8b949e;
-        margin-top: 3px;
-    }
-
+    .td-stat-unit { font-size: 13px; margin-left: 3px; color: #8b949e; }
+    .td-stat-sub  { font-size: 10px; color: #8b949e; margin-top: 3px; }
     .td-chart-box {
         background: #161b22;
         border: 1px solid #30363d;
@@ -64,20 +49,8 @@
         padding: 16px 16px 10px;
         margin-bottom: 14px;
     }
-
-    .td-chart-title {
-        font-size: 12px;
-        color: #8b949e;
-        margin-bottom: 12px;
-    }
-
-    .td-btns {
-        display: flex;
-        gap: 6px;
-        margin-bottom: 16px;
-        flex-wrap: wrap;
-    }
-
+    .td-chart-title { font-size: 12px; color: #8b949e; margin-bottom: 12px; }
+    .td-btns { display: flex; gap: 6px; margin-bottom: 16px; flex-wrap: wrap; }
     .td-btn {
         padding: 7px 16px;
         border-radius: 8px;
@@ -88,21 +61,18 @@
         font-size: 13px;
         transition: all 0.15s;
     }
-
-        .td-btn.k-active {
-            background: #58a6ff22;
-            border-color: #58a6ff;
-            color: #58a6ff;
-            font-weight: 600;
-        }
-
-        .td-btn.a-active {
-            background: #3fb95022;
-            border-color: #3fb950;
-            color: #3fb950;
-            font-weight: 600;
-        }
-
+    .td-btn.k-active {
+        background: #58a6ff22;
+        border-color: #58a6ff;
+        color: #58a6ff;
+        font-weight: 600;
+    }
+    .td-btn.a-active {
+        background: #3fb95022;
+        border-color: #3fb950;
+        color: #3fb950;
+        font-weight: 600;
+    }
     .td-info {
         background: #1c2128;
         border: 1px solid #30363d;
@@ -112,13 +82,7 @@
         color: #8b949e;
         line-height: 1.7;
     }
-
-        .td-info b {
-            color: #e6edf3;
-            display: block;
-            margin-bottom: 5px;
-        }
-
+    .td-info b { color: #e6edf3; display: block; margin-bottom: 5px; }
     .td-loader {
         display: flex;
         align-items: center;
@@ -128,22 +92,14 @@
         font-size: 14px;
         gap: 10px;
     }
-
     .td-spin {
-        width: 20px;
-        height: 20px;
+        width: 20px; height: 20px;
         border: 2px solid #30363d;
         border-top-color: #58a6ff;
         border-radius: 50%;
         animation: tdspin 0.8s linear infinite;
     }
-
-    @@keyframes tdspin {
-        to {
-            transform: rotate(360deg);
-        }
-    }
-
+    @@keyframes tdspin { to { transform: rotate(360deg); } }
     .td-empty {
         padding: 32px;
         color: #8b949e;
@@ -151,7 +107,6 @@
         text-align: center;
         line-height: 1.8;
     }
-
     .td-debug {
         margin-top: 12px;
         padding: 10px 14px;
@@ -163,7 +118,6 @@
         color: #555;
         text-align: left;
     }
-
     .td-reload-btn {
         margin-top: 14px;
         padding: 8px 22px;
@@ -184,428 +138,426 @@
 </div>
 
 <script>
-    (function () {
+(function () {
 
-        // ── State ────────────────────────────────────────────────────────────────
-        let _daten    = null;
-        let _kanal    = 1;
-        let _ansicht  = 'verlauf';
-        let _chart    = null;
+    // ── State ────────────────────────────────────────────────────────────────
+    let _daten    = null;
+    let _kanal    = 1;
+    let _ansicht  = 'verlauf';
+    let _chart    = null;
 
-        // ── Farben ───────────────────────────────────────────────────────────────
-        const C = {
-            soll:   '#58a6ff',
-            ist:    '#f0883e',
-            fehler: '#3fb950',
-            neg:    '#f85149',
-            warn:   '#e3b341',
-            muted:  '#8b949e',
-            border: '#30363d',
-            purple: '#c0a4ff',
-        };
+    // ── Farben ───────────────────────────────────────────────────────────────
+    const C = {
+        soll:   '#58a6ff',
+        ist:    '#f0883e',
+        fehler: '#3fb950',
+        neg:    '#f85149',
+        warn:   '#e3b341',
+        muted:  '#8b949e',
+        border: '#30363d',
+        purple: '#c0a4ff',
+    };
 
-        // ════════════════════════════════════════════════════════════════════════
-        // Filter-Werte aus dem DOM lesen
-        // Unterstützt Select-Dropdowns (Tag/Monat/Jahr) UND input[type=date]
-        // ════════════════════════════════════════════════════════════════════════
-        function leseFilter() {
-            // Hilfsfunktion: Wert eines Elements anhand von ID oder name-Attribut
-            function v(selectors) {
-                for (const s of selectors) {
-                    const el = document.getElementById(s) || document.querySelector(`[name="${s}"]`);
-                    if (el && el.value) return el.value.trim();
-                }
-                return '';
-            }
+    // ════════════════════════════════════════════════════════════════════════
+    // Filter-Werte lesen
+    //
+    // LÖSUNG: Razor bettet die Cookie-Werte direkt beim Rendern ins JS ein.
+    // Beim Klick auf "Filtern" speichert dein Controller den Cookie.
+    // Beim nächsten Rendern der Seite liest Razor den Cookie aus und
+    // schreibt ihn als JavaScript-Konstanten → kein DOM-Parsing nötig.
+    // ════════════════════════════════════════════════════════════════════════
+    @{
+        // Razor liest den Cookie serverseitig — gleich wie im Controller
+        var _fc  = GetFilterModelViewCookie();
+        var _von = (_fc?.DatumVon != default && _fc.DatumVon != DateTime.MinValue)
+                    ? _fc.DatumVon.ToString("yyyy-MM-dd") : "";
+        var _bis = (_fc?.DatumBis != default && _fc.DatumBis != DateTime.MinValue)
+                    ? _fc.DatumBis.ToString("yyyy-MM-dd") : "";
+        var _mid = (_fc?.MaschinenId > 0) ? _fc.MaschinenId.ToString() : "0";
+    }
+    // Vom Server eingebettete Filter-Werte (aus Cookie, beim Seiten-Render gesetzt)
+    const _COOKIE_VON      = '@Html.Raw(_von)';
+    const _COOKIE_BIS      = '@Html.Raw(_bis)';
+    const _COOKIE_MASCHINE = '@Html.Raw(_mid)';
 
-            let datumVon = '', datumBis = '';
+    function leseFilter() {
+        // 1. Priorität: Cookie-Werte die Razor eingebettet hat
+        let datumVon    = _COOKIE_VON;
+        let datumBis    = _COOKIE_BIS;
+        let maschinenId = _COOKIE_MASCHINE;
 
-            // Variante A: input[type=date] → Wert ist bereits "YYYY-MM-DD"
-            const vonDate = v(['DatumVon', 'datumVon', 'vonDate']);
-            const bisDate = v(['DatumBis', 'datumBis', 'bisDate']);
-            if (vonDate) datumVon = vonDate;
-            if (bisDate) datumBis = bisDate;
+        // 2. Fallback: Falls Cookie leer (erste Nutzung ohne Filter-Klick),
+        //    gezielt nach benannten Elementen suchen — KEIN generisches
+        //    querySelectorAll('select') mehr (das hatte Maschinen-Dropdown als
+        //    erstes Element und verschob alle Indizes → falsches Datum)
+        if (!datumVon || !datumBis) {
+            const vonTag  = document.querySelector('[name="DatumVon_Tag"]')?.value   || '';
+            const vonMon  = document.querySelector('[name="DatumVon_Monat"]')?.value || '';
+            const vonJahr = document.querySelector('[name="DatumVon_Jahr"]')?.value  || '';
+            const bisTag  = document.querySelector('[name="DatumBis_Tag"]')?.value   || '';
+            const bisMon  = document.querySelector('[name="DatumBis_Monat"]')?.value || '';
+            const bisJahr = document.querySelector('[name="DatumBis_Jahr"]')?.value  || '';
 
-            // Variante B: drei separate Dropdowns (Tag / Monat / Jahr)
-            if (!datumVon) {
-                const t = v(['DatumVon_Tag',   'vonTag',   'startTag']);
-                const m = v(['DatumVon_Monat', 'vonMonat', 'startMonat']);
-                const j = v(['DatumVon_Jahr',  'vonJahr',  'startJahr']);
-                if (t && m && j) datumVon = `${j}-${m.padStart(2,'0')}-${t.padStart(2,'0')}`;
-            }
-            if (!datumBis) {
-                const t = v(['DatumBis_Tag',   'bisTag',   'endTag']);
-                const m = v(['DatumBis_Monat', 'bisMonat', 'endMonat']);
-                const j = v(['DatumBis_Jahr',  'bisJahr',  'endJahr']);
-                if (t && m && j) datumBis = `${j}-${m.padStart(2,'0')}-${t.padStart(2,'0')}`;
-            }
+            if (vonTag && vonMon && vonJahr)
+                datumVon = `${vonJahr}-${vonMon.padStart(2,'0')}-${vonTag.padStart(2,'0')}`;
+            if (bisTag && bisMon && bisJahr)
+                datumBis = `${bisJahr}-${bisMon.padStart(2,'0')}-${bisTag.padStart(2,'0')}`;
 
-            // Variante C: einzelne Selects mit dd-MM-YYYY aus Dropdowns (dein aktuelles Format)
-            // Aus dem Screenshot: Tag=25, Monat=02, Jahr=2024 (Start) und 25/02/2026 (Ende)
-            if (!datumVon) {
-                // Versuche alle Selects auf der Seite zu lesen (generisch)
-                const allSelects = Array.from(document.querySelectorAll('select'));
-                // Gruppiere nach Position: die ersten 3 = Von, nächsten 3 = Bis
-                const vals = allSelects.map(s => s.value).filter(Boolean);
-                if (vals.length >= 6) {
-                    // Format: Tag Monat Jahr Tag Monat Jahr
-                    datumVon = `${vals[2]}-${vals[1].padStart(2,'0')}-${vals[0].padStart(2,'0')}`;
-                    datumBis = `${vals[5]}-${vals[4].padStart(2,'0')}-${vals[3].padStart(2,'0')}`;
-                }
-            }
-
-            const maschinenId = v(['MaschinenId', 'maschinenId', 'MaschinenSelect']) || '0';
-
-            return { datumVon, datumBis, maschinenId };
+            if (maschinenId === '0')
+                maschinenId = document.querySelector('[name="MaschinenId"]')?.value || '0';
         }
 
-        // ════════════════════════════════════════════════════════════════════════
-        // Daten laden — öffentliche Funktion, aufgerufen vom Tab-onclick
-        // ════════════════════════════════════════════════════════════════════════
-        window.ladeChartDaten = function (force) {
-            if (_daten && !force) return;
-            _daten = null;
+        return { datumVon, datumBis, maschinenId };
+    }
 
-            document.getElementById('tdRoot').innerHTML =
-                '<div class="td-loader"><div class="td-spin"></div>Lade Temperaturdaten ...</div>';
 
-            const f  = leseFilter();
-            const qs = [];
-            if (f.datumVon)                      qs.push('datumVon='    + encodeURIComponent(f.datumVon));
-            if (f.datumBis)                      qs.push('datumBis='    + encodeURIComponent(f.datumBis));
-            if (f.maschinenId && f.maschinenId !== '0')
-                                                 qs.push('maschinenId=' + encodeURIComponent(f.maschinenId));
+    // ════════════════════════════════════════════════════════════════════════
+    // Daten laden — öffentliche Funktion, aufgerufen vom Tab-onclick
+    // ════════════════════════════════════════════════════════════════════════
+    window.ladeChartDaten = function (force) {
+        if (_daten && !force) return;
+        _daten = null;
 
-            const url = '/TemperaturDaten/GetChartData' + (qs.length ? '?' + qs.join('&') : '');
+        document.getElementById('tdRoot').innerHTML =
+            '<div class="td-loader"><div class="td-spin"></div>Lade Temperaturdaten ...</div>';
 
-            fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
-                .then(r => {
-                    if (!r.ok) throw new Error('Server antwortete mit HTTP ' + r.status);
-                    return r.json();
-                })
-                .then(json => {
-                    _daten = json;
+        const f  = leseFilter();
+        const qs = [];
+        if (f.datumVon)                      qs.push('datumVon='    + encodeURIComponent(f.datumVon));
+        if (f.datumBis)                      qs.push('datumBis='    + encodeURIComponent(f.datumBis));
+        if (f.maschinenId && f.maschinenId !== '0')
+                                             qs.push('maschinenId=' + encodeURIComponent(f.maschinenId));
 
-                    if (!json.punkte || json.punkte.length === 0) {
-                        const dbg = json.debug || {};
-                        document.getElementById('tdRoot').innerHTML = `
-                            <div class="td-empty">
-                                <div style="font-size:36px;margin-bottom:12px">📭</div>
-                                <div style="font-size:16px;color:#e6edf3;margin-bottom:8px">
-                                    Keine Daten im gewählten Zeitraum
-                                </div>
-                                <div style="font-size:13px">
-                                    Bitte Datumsbereich oder Maschine anpassen,
-                                    <strong style="color:#58a6ff">Filtern</strong> klicken
-                                    und danach erneut auf
-                                    <strong style="color:#3fb950">📊 Analyse-Diagramm</strong> wechseln.
-                                </div>
-                                <div class="td-debug">
-                                    🔍 Abgefragter Zeitraum:
-                                    <span style="color:#58a6ff">${dbg.datumVonVerwendet || '?'}</span>
-                                    bis
-                                    <span style="color:#58a6ff">${dbg.datumBisVerwendet || '?'}</span>
-                                    &nbsp;·&nbsp; Maschinen-ID:
-                                    <span style="color:#f0883e">${dbg.maschinenIdFilter || 'alle'}</span>
-                                    &nbsp;·&nbsp; Datenbankzeilen:
-                                    <span style="color:#f85149">${dbg.gesamtPunkteDatenbank ?? 0}</span>
-                                </div>
-                                <button class="td-reload-btn" onclick="ladeChartDaten(true)">🔄 Neu laden</button>
-                            </div>`;
-                        return;
-                    }
+        const url = '/TemperaturDaten/GetChartData' + (qs.length ? '?' + qs.join('&') : '');
 
-                    renderDashboard();
-                })
-                .catch(err => {
+        fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+            .then(r => {
+                if (!r.ok) throw new Error('Server antwortete mit HTTP ' + r.status);
+                return r.json();
+            })
+            .then(json => {
+                _daten = json;
+
+                if (!json.punkte || json.punkte.length === 0) {
+                    const dbg = json.debug || {};
                     document.getElementById('tdRoot').innerHTML = `
                         <div class="td-empty">
-                            <div style="font-size:32px;margin-bottom:10px;color:#f85149">❌</div>
-                            <div style="font-size:15px;color:#e6edf3;margin-bottom:6px">Fehler beim Laden</div>
-                            <div class="td-debug" style="color:#f85149">
-                                ${err.message}<br>
-                                <span style="color:#555">Endpoint: ${url}</span>
+                            <div style="font-size:36px;margin-bottom:12px">📭</div>
+                            <div style="font-size:16px;color:#e6edf3;margin-bottom:8px">
+                                Keine Daten im gewählten Zeitraum
                             </div>
-                            <div style="margin-top:10px;font-size:12px;color:#8b949e">
-                                Prüfe ob <code style="color:#f0883e">GetChartData</code>
-                                im Controller existiert und die App läuft.
+                            <div style="font-size:13px">
+                                Bitte Datumsbereich oder Maschine anpassen,
+                                <strong style="color:#58a6ff">Filtern</strong> klicken
+                                und danach erneut auf
+                                <strong style="color:#3fb950">📊 Analyse-Diagramm</strong> wechseln.
                             </div>
-                            <button class="td-reload-btn" style="border-color:#f85149;color:#f85149;background:#f8514911"
-                                onclick="ladeChartDaten(true)">🔄 Erneut versuchen</button>
+                            <div class="td-debug">
+                                🔍 Abgefragter Zeitraum:
+                                <span style="color:#58a6ff">${dbg.datumVonVerwendet || '?'}</span>
+                                bis
+                                <span style="color:#58a6ff">${dbg.datumBisVerwendet || '?'}</span>
+                                &nbsp;·&nbsp; Maschinen-ID:
+                                <span style="color:#f0883e">${dbg.maschinenIdFilter || 'alle'}</span>
+                                &nbsp;·&nbsp; Datenbankzeilen:
+                                <span style="color:#f85149">${dbg.gesamtPunkteDatenbank ?? 0}</span>
+                            </div>
+                            <button class="td-reload-btn" onclick="ladeChartDaten(true)">🔄 Neu laden</button>
                         </div>`;
-                });
+                    return;
+                }
+
+                renderDashboard();
+            })
+            .catch(err => {
+                document.getElementById('tdRoot').innerHTML = `
+                    <div class="td-empty">
+                        <div style="font-size:32px;margin-bottom:10px;color:#f85149">❌</div>
+                        <div style="font-size:15px;color:#e6edf3;margin-bottom:6px">Fehler beim Laden</div>
+                        <div class="td-debug" style="color:#f85149">
+                            ${err.message}<br>
+                            <span style="color:#555">Endpoint: ${url}</span>
+                        </div>
+                        <div style="margin-top:10px;font-size:12px;color:#8b949e">
+                            Prüfe ob <code style="color:#f0883e">GetChartData</code>
+                            im Controller existiert und die App läuft.
+                        </div>
+                        <button class="td-reload-btn" style="border-color:#f85149;color:#f85149;background:#f8514911"
+                            onclick="ladeChartDaten(true)">🔄 Erneut versuchen</button>
+                    </div>`;
+            });
+    };
+
+    // ════════════════════════════════════════════════════════════════════════
+    // Histogramm-Daten berechnen
+    // ════════════════════════════════════════════════════════════════════════
+    function buildHist(key) {
+        const bins = {};
+        for (let b = -8; b <= 8; b++) bins[b] = 0;
+        _daten.punkte.forEach(p => {
+            const b = Math.round(Math.max(-8, Math.min(8, p[key])));
+            if (b in bins) bins[b]++;
+        });
+        return {
+            labels: Object.keys(bins).map(k => k + '°C'),
+            counts: Object.values(bins)
+        };
+    }
+
+    // ════════════════════════════════════════════════════════════════════════
+    // Chart zeichnen
+    // ════════════════════════════════════════════════════════════════════════
+    function drawChart() {
+        if (_chart) { _chart.destroy(); _chart = null; }
+
+        const canvas = document.getElementById('tdCanvas');
+        if (!canvas) return;
+
+        const sollKey   = _kanal === 1 ? 'soll1'   : 'soll2';
+        const istKey    = _kanal === 1 ? 'ist1'    : 'ist2';
+        const fehlerKey = _kanal === 1 ? 'fehler1' : 'fehler2';
+        const punkte    = _daten.punkte;
+        const labels    = punkte.map(p => p.t);
+        const s         = _kanal === 1 ? _daten.statistik.kanal1 : _daten.statistik.kanal2;
+
+        Chart.defaults.color = C.muted;
+
+        const baseOpts = {
+            responsive: true,
+            maintainAspectRatio: false,
+            animation: { duration: 250 },
+            plugins: {
+                legend: { labels: { color: C.muted, font: { size: 12 }, boxWidth: 20 } },
+                tooltip: {
+                    backgroundColor: '#0d1117ee',
+                    borderColor: C.border,
+                    borderWidth: 1,
+                    titleColor: C.muted,
+                    bodyColor: '#e6edf3',
+                    callbacks: { label: c => ` ${c.dataset.label}: ${c.parsed.y}°C` }
+                }
+            },
+            scales: {
+                x: {
+                    ticks: { color: C.muted, maxTicksLimit: 10, font: { size: 10 } },
+                    grid:  { color: C.border + '55' }
+                },
+                y: {
+                    ticks: { color: C.muted, font: { size: 10 } },
+                    grid:  { color: C.border + '55' },
+                    title: { display: true, text: '°C', color: C.muted }
+                }
+            }
         };
 
-        // ════════════════════════════════════════════════════════════════════════
-        // Histogramm-Daten berechnen
-        // ════════════════════════════════════════════════════════════════════════
-        function buildHist(key) {
-            const bins = {};
-            for (let b = -8; b <= 8; b++) bins[b] = 0;
-            _daten.punkte.forEach(p => {
-                const b = Math.round(Math.max(-8, Math.min(8, p[key])));
-                if (b in bins) bins[b]++;
-            });
-            return {
-                labels: Object.keys(bins).map(k => k + '°C'),
-                counts: Object.values(bins)
-            };
-        }
-
-        // ════════════════════════════════════════════════════════════════════════
-        // Chart zeichnen
-        // ════════════════════════════════════════════════════════════════════════
-        function drawChart() {
-            if (_chart) { _chart.destroy(); _chart = null; }
-
-            const canvas = document.getElementById('tdCanvas');
-            if (!canvas) return;
-
-            const sollKey   = _kanal === 1 ? 'soll1'   : 'soll2';
-            const istKey    = _kanal === 1 ? 'ist1'    : 'ist2';
-            const fehlerKey = _kanal === 1 ? 'fehler1' : 'fehler2';
-            const punkte    = _daten.punkte;
-            const labels    = punkte.map(p => p.t);
-            const s         = _kanal === 1 ? _daten.statistik.kanal1 : _daten.statistik.kanal2;
-
-            Chart.defaults.color = C.muted;
-
-            const baseOpts = {
-                responsive: true,
-                maintainAspectRatio: false,
-                animation: { duration: 250 },
-                plugins: {
-                    legend: { labels: { color: C.muted, font: { size: 12 }, boxWidth: 20 } },
-                    tooltip: {
-                        backgroundColor: '#0d1117ee',
-                        borderColor: C.border,
-                        borderWidth: 1,
-                        titleColor: C.muted,
-                        bodyColor: '#e6edf3',
-                        callbacks: { label: c => ` ${c.dataset.label}: ${c.parsed.y}°C` }
-                    }
+        if (_ansicht === 'verlauf') {
+            _chart = new Chart(canvas.getContext('2d'), {
+                type: 'line',
+                data: {
+                    labels,
+                    datasets: [
+                        {
+                            label: `Soll${_kanal}`,
+                            data: punkte.map(p => p[sollKey]),
+                            borderColor: C.soll,
+                            backgroundColor: C.soll + '18',
+                            borderDash: [6, 3],
+                            borderWidth: 2,
+                            pointRadius: 0,
+                            fill: true,
+                            tension: 0.3
+                        },
+                        {
+                            label: `Ist${_kanal}`,
+                            data: punkte.map(p => p[istKey]),
+                            borderColor: C.ist,
+                            backgroundColor: 'transparent',
+                            borderWidth: 2,
+                            pointRadius: 0,
+                            tension: 0.3
+                        }
+                    ]
                 },
-                scales: {
-                    x: {
-                        ticks: { color: C.muted, maxTicksLimit: 10, font: { size: 10 } },
-                        grid:  { color: C.border + '55' }
-                    },
-                    y: {
-                        ticks: { color: C.muted, font: { size: 10 } },
-                        grid:  { color: C.border + '55' },
-                        title: { display: true, text: '°C', color: C.muted }
+                options: baseOpts
+            });
+
+        } else if (_ansicht === 'fehler') {
+            _chart = new Chart(canvas.getContext('2d'), {
+                type: 'line',
+                data: {
+                    labels,
+                    datasets: [
+                        {
+                            label: `Fehler Kanal${_kanal}`,
+                            data: punkte.map(p => p[fehlerKey]),
+                            borderColor: C.fehler,
+                            backgroundColor: C.fehler + '22',
+                            borderWidth: 1.5,
+                            pointRadius: 0,
+                            fill: true,
+                            tension: 0.2
+                        },
+                        {
+                            label: `Bias (${s.bias}°C)`,
+                            data: labels.map(() => s.bias),
+                            borderColor: C.warn,
+                            borderDash: [5, 4],
+                            borderWidth: 1.5,
+                            pointRadius: 0,
+                            fill: false
+                        },
+                        {
+                            label: 'Nulllinie',
+                            data: labels.map(() => 0),
+                            borderColor: '#ffffff22',
+                            borderWidth: 1,
+                            pointRadius: 0,
+                            fill: false
+                        }
+                    ]
+                },
+                options: {
+                    ...baseOpts,
+                    scales: {
+                        ...baseOpts.scales,
+                        y: { ...baseOpts.scales.y, title: { display: true, text: 'ΔT (°C)', color: C.muted } }
                     }
                 }
-            };
+            });
 
-            if (_ansicht === 'verlauf') {
-                _chart = new Chart(canvas.getContext('2d'), {
-                    type: 'line',
-                    data: {
-                        labels,
-                        datasets: [
-                            {
-                                label: `Soll${_kanal}`,
-                                data: punkte.map(p => p[sollKey]),
-                                borderColor: C.soll,
-                                backgroundColor: C.soll + '18',
-                                borderDash: [6, 3],
-                                borderWidth: 2,
-                                pointRadius: 0,
-                                fill: true,
-                                tension: 0.3
-                            },
-                            {
-                                label: `Ist${_kanal}`,
-                                data: punkte.map(p => p[istKey]),
-                                borderColor: C.ist,
-                                backgroundColor: 'transparent',
-                                borderWidth: 2,
-                                pointRadius: 0,
-                                tension: 0.3
-                            }
-                        ]
-                    },
-                    options: baseOpts
-                });
-
-            } else if (_ansicht === 'fehler') {
-                _chart = new Chart(canvas.getContext('2d'), {
-                    type: 'line',
-                    data: {
-                        labels,
-                        datasets: [
-                            {
-                                label: `Fehler Kanal${_kanal}`,
-                                data: punkte.map(p => p[fehlerKey]),
-                                borderColor: C.fehler,
-                                backgroundColor: C.fehler + '22',
-                                borderWidth: 1.5,
-                                pointRadius: 0,
-                                fill: true,
-                                tension: 0.2
-                            },
-                            {
-                                label: `Bias (${s.bias}°C)`,
-                                data: labels.map(() => s.bias),
-                                borderColor: C.warn,
-                                borderDash: [5, 4],
-                                borderWidth: 1.5,
-                                pointRadius: 0,
-                                fill: false
-                            },
-                            {
-                                label: 'Nulllinie',
-                                data: labels.map(() => 0),
-                                borderColor: '#ffffff22',
-                                borderWidth: 1,
-                                pointRadius: 0,
-                                fill: false
-                            }
-                        ]
-                    },
-                    options: {
-                        ...baseOpts,
-                        scales: {
-                            ...baseOpts.scales,
-                            y: { ...baseOpts.scales.y, title: { display: true, text: 'ΔT (°C)', color: C.muted } }
-                        }
+        } else if (_ansicht === 'histogramm') {
+            const hist = buildHist(fehlerKey);
+            _chart = new Chart(canvas.getContext('2d'), {
+                type: 'bar',
+                data: {
+                    labels: hist.labels,
+                    datasets: [{
+                        label: 'Häufigkeit',
+                        data: hist.counts,
+                        backgroundColor: C.soll + 'bb',
+                        borderColor: C.soll,
+                        borderWidth: 1,
+                        borderRadius: 4
+                    }]
+                },
+                options: {
+                    ...baseOpts,
+                    scales: {
+                        x: { ...baseOpts.scales.x, title: { display: true, text: 'Fehler (°C)', color: C.muted } },
+                        y: { ...baseOpts.scales.y, title: { display: true, text: 'Anzahl', color: C.muted } }
                     }
-                });
+                }
+            });
+        }
+    }
 
-            } else if (_ansicht === 'histogramm') {
-                const hist = buildHist(fehlerKey);
-                _chart = new Chart(canvas.getContext('2d'), {
-                    type: 'bar',
-                    data: {
-                        labels: hist.labels,
-                        datasets: [{
-                            label: 'Häufigkeit',
-                            data: hist.counts,
-                            backgroundColor: C.soll + 'bb',
-                            borderColor: C.soll,
-                            borderWidth: 1,
-                            borderRadius: 4
-                        }]
-                    },
-                    options: {
-                        ...baseOpts,
-                        scales: {
-                            x: { ...baseOpts.scales.x, title: { display: true, text: 'Fehler (°C)', color: C.muted } },
-                            y: { ...baseOpts.scales.y, title: { display: true, text: 'Anzahl', color: C.muted } }
-                        }
-                    }
-                });
-            }
+    // ════════════════════════════════════════════════════════════════════════
+    // Interpretation
+    // ════════════════════════════════════════════════════════════════════════
+    function interpText() {
+        const s = _kanal === 1 ? _daten.statistik.kanal1 : _daten.statistik.kanal2;
+        const ab = Math.abs(s.bias);
+
+        const bColor = ab < 1 ? C.fehler : ab < 3 ? C.warn : C.neg;
+        const bText  = ab < 1 ? '✅ Sehr gute Kalibrierung'
+                     : ab < 3 ? '⚠️ Leichte Abweichung — Sensor-Kalibrierung prüfen'
+                     :          '❌ Systematischer Fehler — Heizung/Sensor defekt?';
+
+        const rColor = s.rmse < 2 ? C.fehler : s.rmse < 5 ? C.warn : C.neg;
+        const rText  = s.rmse < 2 ? '✅ Stabile Regelung'
+                     : s.rmse < 5 ? '⚠️ Mäßige Stabilität'
+                     :              '❌ Instabile Regelung — PID prüfen';
+
+        const dbg = _daten.debug || {};
+
+        return `
+            <div class="td-info">
+                <b>💡 Automatische Interpretation — Kanal ${_kanal}</b>
+                Bias: <strong style="color:${bColor}">${s.bias}°C</strong> → ${bText}
+                &nbsp;·&nbsp;
+                RMSE: <strong style="color:${rColor}">${s.rmse}°C</strong> → ${rText}
+                <div style="margin-top:8px;font-size:10px;color:#444">
+                    Zeitraum: ${dbg.datumVonVerwendet || '–'} – ${dbg.datumBisVerwendet || '–'}
+                    &nbsp;·&nbsp; Datenbankpunkte: ${dbg.gesamtPunkteDatenbank ?? '–'}
+                    &nbsp;·&nbsp; Dargestellt: ${dbg.dargestelltePunkte ?? _daten.punkte.length}
+                </div>
+            </div>`;
+    }
+
+    // ════════════════════════════════════════════════════════════════════════
+    // Dashboard komplett rendern
+    // ════════════════════════════════════════════════════════════════════════
+    function renderDashboard() {
+        const s = _kanal === 1 ? _daten.statistik.kanal1 : _daten.statistik.kanal2;
+
+        function sc(label, value, unit, color, sub) {
+            return `<div class="td-stat-card">
+                <div class="td-stat-label">${label}</div>
+                <div class="td-stat-value" style="color:${color}">
+                    ${value}<span class="td-stat-unit">${unit}</span>
+                </div>
+                <div class="td-stat-sub">${sub}</div>
+            </div>`;
         }
 
-        // ════════════════════════════════════════════════════════════════════════
-        // Interpretation
-        // ════════════════════════════════════════════════════════════════════════
-        function interpText() {
-            const s = _kanal === 1 ? _daten.statistik.kanal1 : _daten.statistik.kanal2;
-            const ab = Math.abs(s.bias);
+        const kBtns = [1,2].map(k =>
+            `<button class="td-btn${_kanal===k?' k-active':''}" onclick="tdKanal(${k})">
+                Kanal ${k} &nbsp;(Soll${k} / Ist${k})
+             </button>`
+        ).join('');
 
-            const bColor = ab < 1 ? C.fehler : ab < 3 ? C.warn : C.neg;
-            const bText  = ab < 1 ? '✅ Sehr gute Kalibrierung'
-                         : ab < 3 ? '⚠️ Leichte Abweichung — Sensor-Kalibrierung prüfen'
-                         :          '❌ Systematischer Fehler — Heizung/Sensor defekt?';
+        const aBtns = [
+            { id:'verlauf',    l:'Soll / Ist Verlauf' },
+            { id:'fehler',     l:'Fehler-Verlauf'     },
+            { id:'histogramm', l:'Histogramm'         },
+        ].map(a =>
+            `<button class="td-btn${_ansicht===a.id?' a-active':''}" onclick="tdAnsicht('${a.id}')">
+                ${a.l}
+             </button>`
+        ).join('');
 
-            const rColor = s.rmse < 2 ? C.fehler : s.rmse < 5 ? C.warn : C.neg;
-            const rText  = s.rmse < 2 ? '✅ Stabile Regelung'
-                         : s.rmse < 5 ? '⚠️ Mäßige Stabilität'
-                         :              '❌ Instabile Regelung — PID prüfen';
+        const titles = {
+            verlauf    : 'Soll-Temperatur (Zielkurve) vs. Ist-Temperatur — Abstand = Regelabweichung',
+            fehler     : `Fehler(t) = Ist${_kanal}(t) − Soll${_kanal}(t) &nbsp;·&nbsp; Positiv = zu warm &nbsp;·&nbsp; Negativ = zu kalt`,
+            histogramm : 'Häufigkeitsverteilung der Fehler — Ideal: schmale Glocke zentriert um 0°C'
+        };
 
-            const dbg = _daten.debug || {};
+        document.getElementById('tdRoot').innerHTML = `
+            <div style="margin-bottom:18px">
+                <h4 style="margin:0 0 4px;font-weight:700">🌡 Temperatur-Analyse</h4>
+                <p style="margin:0;color:#8b949e;font-size:13px">
+                    ${_daten.punkte.length} Messpunkte · Kanal ${_kanal} aktiv
+                </p>
+            </div>
 
-            return `
-                <div class="td-info">
-                    <b>💡 Automatische Interpretation — Kanal ${_kanal}</b>
-                    Bias: <strong style="color:${bColor}">${s.bias}°C</strong> → ${bText}
-                    &nbsp;·&nbsp;
-                    RMSE: <strong style="color:${rColor}">${s.rmse}°C</strong> → ${rText}
-                    <div style="margin-top:8px;font-size:10px;color:#444">
-                        Zeitraum: ${dbg.datumVonVerwendet || '–'} – ${dbg.datumBisVerwendet || '–'}
-                        &nbsp;·&nbsp; Datenbankpunkte: ${dbg.gesamtPunkteDatenbank ?? '–'}
-                        &nbsp;·&nbsp; Dargestellt: ${dbg.dargestelltePunkte ?? _daten.punkte.length}
-                    </div>
-                </div>`;
-        }
+            <div class="td-btns">${kBtns}</div>
 
-        // ════════════════════════════════════════════════════════════════════════
-        // Dashboard komplett rendern
-        // ════════════════════════════════════════════════════════════════════════
-        function renderDashboard() {
-            const s = _kanal === 1 ? _daten.statistik.kanal1 : _daten.statistik.kanal2;
+            <div class="td-stat-grid">
+                ${sc('Bias (Mittelwert)', s.bias,      '°C', s.bias>=0 ? C.ist : C.neg, 'Systematische Abweichung')}
+                ${sc('RMSE',             s.rmse,      '°C', C.purple,                  'Ø Quadratischer Fehler'  )}
+                ${sc('Std. Abweichung',  s.std,       '°C', C.soll,                    'Rauschen / Instabilität' )}
+                ${sc('Max. |Fehler|',    s.maxFehler, '°C', C.neg,                     'Größter Ausreißer'       )}
+                ${sc('Messpunkte',       s.anzahl,    '',   C.fehler,                  'im gewählten Zeitraum'   )}
+            </div>
 
-            function sc(label, value, unit, color, sub) {
-                return `<div class="td-stat-card">
-                    <div class="td-stat-label">${label}</div>
-                    <div class="td-stat-value" style="color:${color}">
-                        ${value}<span class="td-stat-unit">${unit}</span>
-                    </div>
-                    <div class="td-stat-sub">${sub}</div>
-                </div>`;
-            }
+            <div class="td-btns">${aBtns}</div>
 
-            const kBtns = [1,2].map(k =>
-                `<button class="td-btn${_kanal===k?' k-active':''}" onclick="tdKanal(${k})">
-                    Kanal ${k} &nbsp;(Soll${k} / Ist${k})
-                 </button>`
-            ).join('');
-
-            const aBtns = [
-                { id:'verlauf',    l:'Soll / Ist Verlauf' },
-                { id:'fehler',     l:'Fehler-Verlauf'     },
-                { id:'histogramm', l:'Histogramm'         },
-            ].map(a =>
-                `<button class="td-btn${_ansicht===a.id?' a-active':''}" onclick="tdAnsicht('${a.id}')">
-                    ${a.l}
-                 </button>`
-            ).join('');
-
-            const titles = {
-                verlauf    : 'Soll-Temperatur (Zielkurve) vs. Ist-Temperatur — Abstand = Regelabweichung',
-                fehler     : `Fehler(t) = Ist${_kanal}(t) − Soll${_kanal}(t) &nbsp;·&nbsp; Positiv = zu warm &nbsp;·&nbsp; Negativ = zu kalt`,
-                histogramm : 'Häufigkeitsverteilung der Fehler — Ideal: schmale Glocke zentriert um 0°C'
-            };
-
-            document.getElementById('tdRoot').innerHTML = `
-                <div style="margin-bottom:18px">
-                    <h4 style="margin:0 0 4px;font-weight:700">🌡 Temperatur-Analyse</h4>
-                    <p style="margin:0;color:#8b949e;font-size:13px">
-                        ${_daten.punkte.length} Messpunkte · Kanal ${_kanal} aktiv
-                    </p>
+            <div class="td-chart-box">
+                <div class="td-chart-title">${titles[_ansicht]}</div>
+                <div style="position:relative;height:320px">
+                    <canvas id="tdCanvas"></canvas>
                 </div>
+            </div>
 
-                <div class="td-btns">${kBtns}</div>
+            ${interpText()}
+        `;
 
-                <div class="td-stat-grid">
-                    ${sc('Bias (Mittelwert)', s.bias,      '°C', s.bias>=0 ? C.ist : C.neg, 'Systematische Abweichung')}
-                    ${sc('RMSE',             s.rmse,      '°C', C.purple,                  'Ø Quadratischer Fehler'  )}
-                    ${sc('Std. Abweichung',  s.std,       '°C', C.soll,                    'Rauschen / Instabilität' )}
-                    ${sc('Max. |Fehler|',    s.maxFehler, '°C', C.neg,                     'Größter Ausreißer'       )}
-                    ${sc('Messpunkte',       s.anzahl,    '',   C.fehler,                  'im gewählten Zeitraum'   )}
-                </div>
+        drawChart();
+    }
 
-                <div class="td-btns">${aBtns}</div>
+    // ── Öffentliche Umschalter ────────────────────────────────────────────
+    window.tdKanal   = k => { _kanal   = k; renderDashboard(); };
+    window.tdAnsicht = a => { _ansicht = a; renderDashboard(); };
 
-                <div class="td-chart-box">
-                    <div class="td-chart-title">${titles[_ansicht]}</div>
-                    <div style="position:relative;height:320px">
-                        <canvas id="tdCanvas"></canvas>
-                    </div>
-                </div>
-
-                ${interpText()}
-            `;
-
-            drawChart();
-        }
-
-        // ── Öffentliche Umschalter ────────────────────────────────────────────
-        window.tdKanal   = k => { _kanal   = k; renderDashboard(); };
-        window.tdAnsicht = a => { _ansicht = a; renderDashboard(); };
-
-    })();
+})();
 </script>
