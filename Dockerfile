@@ -3,11 +3,11 @@ WORKDIR /app
 
 # Copy the project file and restore
 COPY Maschin/*.csproj ./Maschin/
-RUN dotnet restore ./Maschin/Maschin.csproj
+RUN dotnet restore ./Maschin/MaschinenDataein.csproj
 
 # Copy everything else and build
 COPY . ./
-RUN dotnet publish ./Maschin/Maschin.csproj -c Release -o out
+RUN dotnet publish ./Maschin/MaschinenDataein.csproj -c Release -o out
 
 FROM mcr.microsoft.com/dotnet/aspnet:8.0
 WORKDIR /app
