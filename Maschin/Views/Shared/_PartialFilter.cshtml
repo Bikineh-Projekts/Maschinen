@@ -35,25 +35,40 @@
                     <select id="vonDay" class="form-select" onchange="updateDate('Von')">
                         @for (int d = 1; d <= 31; d++)
                         {
-                            <option value="@d" @(d == filterModelView.DatumVon.Day ? "selected" : "")>
-                                @d.ToString("D2")
-                            </option>
+                            @if (d == filterModelView.DatumVon.Day)
+                            {
+                                <option value="@d" selected>@d.ToString("D2")</option>
+                            }
+                            else
+                            {
+                                <option value="@d">@d.ToString("D2")</option>
+                            }
                         }
                     </select>
                     <select id="vonMonth" class="form-select" onchange="updateDate('Von')">
                         @for (int m = 1; m <= 12; m++)
                         {
-                            <option value="@m" @(m == filterModelView.DatumVon.Month ? "selected" : "")>
-                                @m.ToString("D2")
-                            </option>
+                            @if (m == filterModelView.DatumVon.Month)
+                            {
+                                <option value="@m" selected>@m.ToString("D2")</option>
+                            }
+                            else
+                            {
+                                <option value="@m">@m.ToString("D2")</option>
+                            }
                         }
                     </select>
                     <select id="vonYear" class="form-select" onchange="updateDate('Von')">
                         @for (int y = DateTime.Now.Year - 3; y <= DateTime.Now.Year + 1; y++)
                         {
-                            <option value="@y" @(y == filterModelView.DatumVon.Year ? "selected" : "")>
-                                @y
-                            </option>
+                            @if (y == filterModelView.DatumVon.Year)
+                            {
+                                <option value="@y" selected>@y</option>
+                            }
+                            else
+                            {
+                                <option value="@y">@y</option>
+                            }
                         }
                     </select>
                 </div>
@@ -66,25 +81,40 @@
                     <select id="bisDay" class="form-select" onchange="updateDate('Bis')">
                         @for (int d = 1; d <= 31; d++)
                         {
-                            <option value="@d" @(d == filterModelView.DatumBis.Day ? "selected" : "")>
-                                @d.ToString("D2")
-                            </option>
+                            @if (d == filterModelView.DatumBis.Day)
+                            {
+                                <option value="@d" selected>@d.ToString("D2")</option>
+                            }
+                            else
+                            {
+                                <option value="@d">@d.ToString("D2")</option>
+                            }
                         }
                     </select>
                     <select id="bisMonth" class="form-select" onchange="updateDate('Bis')">
                         @for (int m = 1; m <= 12; m++)
                         {
-                            <option value="@m" @(m == filterModelView.DatumBis.Month ? "selected" : "")>
-                                @m.ToString("D2")
-                            </option>
+                            @if (m == filterModelView.DatumBis.Month)
+                            {
+                                <option value="@m" selected>@m.ToString("D2")</option>
+                            }
+                            else
+                            {
+                                <option value="@m">@m.ToString("D2")</option>
+                            }
                         }
                     </select>
                     <select id="bisYear" class="form-select" onchange="updateDate('Bis')">
                         @for (int y = DateTime.Now.Year - 3; y <= DateTime.Now.Year + 1; y++)
                         {
-                            <option value="@y" @(y == filterModelView.DatumBis.Year ? "selected" : "")>
-                                @y
-                            </option>
+                            @if (y == filterModelView.DatumBis.Year)
+                            {
+                                <option value="@y" selected>@y</option>
+                            }
+                            else
+                            {
+                                <option value="@y">@y</option>
+                            }
                         }
                     </select>
                 </div>
@@ -119,18 +149,6 @@ else
     }
 
     // ── FIX: Beim Seitenaufruf SOFORT beide hidden fields synchronisieren ─────
-    //
-    // Problem vorher:
-    //   Die hidden fields wurden NUR bei onchange befüllt.
-    //   Beim ersten Laden ohne Filter-Klick stimmten sie mit den
-    //   Dropdowns überein — aber jedes JS das document.getElementById('DatumVon')
-    //   las, bekam den Wert aus dem letzten Cookie, nicht den aktuellen Dropdown.
-    //   Bei Datum-Änderung ohne Filtern-Klick war der Wert falsch.
-    //
-    // Lösung:
-    //   Beim DOMContentLoaded werden beide Felder sofort neu berechnet,
-    //   sodass sie immer mit den sichtbaren Dropdowns übereinstimmen.
-    //
     document.addEventListener('DOMContentLoaded', function () {
         updateDate('Von');
         updateDate('Bis');
