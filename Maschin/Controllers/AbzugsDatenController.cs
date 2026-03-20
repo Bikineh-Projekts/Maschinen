@@ -8,7 +8,6 @@ using MaschinenDataein.Helper;
 using MaschinenDataein.Models;
 using MaschinenDataein.Models.ModelView;
 using MaschinenDataein.Models.PaginatedModel;
-using X.PagedList.Extensions;
 using X.PagedList;
 
 namespace MaschinenDataein.Controllers
