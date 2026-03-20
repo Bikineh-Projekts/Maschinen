@@ -1,161 +1,109 @@
+# Market Data Pipeline
 
+**Automated market data collection from multiple sources into PostgreSQL**
 
-# **MaschinenDataein – Digitale Maschinendatenerfassung & Produktionsplanung**
+## Overview
 
-*ASP.NET Core MVC • OPC UA/DA • SQL Server • EF Core • Produktionsanalyse*
+This Python pipeline collects real-time and historical market data from:
+- **Finnhub** - Real-time quotes, company fundamentals, earnings calendar
+- **Alpha Vantage** - Technical indicators (RSI, MACD, EMA, SMA)
+- **Twelve Data** - OHLCV candlestick data
 
-## 🚀 Überblick
+All data is stored in a **Star Schema** PostgreSQL database for analysis.
 
-**MaschinenDataein** ist ein vollständiges System zur **Erfassung, Speicherung, Analyse und Visualisierung** von Maschinendaten in der Lebensmittelproduktion.
-Es wurde im Rahmen eines realen Industrieprojekts entwickelt („Die Rostocker Wurst & Schinkenspezialitäten GmbH“) und ermöglicht:
+## Features
 
-* Auslesen von Maschinendaten über **Softing OPC UA/DA**
-* Speicherung in **SQL Server** über **EF Core**
-* Web-Dashboard für Echtzeit-Zustände
-* Planung & Erfassung von Produktionsdaten
-* Visualisierung von Temperatur-, Leistungs- und Störungsdaten
+- ✅ Automatic data collection every hour (configurable)
+- ✅ Star Schema data warehouse design
+- ✅ API rate limit handling
+- ✅ Error recovery and logging
+- ✅ Upsert logic (no duplicates)
 
----
-
-## 🏗️ Architektur
-
-**Backend:**
-
-* ASP.NET Core MVC (C#)
-* Entity Framework Core (SQL Server)
-* Repository & Model-View-Pattern
-* Razor Views + jQuery für dynamische Tabellen
-* Session-Handling (JSON via Newtonsoft)
-
-**OPC-Anbindung:**
-
-* Softing OPC UA/DA
-* Standardisierte Übertragung
-* NodeIDs für Temperatur, Leistung, Alarme, Zustände
-
-**Datenbankstruktur (Auszug):**
-
-* `Maschine`
-* `MaschinenProgrammen`
-* `LeistungsDaten`
-* `TemperaturDaten`
-* `ZustandsDaten / ZustandsMeldung`
-* `StoerungsDaten / StoerungsMeldung`
-* `Planungs` (Produktionsplanung)
-
----
-
-## 📊 Features
-
-### 🔹 **Dashboard**
-
-* Maschinenübersicht
-* Letzte Meldungen & Störungen
-* Temperatur & Leistung in Echtzeit
-* Produktionsstatus je Maschine
-
-### 🔹 **Produktionsplanung**
-
-* Grunddaten + dynamische Produktionszeilen
-* JSON-Mapping von Frontend → Backend
-* Speichern in Einzeltabelle `Planungs`
-* Validierung & Error-Handling (TempData)
-
-### 🔹 **Auswertung**
-
-* Filterbare Temperatur- & Leistungsdaten
-* Störungsanalyse
-* Programmdaten Übersicht
-* Pagination & Suchfunktionen
-
----
-
-## 📂 Projektstruktur
+## Project Structure
 
 ```
-MaschinenDataein/
-│
-├── Controllers/
-│   ├── DashboardController.cs
-│   ├── TemperaturDatenController.cs
-│   ├── LeistungsDatenController.cs
-│   ├── ZustandsDatenController.cs
-│   ├── PlanungController.cs
-│
-├── Models/
-│   ├── DbContext/
-│   ├── Entity-Modelle
-│   ├── ModelView/
-│
-├── Views/
-│   ├── Dashboard/
-│   ├── Planung/
-│   ├── Temperatur/
-│   ├── Leistungs/
-│
-├── Helper/
-│   └── SessionHelper.cs
-│
-└── wwwroot/
-    └── JS, CSS, Bilder
-```
-## ⚙️ Installation
-
-### 1️⃣ Repository klonen
-
-```
-git clone https://github.com/DEIN-USERNAME/MaschinenDataein.git
+market_pipeline/
+├── collectors/
+│   ├── finnhub.py          # Finnhub API collector
+│   ├── alphavantage.py     # Alpha Vantage API collector
+│   └── twelvedata.py       # Twelve Data API collector
+├── db/
+│   └── connection.py       # PostgreSQL connection & schema
+├── main.py                 # Entry point
+└── requirements.txt        # Python dependencies
 ```
 
-### 2️⃣ SQL Server Connection ändern
+## Database Schema
 
-In **appsettings.json**:
+**Dimension Tables:**
+- `dim_source` - Data sources
+- `dim_symbol` - Stock symbols
+- `dim_interval` - Time intervals
+- `dim_indicator` - Technical indicators
 
-```json
-"ConnectionStrings": {
-  "DefaultConnection": "Server=.;Database=MaschinenDataein;Trusted_Connection=True;"
-}
+**Fact Tables:**
+- `fact_market_quote` - Real-time quotes
+- `fact_market_indicator` - Technical indicators
+- `fact_market_timeseries` - OHLCV candlesticks
+- `fact_company_fundamental` - Company fundamentals
+- `fact_earnings_calendar` - Earnings dates
+
+## Setup
+
+1. Get free API keys from:
+   - [Finnhub](https://finnhub.io/register) - 60 req/min
+   - [Alpha Vantage](https://www.alphavantage.co/support/#api-key) - 25 req/day
+   - [Twelve Data](https://twelvedata.com/pricing) - 800 req/day
+
+2. Set environment variables in Render:
+
+```bash
+# API Keys
+FINNHUB_API_KEY=your_key
+ALPHAVANTAGE_API_KEY=your_key
+TWELVEDATA_API_KEY=your_key
+
+# PostgreSQL (same database as .NET app)
+PGHOST=your-postgres-host.render.com
+PGPORT=5432
+PGDATABASE=Marketdb
+PGUSER=your_user
+PGPASSWORD=your_password
+
+# Configuration
+SYMBOLS=AAPL,MSFT,GOOGL,TSLA
+POLL_INTERVAL_SECONDS=3600
 ```
 
-### 3️⃣ Datenbank migrieren
+## Running
 
+The pipeline runs automatically via Supervisor alongside the .NET app.
+
+**Manual execution:**
+```bash
+# Run once and exit
+python3 main.py --once
+
+# Run continuously
+python3 main.py
+
+# Custom symbols
+python3 main.py --symbols AAPL,MSFT,TSLA
 ```
-dotnet ef database update
-```
 
-### 4️⃣ Starten
+## API Rate Limits
 
-```
-dotnet run
-```
+| Source | Free Tier | Used For |
+|--------|-----------|----------|
+| Finnhub | 60 req/min | Quotes, fundamentals, earnings |
+| Alpha Vantage | 25 req/day | Technical indicators (every 10 cycles) |
+| Twelve Data | 800 req/day | OHLCV candlesticks |
 
----
+**Recommended:** Set `POLL_INTERVAL_SECONDS=3600` (1 hour)
 
-## 🧩 OPC UA/DA Integration
+## Notes
 
-Das System liest Maschinendaten über **Softing OPC**:
-
-* Temperatur
-* Leistung
-* Zustandscodes
-* Störungsnummern
-* Laufzeiten / Programme
-
-Die Daten werden standardisiert in SQL gespeichert und im Dashboard dargestellt.
-
-
-
----
-
-## 👤 Autor
-
-**Milan Bikineh**
-M.Sc. Technische Informatik – Produktion, Datenanalyse, OPC UA, .NET, SQL
-📍 Rostock / Deutschland
-
----
-
-## ⭐ Unterstützung
-
-Gib dem Projekt einen **Star**, wenn du es hilfreich findest ⭐
-
+- Database schema is created automatically on first run
+- Duplicate data is handled via `ON CONFLICT` upserts
+- API errors are logged but don't stop the pipeline
+- Each cycle logs to console for monitoring
