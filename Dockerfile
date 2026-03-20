@@ -1,14 +1,13 @@
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /app
 
-# Copy solution/project files
-COPY *.sln ./
+# Copy the project file and restore
 COPY Maschin/*.csproj ./Maschin/
-RUN dotnet restore
+RUN dotnet restore ./Maschin/Maschin.csproj
 
-# Copy everything and build
+# Copy everything else and build
 COPY . ./
-RUN dotnet publish Maschin/Maschin.csproj -c Release -o out
+RUN dotnet publish ./Maschin/Maschin.csproj -c Release -o out
 
 FROM mcr.microsoft.com/dotnet/aspnet:8.0
 WORKDIR /app
