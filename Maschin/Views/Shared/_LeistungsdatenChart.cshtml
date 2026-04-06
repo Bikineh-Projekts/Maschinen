@@ -36,9 +36,18 @@
 
 <script>
 
+let chartLoaded = false;
 let mainChart = null;
 let hourChart = null;
 
+// 🔥 فقط یک بار اجرا شود
+function initChart() {
+    if (chartLoaded) return;
+    chartLoaded = true;
+    loadDashboard();
+}
+
+// 🔥 گرفتن فیلتر (ایمن)
 function getFilters() {
     try {
         const d = document;
@@ -67,13 +76,16 @@ async function loadDashboard() {
 
         const res = await fetch(url);
 
-        if (!res.ok) throw new Error("HTTP");
+        if (!res.ok) throw new Error("HTTP error");
 
         const data = await res.json();
 
+        console.log("DATA:", data);
+
+        // 🔥 اگر دیتا نبود
         if (!data.zeitreihe || data.zeitreihe.length === 0) {
             document.getElementById("chartRoot").innerHTML =
-                "<div style='text-align:center;padding:30px'>Keine Daten</div>";
+                "<div style='text-align:center;padding:30px'>Keine Daten vorhanden</div>";
             return;
         }
 
@@ -86,7 +98,9 @@ async function loadDashboard() {
                 labels: data.zeitreihe.map(x => x.ts),
                 datasets: [{
                     label: "Takte",
-                    data: data.zeitreihe.map(x => x.takte)
+                    data: data.zeitreihe.map(x => x.takte),
+                    borderWidth: 2,
+                    tension: 0.3
                 }]
             }
         });
@@ -109,7 +123,7 @@ async function loadDashboard() {
         const tbody = document.getElementById("tableBody");
         tbody.innerHTML = "";
 
-        data.zeitreihe.slice(0,50).forEach(x => {
+        data.zeitreihe.slice(0, 50).forEach(x => {
             tbody.innerHTML += `
                 <tr>
                     <td>${x.ts}</td>
@@ -121,7 +135,7 @@ async function loadDashboard() {
 
     } catch (e) {
 
-        console.error(e);
+        console.error("CHART ERROR:", e);
 
         document.getElementById("chartRoot").innerHTML =
             "<div style='color:red;text-align:center;padding:30px'>Fehler beim Laden</div>";
