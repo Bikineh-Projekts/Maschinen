@@ -3,7 +3,6 @@
 
 @{
     Layout = "~/Views/Shared/_Layout.cshtml";
-    ViewData["actionForm"] = "Index";
     ViewData["Title"] = "Leistungsdaten";
 }
 
@@ -11,15 +10,13 @@
 
     <h2 class="text-center mb-3">⚡ Leistungsdaten</h2>
 
-    <!-- FILTER -->
     @await Html.PartialAsync("_PartialFilter")
 
-    <!-- TABS -->
     <ul class="nav nav-tabs mb-3">
         <li class="nav-item">
             <button class="nav-link active"
                     data-bs-toggle="tab"
-                    data-bs-target="#tabTable">
+                    data-bs-target="#tableTab">
                 📋 Tabelle
             </button>
         </li>
@@ -27,8 +24,8 @@
         <li class="nav-item">
             <button class="nav-link"
                     data-bs-toggle="tab"
-                    data-bs-target="#tabChart"
-                    onclick="ladeLeistungChart()">
+                    data-bs-target="#chartTab"
+                    onclick="loadDashboard()">
                 📊 Analyse
             </button>
         </li>
@@ -36,215 +33,14 @@
 
     <div class="tab-content">
 
-        <!-- TABLE -->
-        <div class="tab-pane fade show active" id="tabTable">
+        <div class="tab-pane fade show active" id="tableTab">
             @await Html.PartialAsync("_LeistungsdatenTable", Model)
         </div>
 
-        <!-- CHART -->
-        <div class="tab-pane fade" id="tabChart">
-
-            <!-- DASHBOARD -->
-            <div id="chartContainer" style="background:#0f172a;color:white;padding:20px;border-radius:12px;">
-
-                <!-- KPI -->
-                <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:15px;margin-bottom:20px;">
-                    <div class="kpi">Total<br><span id="kpiTotal">-</span></div>
-                    <div class="kpi">Avg<br><span id="kpiAvg">-</span></div>
-                    <div class="kpi">Max<br><span id="kpiMax">-</span></div>
-                    <div class="kpi">Maschinen<br><span id="kpiMaschinen">-</span></div>
-                </div>
-
-                <div class="box">
-                    <canvas id="mainChart"></canvas>
-                </div>
-
-                <div class="box">
-                    <canvas id="hourChart"></canvas>
-                </div>
-
-                <div class="box">
-                    <table class="table table-dark table-sm">
-                        <thead>
-                            <tr>
-                                <th>Zeit</th>
-                                <th>Takte</th>
-                                <th>Programm</th>
-                            </tr>
-                        </thead>
-                        <tbody id="tableBody"></tbody>
-                    </table>
-                </div>
-
-            </div>
-
+        <div class="tab-pane fade" id="chartTab">
+            @await Html.PartialAsync("_LeistungsdatenChart")
         </div>
 
     </div>
 
 </div>
-
-<style>
-.kpi {
-    background:#1e293b;
-    padding:15px;
-    border-radius:10px;
-    text-align:center;
-}
-.kpi span {
-    font-size:22px;
-    font-weight:bold;
-}
-.box {
-    background:#1e293b;
-    padding:20px;
-    border-radius:12px;
-    margin-bottom:20px;
-}
-</style>
-
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-<script>
-
-let mainChart = null;
-let hourChart = null;
-
-function ladeLeistungChart() {
-    loadDashboard();
-}
-
-function getFilters() {
-
-    const d = document;
-
-    try {
-
-        const von = `${d.querySelector('[name=StartTag]').value.padStart(2,'0')}.${d.querySelector('[name=StartMonat]').value.padStart(2,'0')}.${d.querySelector('[name=StartJahr]').value}`;
-
-        const bis = `${d.querySelector('[name=EndTag]').value.padStart(2,'0')}.${d.querySelector('[name=EndMonat]').value.padStart(2,'0')}.${d.querySelector('[name=EndJahr]').value}`;
-
-        const maschine = d.querySelector('[name=MaschinenId]')?.value || 0;
-
-        return { von, bis, maschine };
-
-    } catch {
-        // fallback
-        return {
-            von: "01.01.2024",
-            bis: "31.12.2024",
-            maschine: 0
-        };
-    }
-}
-
-async function loadDashboard() {
-
-    try {
-
-        const f = getFilters();
-
-        const url = `${window.location.origin}/Leistungsdaten/GetChartData?datumVon=${f.von}&datumBis=${f.bis}&maschinenId=${f.maschine}`;
-
-        const res = await fetch(url);
-
-        if (!res.ok) throw new Error("HTTP Error");
-
-        const data = await res.json();
-
-        console.log("DEBUG:", data.debug);
-
-        // ===== EMPTY FIX =====
-        if (!data.zeitreihe || data.zeitreihe.length === 0) {
-            document.getElementById("chartContainer").innerHTML =
-                "<div style='text-align:center;padding:40px'>Keine Daten vorhanden</div>";
-            return;
-        }
-
-        // ===== KPI =====
-        const takte = data.zeitreihe.map(x => x.takte);
-
-        document.getElementById("kpiTotal").innerText =
-            takte.reduce((a,b)=>a+b,0);
-
-        document.getElementById("kpiAvg").innerText =
-            Math.round(takte.reduce((a,b)=>a+b,0)/takte.length);
-
-        document.getElementById("kpiMax").innerText =
-            Math.max(...takte);
-
-        document.getElementById("kpiMaschinen").innerText =
-            data.maschinen.length;
-
-        // ===== GROUP =====
-        const grouped = {};
-
-        data.zeitreihe.forEach(x=>{
-            const key = x.prNummer || "N/A";
-            if(!grouped[key]) grouped[key]=[];
-            grouped[key].push(x);
-        });
-
-        const datasets = Object.keys(grouped)
-            .filter(k => grouped[k].length > 0)
-            .map(k => ({
-                label: "PR " + k,
-                data: grouped[k].map(x => x.takte),
-                tension: 0.3
-            }));
-
-        if(mainChart) mainChart.destroy();
-
-        mainChart = new Chart(document.getElementById("mainChart"),{
-            type:'line',
-            data:{
-                labels: data.zeitreihe.map(x=>x.ts),
-                datasets: datasets
-            },
-            options:{
-                plugins:{legend:{labels:{color:'white'}}},
-                scales:{
-                    x:{ticks:{color:'white'}},
-                    y:{ticks:{color:'white'},beginAtZero:true}
-                }
-            }
-        });
-
-        // ===== HOUR =====
-        if(hourChart) hourChart.destroy();
-
-        hourChart = new Chart(document.getElementById("hourChart"),{
-            type:'bar',
-            data:{
-                labels: data.stundenkurve.map(x=>x.label),
-                datasets:[{
-                    label:"Hourly",
-                    data: data.stundenkurve.map(x=>x.takte)
-                }]
-            }
-        });
-
-        // ===== TABLE =====
-        const tbody = document.getElementById("tableBody");
-        tbody.innerHTML="";
-
-        data.zeitreihe.slice(0,100).forEach(x=>{
-            tbody.insertAdjacentHTML("beforeend",`
-                <tr>
-                    <td>${x.ts}</td>
-                    <td>${x.takte}</td>
-                    <td>${x.programm}</td>
-                </tr>
-            `);
-        });
-
-    } catch (e) {
-
-        console.error("FETCH ERROR:", e);
-
-        document.getElementById("chartContainer").innerHTML =
-            "<div style='color:red;text-align:center;padding:40px'>Fehler beim Laden</div>";
-    }
-}
-
-</script>
