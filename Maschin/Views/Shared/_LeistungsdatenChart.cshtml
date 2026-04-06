@@ -1,24 +1,13 @@
-<div id="chartRoot" style="background:#0f172a;color:white;padding:20px;border-radius:12px;min-height:100vh;">
+<div id="chartRoot" style="background:#0f172a;color:white;padding:20px;border-radius:12px;">
 
-    <!-- KPI -->
-    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:15px;margin-bottom:20px;">
-        <div class="kpi">Total<br><span id="kpiTotal">-</span></div>
-        <div class="kpi">Avg<br><span id="kpiAvg">-</span></div>
-        <div class="kpi">Max<br><span id="kpiMax">-</span></div>
-        <div class="kpi">Maschinen<br><span id="kpiMaschinen">-</span></div>
-    </div>
-
-    <!-- MAIN -->
     <div class="box">
         <canvas id="mainChart"></canvas>
     </div>
 
-    <!-- HOURLY -->
     <div class="box">
         <canvas id="hourChart"></canvas>
     </div>
 
-    <!-- TABLE -->
     <div class="box">
         <table class="table table-dark table-sm">
             <thead>
@@ -35,16 +24,6 @@
 </div>
 
 <style>
-.kpi {
-    background:#1e293b;
-    padding:15px;
-    border-radius:10px;
-    text-align:center;
-}
-.kpi span {
-    font-size:22px;
-    font-weight:bold;
-}
 .box {
     background:#1e293b;
     padding:20px;
@@ -54,24 +33,19 @@
 </style>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/hammerjs"></script>
-<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom"></script>
 
 <script>
 
 let mainChart = null;
 let hourChart = null;
 
-// =======================
-// FILTER (safe)
-// =======================
 function getFilters() {
     try {
         const d = document;
 
         return {
-            von: `${d.querySelector('[name=StartTag]').value.padStart(2,'0')}.${d.querySelector('[name=StartMonat]').value.padStart(2,'0')}.${d.querySelector('[name=StartJahr]').value}`,
-            bis: `${d.querySelector('[name=EndTag]').value.padStart(2,'0')}.${d.querySelector('[name=EndMonat]').value.padStart(2,'0')}.${d.querySelector('[name=EndJahr]').value}`,
+            von: `${d.querySelector('[name=StartTag]').value}.${d.querySelector('[name=StartMonat]').value}.${d.querySelector('[name=StartJahr]').value}`,
+            bis: `${d.querySelector('[name=EndTag]').value}.${d.querySelector('[name=EndMonat]').value}.${d.querySelector('[name=EndJahr]').value}`,
             maschine: d.querySelector('[name=MaschinenId]')?.value || 0
         };
     } catch {
@@ -83,16 +57,13 @@ function getFilters() {
     }
 }
 
-// =======================
-// LOAD
-// =======================
 async function loadDashboard() {
 
     try {
 
         const f = getFilters();
 
-        const url = `${window.location.origin}/Leistungsdaten/GetChartData?datumVon=${f.von}&datumBis=${f.bis}&maschinenId=${f.maschine}`;
+        const url = `/Leistungsdaten/GetChartData?datumVon=${f.von}&datumBis=${f.bis}&maschinenId=${f.maschine}`;
 
         const res = await fetch(url);
 
@@ -100,138 +71,61 @@ async function loadDashboard() {
 
         const data = await res.json();
 
-        console.log("DEBUG:", data.debug);
-
-        // ===== EMPTY SAFE =====
         if (!data.zeitreihe || data.zeitreihe.length === 0) {
             document.getElementById("chartRoot").innerHTML =
-                "<div style='text-align:center;padding:40px'>Keine Daten vorhanden</div>";
+                "<div style='text-align:center;padding:30px'>Keine Daten</div>";
             return;
         }
 
-        // ===== KPI =====
-        const takte = data.zeitreihe.map(x => x.takte);
+        // ===== MAIN =====
+        if (mainChart) mainChart.destroy();
 
-        document.getElementById("kpiTotal").innerText =
-            takte.reduce((a,b)=>a+b,0);
-
-        document.getElementById("kpiAvg").innerText =
-            Math.round(takte.reduce((a,b)=>a+b,0)/takte.length);
-
-        document.getElementById("kpiMax").innerText =
-            Math.max(...takte);
-
-        document.getElementById("kpiMaschinen").innerText =
-            data.maschinen.length;
-
-        // =======================
-        // GROUP → MULTI LINE
-        // =======================
-        const grouped = {};
-
-        data.zeitreihe.forEach(x=>{
-            const key = x.prNummer || "N/A";
-            if(!grouped[key]) grouped[key]=[];
-            grouped[key].push(x);
-        });
-
-        const labels = data.zeitreihe.map(x=>x.ts);
-
-        const datasets = Object.keys(grouped)
-            .filter(k => grouped[k].length > 0)
-            .map(k => ({
-                label:"PR "+k,
-                data: grouped[k].map(x=>x.takte),
-                tension:0.3,
-                borderWidth:2,
-                pointRadius:0
-            }));
-
-        // =======================
-        // MAIN CHART
-        // =======================
-        if(mainChart) mainChart.destroy();
-
-        mainChart = new Chart(document.getElementById("mainChart"),{
-            type:'line',
-            data:{ labels, datasets },
-            options:{
-                responsive:true,
-                interaction:{mode:'index',intersect:false},
-
-                plugins:{
-                    legend:{labels:{color:'white'}},
-
-                    // 🔥 ZOOM + PAN
-                    zoom:{
-                        pan:{
-                            enabled:true,
-                            mode:'x'
-                        },
-                        zoom:{
-                            wheel:{enabled:true},
-                            pinch:{enabled:true},
-                            mode:'x'
-                        }
-                    }
-                },
-
-                scales:{
-                    x:{ticks:{color:'white'}},
-                    y:{ticks:{color:'white'},beginAtZero:true}
-                }
-            }
-        });
-
-        // Chart.js zoom plugin allows zoom/pan via mouse & touch :contentReference[oaicite:0]{index=0}
-
-        // =======================
-        // HOUR CHART
-        // =======================
-        if(hourChart) hourChart.destroy();
-
-        hourChart = new Chart(document.getElementById("hourChart"),{
-            type:'bar',
-            data:{
-                labels: data.stundenkurve.map(x=>x.label),
-                datasets:[{
-                    label:"Hourly",
-                    data: data.stundenkurve.map(x=>x.takte)
+        mainChart = new Chart(document.getElementById("mainChart"), {
+            type: 'line',
+            data: {
+                labels: data.zeitreihe.map(x => x.ts),
+                datasets: [{
+                    label: "Takte",
+                    data: data.zeitreihe.map(x => x.takte)
                 }]
-            },
-            options:{
-                plugins:{legend:{labels:{color:'white'}}}
             }
         });
 
-        // =======================
-        // TABLE
-        // =======================
-        const tbody = document.getElementById("tableBody");
-        tbody.innerHTML="";
+        // ===== HOUR =====
+        if (hourChart) hourChart.destroy();
 
-        data.zeitreihe.slice(0,100).forEach(x=>{
-            tbody.insertAdjacentHTML("beforeend",`
+        hourChart = new Chart(document.getElementById("hourChart"), {
+            type: 'bar',
+            data: {
+                labels: data.stundenkurve.map(x => x.label),
+                datasets: [{
+                    label: "Hourly",
+                    data: data.stundenkurve.map(x => x.takte)
+                }]
+            }
+        });
+
+        // ===== TABLE =====
+        const tbody = document.getElementById("tableBody");
+        tbody.innerHTML = "";
+
+        data.zeitreihe.slice(0,50).forEach(x => {
+            tbody.innerHTML += `
                 <tr>
                     <td>${x.ts}</td>
                     <td>${x.takte}</td>
                     <td>${x.programm}</td>
                 </tr>
-            `);
+            `;
         });
 
     } catch (e) {
 
-        console.error("ERROR:", e);
+        console.error(e);
 
         document.getElementById("chartRoot").innerHTML =
-            "<div style='color:red;text-align:center;padding:40px'>Fehler beim Laden</div>";
+            "<div style='color:red;text-align:center;padding:30px'>Fehler beim Laden</div>";
     }
 }
-
-// =======================
-// AUTO LOAD
-// =======================
-document.addEventListener("DOMContentLoaded", loadDashboard);
 
 </script>
