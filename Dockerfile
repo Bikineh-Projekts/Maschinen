@@ -1,20 +1,18 @@
+# Build-Stage
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
-WORKDIR /app
+WORKDIR /src
 
-# Copy the project file and restore
-COPY Maschin/*.csproj ./Maschin/
-RUN dotnet restore ./Maschin/MaschinenDataein.csproj
-
-# Copy everything else and build
 COPY . ./
-RUN dotnet publish ./Maschin/MaschinenDataein.csproj -c Release -o out
+RUN dotnet restore
+RUN dotnet publish -c Release -o /app/publish /p:UseAppHost=false
 
-FROM mcr.microsoft.com/dotnet/aspnet:8.0
+# Runtime-Stage
+FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS final
 WORKDIR /app
-COPY --from=build /app/out .
 
-ENV ASPNETCORE_ENVIRONMENT=Production
-ENV ASPNETCORE_URLS=http://+:8080
+COPY --from=build /app/publish ./
 
-EXPOSE 8080
+ENV ASPNETCORE_URLS=http://+:10000
+EXPOSE 10000
+
 ENTRYPOINT ["dotnet", "MaschinenDataein.dll"]
