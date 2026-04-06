@@ -8,7 +8,6 @@ builder.Services.AddControllersWithViews();
 builder.Services.AddDbContext<MaschinenDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-// Session
 builder.Services.AddDistributedMemoryCache();
 builder.Services.AddSession(options =>
 {
@@ -27,5 +26,8 @@ app.UseSession();
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
+
+// 🔥 THIS IS THE FIX
+app.MapGet("/", () => "OK");
 
 app.Run();
