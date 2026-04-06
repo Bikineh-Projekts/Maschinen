@@ -180,12 +180,42 @@
     // ════════════════════════════════════════════════════════════════════════
     // Filter lesen — direkt aus hidden fields von _PartialFilter
     // ════════════════════════════════════════════════════════════════════════
+    // ════════════════════════════════════════════════════════════════════════
+    // Filter lesen
+    // Strategie:
+    //   1. updateDate() aufrufen damit hidden fields SICHER aktuell sind
+    //   2. hidden fields #DatumVon / #DatumBis lesen (yyyy-MM-dd)
+    //   3. Falls immer noch leer: Dropdowns direkt auslesen als Fallback
+    // ════════════════════════════════════════════════════════════════════════
     function leseFilter() {
-        return {
-            datumVon:    document.getElementById('DatumVon')?.value    || '',
-            datumBis:    document.getElementById('DatumBis')?.value    || '',
-            maschinenId: document.getElementById('MaschinenId')?.value || '0'
-        };
+        // Sicherstellen dass _PartialFilter hidden fields aktuell sind
+        if (typeof updateDate === 'function') {
+            try { updateDate('Von'); updateDate('Bis'); } catch(e) {}
+        }
+
+        // Hidden fields lesen
+        let datumVon    = document.getElementById('DatumVon')?.value    || '';
+        let datumBis    = document.getElementById('DatumBis')?.value    || '';
+        let maschinenId = document.getElementById('MaschinenId')?.value || '0';
+
+        // Fallback: Dropdowns direkt lesen falls hidden fields leer
+        if (!datumVon) {
+            const d = document.getElementById('vonDay')?.value;
+            const m = document.getElementById('vonMonth')?.value;
+            const y = document.getElementById('vonYear')?.value;
+            if (d && m && y)
+                datumVon = y + '-' + String(m).padStart(2,'0') + '-' + String(d).padStart(2,'0');
+        }
+        if (!datumBis) {
+            const d = document.getElementById('bisDay')?.value;
+            const m = document.getElementById('bisMonth')?.value;
+            const y = document.getElementById('bisYear')?.value;
+            if (d && m && y)
+                datumBis = y + '-' + String(m).padStart(2,'0') + '-' + String(d).padStart(2,'0');
+        }
+
+        console.log('[LeistungChart] Filter:', { datumVon, datumBis, maschinenId });
+        return { datumVon, datumBis, maschinenId };
     }
 
     // ════════════════════════════════════════════════════════════════════════
@@ -200,8 +230,8 @@
 
         const f   = leseFilter();
         const qs  = [];
-        if (f.datumVon)                           qs.push('datumVon='    + encodeURIComponent(f.datumVon));
-        if (f.datumBis)                           qs.push('datumBis='    + encodeURIComponent(f.datumBis));
+        if (f.datumVon)                             qs.push('datumVon='    + encodeURIComponent(f.datumVon));
+        if (f.datumBis)                             qs.push('datumBis='    + encodeURIComponent(f.datumBis));
         if (f.maschinenId && f.maschinenId !== '0') qs.push('maschinenId=' + encodeURIComponent(f.maschinenId));
 
         const url = '/Leistungsdaten/GetChartData' + (qs.length ? '?' + qs.join('&') : '');
