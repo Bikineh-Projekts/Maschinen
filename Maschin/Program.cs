@@ -5,10 +5,15 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllersWithViews();
 
-builder.Services.AddDbContext<MaschinenDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+// 🔥 FIX DATABASE
+var connectionString =
+    Environment.GetEnvironmentVariable("DATABASE_URL")
+    ?? builder.Configuration.GetConnectionString("DefaultConnection");
 
-// ✅ Session registrieren
+builder.Services.AddDbContext<MaschinenDbContext>(options =>
+    options.UseNpgsql(connectionString));
+
+// Session
 builder.Services.AddDistributedMemoryCache();
 builder.Services.AddSession(options =>
 {
@@ -19,10 +24,13 @@ builder.Services.AddSession(options =>
 
 var app = builder.Build();
 
+// 🔥 FIX PORT (خیلی مهم)
+var port = Environment.GetEnvironmentVariable("PORT") ?? "10000";
+app.Urls.Add($"http://*:{port}");
+
 app.UseStaticFiles();
 app.UseRouting();
 
-// ✅ Session aktivieren
 app.UseSession();
 
 app.MapControllerRoute(
