@@ -8,17 +8,9 @@
         <div class="kpi">Maschinen<br><span id="kpiMaschinen">-</span></div>
     </div>
 
-    <!-- MAIN CHART -->
-    <div class="box">
-        <canvas id="mainChart"></canvas>
-    </div>
+    <div class="box"><canvas id="mainChart"></canvas></div>
+    <div class="box"><canvas id="hourChart"></canvas></div>
 
-    <!-- SECOND CHART -->
-    <div class="box">
-        <canvas id="hourChart"></canvas>
-    </div>
-
-    <!-- TABLE -->
     <div class="box">
         <table style="width:100%;border-collapse:collapse;">
             <thead>
@@ -31,70 +23,60 @@
             <tbody id="tableBody"></tbody>
         </table>
     </div>
-
 </div>
 
 <style>
-.kpi {
-    background:#1e293b;
-    padding:15px;
-    border-radius:10px;
-    text-align:center;
-}
-.kpi span {
-    font-size:22px;
-    font-weight:bold;
-}
-.box {
-    background:#1e293b;
-    padding:20px;
-    border-radius:12px;
-    margin-bottom:20px;
-}
-table th, table td {
-    padding:8px;
-    border-bottom:1px solid #334155;
-    text-align:left;
-}
+.kpi { background:#1e293b;padding:15px;border-radius:10px;text-align:center; }
+.kpi span { font-size:22px;font-weight:bold; }
+.box { background:#1e293b;padding:20px;border-radius:12px;margin-bottom:20px; }
 </style>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/hammerjs"></script>
-<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom"></script>
 
 <script>
 let mainChart = null;
 let hourChart = null;
 
+function getFilters() {
+
+    const d = document;
+
+    const von = `${d.querySelector('[name=StartTag]').value.padStart(2,'0')}.${d.querySelector('[name=StartMonat]').value.padStart(2,'0')}.${d.querySelector('[name=StartJahr]').value}`;
+
+    const bis = `${d.querySelector('[name=EndTag]').value.padStart(2,'0')}.${d.querySelector('[name=EndMonat]').value.padStart(2,'0')}.${d.querySelector('[name=EndJahr]').value}`;
+
+    const maschine = d.querySelector('[name=MaschinenId]')?.value || 0;
+
+    return { von, bis, maschine };
+}
+
 async function loadDashboard() {
 
     try {
-        const res = await fetch('/Leistungsdaten/GetChartData');
+
+        const f = getFilters();
+
+        const url = `/Leistungsdaten/GetChartData?datumVon=${f.von}&datumBis=${f.bis}&maschinenId=${f.maschine}`;
+
+        const res = await fetch(url);
         const data = await res.json();
 
-        // 🔴 FIX: handle empty data safely
-        if (!data || !data.zeitreihe || data.zeitreihe.length === 0) {
+        console.log("DEBUG:", data.debug);
+
+        if (!data.zeitreihe || data.zeitreihe.length === 0) {
             document.getElementById("mainChart").parentElement.innerHTML =
                 "<div style='text-align:center;padding:40px'>Keine Daten vorhanden</div>";
             return;
         }
 
-        // ================= KPI =================
         const takte = data.zeitreihe.map(x => x.takte);
 
-        document.getElementById("kpiTotal").innerText =
-            takte.reduce((a,b)=>a+b,0);
+        document.getElementById("kpiTotal").innerText = takte.reduce((a,b)=>a+b,0);
+        document.getElementById("kpiAvg").innerText = Math.round(takte.reduce((a,b)=>a+b,0)/takte.length);
+        document.getElementById("kpiMax").innerText = Math.max(...takte);
+        document.getElementById("kpiMaschinen").innerText = data.maschinen.length;
 
-        document.getElementById("kpiAvg").innerText =
-            Math.round(takte.reduce((a,b)=>a+b,0)/takte.length);
-
-        document.getElementById("kpiMax").innerText =
-            Math.max(...takte);
-
-        document.getElementById("kpiMaschinen").innerText =
-            data.maschinen ? data.maschinen.length : 0;
-
-        // ================= GROUP =================
+        // ===== GROUP =====
         const grouped = {};
 
         data.zeitreihe.forEach(x=>{
@@ -105,28 +87,19 @@ async function loadDashboard() {
 
         const labels = data.zeitreihe.map(x=>x.ts);
 
-        const datasets = Object.keys(grouped).map((k,i)=>({
+        const datasets = Object.keys(grouped).map(k=>({
             label:"PR "+k,
             data: grouped[k].map(x=>x.takte),
-            tension:0.3,
-            borderWidth:2
+            tension:0.3
         }));
 
-        // ================= MAIN CHART =================
         if(mainChart) mainChart.destroy();
 
         mainChart = new Chart(document.getElementById("mainChart"),{
             type:'line',
             data:{labels,datasets},
             options:{
-                responsive:true,
-                plugins:{
-                    legend:{labels:{color:'white'}},
-                    zoom:{
-                        pan:{enabled:true,mode:'x'},
-                        zoom:{wheel:{enabled:true},pinch:{enabled:true},mode:'x'}
-                    }
-                },
+                plugins:{legend:{labels:{color:'white'}}},
                 scales:{
                     x:{ticks:{color:'white'}},
                     y:{ticks:{color:'white'},beginAtZero:true}
@@ -134,56 +107,40 @@ async function loadDashboard() {
             }
         });
 
-        // ================= HOURLY =================
-        const hourLabels = (data.stundenkurve || []).map(x=>x.label);
-        const hourValues = (data.stundenkurve || []).map(x=>x.takte);
-
+        // ===== HOUR =====
         if(hourChart) hourChart.destroy();
 
         hourChart = new Chart(document.getElementById("hourChart"),{
             type:'bar',
             data:{
-                labels:hourLabels,
+                labels: data.stundenkurve.map(x=>x.label),
                 datasets:[{
-                    label:"Hourly Takte",
-                    data:hourValues
+                    label:"Hourly",
+                    data: data.stundenkurve.map(x=>x.takte)
                 }]
-            },
-            options:{
-                plugins:{legend:{labels:{color:'white'}}},
-                scales:{
-                    x:{ticks:{color:'white'}},
-                    y:{ticks:{color:'white'}}
-                }
             }
         });
 
-        // ================= TABLE =================
+        // ===== TABLE =====
         const tbody = document.getElementById("tableBody");
         tbody.innerHTML="";
 
         data.zeitreihe.slice(0,100).forEach(x=>{
-            const row = `
+            tbody.insertAdjacentHTML("beforeend",`
                 <tr>
                     <td>${x.ts}</td>
                     <td>${x.takte}</td>
                     <td>${x.programm}</td>
-                </tr>`;
-            tbody.insertAdjacentHTML("beforeend", row);
+                </tr>
+            `);
         });
 
-    } catch (err) {
-        console.error(err);
+    } catch(e) {
+        console.error(e);
         document.body.innerHTML =
             "<div style='color:red;text-align:center;padding:40px'>Fehler beim Laden</div>";
     }
 }
 
-// LOAD
 document.addEventListener("DOMContentLoaded", loadDashboard);
-
-// 🔥 SAFE LIVE UPDATE (no crash)
-setInterval(()=>{
-    loadDashboard();
-},10000);
 </script>
