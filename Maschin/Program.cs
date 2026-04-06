@@ -5,13 +5,8 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllersWithViews();
 
-// 🔥 FIX DATABASE
-var connectionString =
-    Environment.GetEnvironmentVariable("DATABASE_URL")
-    ?? builder.Configuration.GetConnectionString("DefaultConnection");
-
 builder.Services.AddDbContext<MaschinenDbContext>(options =>
-    options.UseNpgsql(connectionString));
+    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 // Session
 builder.Services.AddDistributedMemoryCache();
@@ -23,10 +18,6 @@ builder.Services.AddSession(options =>
 });
 
 var app = builder.Build();
-
-// 🔥 FIX PORT (خیلی مهم)
-var port = Environment.GetEnvironmentVariable("PORT") ?? "10000";
-app.Urls.Add($"http://*:{port}");
 
 app.UseStaticFiles();
 app.UseRouting();
