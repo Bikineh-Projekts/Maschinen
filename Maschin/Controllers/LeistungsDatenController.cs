@@ -10,7 +10,7 @@ using MaschinenDataein.Models;
 using MaschinenDataein.Models.ModelView;
 using MaschinenDataein.Models.PaginatedModel;
 using X.PagedList;
-using X.PagedList.Extensions;
+
 
 namespace MaschinenDataein.Controllers
 {
