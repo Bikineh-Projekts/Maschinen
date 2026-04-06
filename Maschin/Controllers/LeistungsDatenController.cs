@@ -10,7 +10,7 @@ using MaschinenDataein.Models;
 using MaschinenDataein.Models.ModelView;
 using MaschinenDataein.Models.PaginatedModel;
 using X.PagedList;
-
+using X.PagedList.Extensions;
 
 namespace MaschinenDataein.Controllers
 {
@@ -190,11 +190,61 @@ namespace MaschinenDataein.Controllers
                     .OrderBy(x => x.label)
                     .ToList();
 
+                // ── 7. Pakete pro Tag pro Programm ────────────────────────
+                //    Für jedes Programm: an welchem Tag wie viele Pakete produziert
+                var tagesPackungen = list
+                    .GroupBy(x => new
+                    {
+                        Datum    = x.Timestamp.Date,
+                        PrNr     = x.PRnummer,
+                        MaschId  = x.MaschinenId
+                    })
+                    .Select(g => new
+                    {
+                        datum      = g.Key.Datum.ToString("dd.MM.yyyy"),
+                        prNummer   = g.Key.PrNr,
+                        name       = ProgrammnamenHelper.GetName(g.Key.MaschId, g.Key.PrNr),
+                        packungen  = g.Sum(x => x.Packungszaeler),
+                        takte      = g.Sum(x => x.Maschinentakte),
+                        // Leistung % = Tagesmaximum Taktzähler am Ende des Tages
+                        // = letzter Tagestaktzaehler-Wert des Tages (höchste Zahl)
+                        tagesMax   = g.Max(x => x.Tagestaktzaehler)
+                    })
+                    .OrderBy(x => x.datum)
+                    .ThenByDescending(x => x.packungen)
+                    .ToList();
+
+                // ── 8. Leistung % pro Programm ─────────────────────────────
+                //    Leistung = (IstTakte / MaxMöglicheTakte) * 100
+                //    MaxMöglicheTakte = höchster Tagestaktzaehler aller Programme
+                int globalTakteMax = list.Count > 0
+                    ? list.Max(x => x.Tagestaktzaehler)
+                    : 1;
+                if (globalTakteMax < 1) globalTakteMax = 1;
+
+                var leistungProzent = list
+                    .GroupBy(x => new { x.PRnummer, x.MaschinenId })
+                    .Select(g => new
+                    {
+                        prNummer      = g.Key.PRnummer,
+                        name          = ProgrammnamenHelper.GetName(g.Key.MaschinenId, g.Key.PRnummer),
+                        packungen     = g.Sum(x => x.Packungszaeler),
+                        takteSumme    = g.Sum(x => x.Maschinentakte),
+                        takteMax      = g.Max(x => x.Tagestaktzaehler),
+                        // Leistung in % relativ zum besten Programm
+                        leistungPct   = Math.Round(
+                            g.Max(x => x.Tagestaktzaehler) * 100.0 / globalTakteMax, 1)
+                    })
+                    .OrderByDescending(x => x.leistungPct)
+                    .ToList();
+
                 return Json(new
                 {
                     zeitreihe,
                     programme,
                     stundenkurve,
+                    tagesPackungen,
+                    leistungProzent,
                     debug = new
                     {
                         datumVon          = model.DatumVon.ToString("dd.MM.yyyy"),
@@ -202,7 +252,8 @@ namespace MaschinenDataein.Controllers
                         maschinenId       = model.MaschinenId,
                         gesamtDatensaetze = list.Count,
                         anzahlProgramme   = programme.Count,
-                        fallbackVerwendet
+                        fallbackVerwendet,
+                        globalTakteMax
                     }
                 });
             }
