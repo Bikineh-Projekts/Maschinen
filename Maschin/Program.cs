@@ -27,7 +27,5 @@ app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
 
-// 🔥 THIS IS THE FIX
-app.MapGet("/", () => "OK");
 
 app.Run();
