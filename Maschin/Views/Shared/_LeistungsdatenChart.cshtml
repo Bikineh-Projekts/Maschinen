@@ -1,0 +1,666 @@
+@*
+    _LeistungsdatenChart.cshtml
+    Leistungs-Analyse: Maschinentakte pro Programm + Zoom-Chart
+    Chart.js + chartjs-plugin-zoom (Maus-Zoom über Zeitraum ziehen)
+*@
+
+@* Chart.js + Zoom-Plugin *@
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/hammerjs@2.0.8/hammer.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.1/dist/chartjs-plugin-zoom.min.js"></script>
+
+<style>
+    .lc-dashboard {
+        background: #0d1117;
+        border-radius: 14px;
+        padding: 24px;
+        color: #e6edf3;
+        font-family: 'Segoe UI', system-ui, sans-serif;
+        min-height: 400px;
+    }
+    .lc-header { margin-bottom: 20px; }
+    .lc-header h4 { margin: 0 0 4px; font-weight: 700; font-size: 18px; }
+    .lc-header p  { margin: 0; color: #8b949e; font-size: 13px; }
+
+    /* ── Stat-Karten ──────────────────────────────────────────────────── */
+    .lc-stat-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+        gap: 10px;
+        margin-bottom: 20px;
+    }
+    .lc-stat {
+        background: #1c2128;
+        border: 1px solid #30363d;
+        border-radius: 10px;
+        padding: 12px 16px;
+    }
+    .lc-stat-label {
+        font-size: 10px; color: #8b949e;
+        text-transform: uppercase; letter-spacing: 1px; margin-bottom: 3px;
+    }
+    .lc-stat-val {
+        font-size: 24px; font-weight: 700;
+        font-family: 'Courier New', monospace;
+    }
+    .lc-stat-sub { font-size: 10px; color: #8b949e; margin-top: 2px; }
+
+    /* ── Chart-Box ────────────────────────────────────────────────────── */
+    .lc-box {
+        background: #161b22;
+        border: 1px solid #30363d;
+        border-radius: 12px;
+        padding: 16px;
+        margin-bottom: 16px;
+    }
+    .lc-box-title {
+        font-size: 12px; color: #8b949e; margin-bottom: 4px;
+    }
+    .lc-box-hint {
+        font-size: 11px; color: #444; margin-bottom: 12px;
+    }
+
+    /* ── Programm-Tabelle ─────────────────────────────────────────────── */
+    .lc-prog-table {
+        width: 100%; border-collapse: collapse; font-size: 13px;
+    }
+    .lc-prog-table th {
+        padding: 8px 12px; text-align: left;
+        font-size: 10px; text-transform: uppercase;
+        letter-spacing: 0.8px; color: #8b949e;
+        border-bottom: 1px solid #30363d;
+        background: #1c2128;
+    }
+    .lc-prog-table td {
+        padding: 9px 12px;
+        border-bottom: 1px solid #21262d;
+        color: #e6edf3;
+    }
+    .lc-prog-table tr:last-child td { border-bottom: none; }
+    .lc-prog-table tr:hover td     { background: #1c2128; cursor: pointer; }
+    .lc-prog-table tr.selected td  { background: #58a6ff15; }
+
+    /* Fortschrittsbalken */
+    .lc-bar { height: 6px; background: #21262d; border-radius: 3px; margin-top: 4px; }
+    .lc-bar-fill { height: 100%; border-radius: 3px; }
+
+    /* ── Zoom-Hinweis ─────────────────────────────────────────────────── */
+    .lc-zoom-controls {
+        display: flex; gap: 8px; align-items: center;
+        margin-bottom: 10px; flex-wrap: wrap;
+    }
+    .lc-zoom-btn {
+        padding: 5px 12px; border-radius: 6px;
+        border: 1px solid #30363d; background: transparent;
+        color: #8b949e; cursor: pointer; font-size: 12px;
+        transition: all 0.15s;
+    }
+    .lc-zoom-btn:hover {
+        border-color: #58a6ff; color: #58a6ff; background: #58a6ff11;
+    }
+    .lc-zoom-hint {
+        font-size: 11px; color: #444;
+        padding: 4px 10px; background: #1c2128;
+        border-radius: 6px; border: 1px solid #30363d;
+    }
+
+    /* ── Loader ───────────────────────────────────────────────────────── */
+    .lc-loader {
+        display: flex; align-items: center; justify-content: center;
+        height: 200px; color: #8b949e; font-size: 14px; gap: 10px;
+    }
+    .lc-spin {
+        width: 20px; height: 20px;
+        border: 2px solid #30363d; border-top-color: #58a6ff;
+        border-radius: 50%; animation: lcspin 0.8s linear infinite;
+    }
+    @@keyframes lcspin { to { transform: rotate(360deg); } }
+
+    .lc-empty { padding: 32px; color: #8b949e; text-align: center; font-size: 14px; }
+    .lc-debug {
+        margin-top: 10px; padding: 8px 12px;
+        background: #1c2128; border: 1px solid #30363d;
+        border-radius: 6px; font-family: monospace; font-size: 11px; color: #444;
+    }
+    .lc-reload-btn {
+        margin-top: 12px; padding: 7px 20px;
+        background: #58a6ff22; border: 1px solid #58a6ff;
+        color: #58a6ff; border-radius: 8px; cursor: pointer; font-size: 13px;
+    }
+
+    /* ── Programm-Filter-Buttons ──────────────────────────────────────── */
+    .lc-prog-filter {
+        display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px;
+    }
+    .lc-prog-btn {
+        padding: 4px 12px; border-radius: 20px;
+        border: 1px solid #30363d; background: transparent;
+        color: #8b949e; cursor: pointer; font-size: 11px;
+        transition: all 0.15s;
+    }
+    .lc-prog-btn.active {
+        font-weight: 600;
+    }
+</style>
+
+<div id="lcRoot" class="lc-dashboard">
+    <div class="lc-loader">
+        <div class="lc-spin"></div>
+        Lade Leistungsdaten ...
+    </div>
+</div>
+
+<script>
+(function () {
+
+    // ── State ────────────────────────────────────────────────────────────────
+    let _daten         = null;
+    let _chartZeit     = null;  // Zoom-Chart (Zeitverlauf)
+    let _chartProg     = null;  // Balken-Chart (Programme)
+    let _selectedPr    = null;  // Gewähltes Programm (null = alle)
+
+    // ── Farben ───────────────────────────────────────────────────────────────
+    const C = {
+        takte:   '#58a6ff',
+        pack:    '#3fb950',
+        warn:    '#e3b341',
+        neg:     '#f85149',
+        muted:   '#8b949e',
+        border:  '#30363d',
+        purple:  '#c0a4ff',
+    };
+
+    // Farbpalette für mehrere Programme
+    const PROG_FARBEN = [
+        '#58a6ff','#3fb950','#f0883e','#c0a4ff',
+        '#e3b341','#f85149','#39d353','#79c0ff',
+        '#ffa657','#d2a8ff','#56d364','#ff7b72',
+    ];
+
+    // ════════════════════════════════════════════════════════════════════════
+    // Filter lesen — direkt aus hidden fields von _PartialFilter
+    // ════════════════════════════════════════════════════════════════════════
+    function leseFilter() {
+        return {
+            datumVon:    document.getElementById('DatumVon')?.value    || '',
+            datumBis:    document.getElementById('DatumBis')?.value    || '',
+            maschinenId: document.getElementById('MaschinenId')?.value || '0'
+        };
+    }
+
+    // ════════════════════════════════════════════════════════════════════════
+    // Daten laden
+    // ════════════════════════════════════════════════════════════════════════
+    window.ladeLeistungChart = function (force) {
+        if (_daten && !force) return;
+        _daten = null;
+
+        document.getElementById('lcRoot').innerHTML =
+            '<div class="lc-loader"><div class="lc-spin"></div>Lade Leistungsdaten ...</div>';
+
+        const f   = leseFilter();
+        const qs  = [];
+        if (f.datumVon)                           qs.push('datumVon='    + encodeURIComponent(f.datumVon));
+        if (f.datumBis)                           qs.push('datumBis='    + encodeURIComponent(f.datumBis));
+        if (f.maschinenId && f.maschinenId !== '0') qs.push('maschinenId=' + encodeURIComponent(f.maschinenId));
+
+        const url = '/Leistungsdaten/GetChartData' + (qs.length ? '?' + qs.join('&') : '');
+
+        fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+            .then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+            .then(json => {
+                _daten = json;
+                if (!json.zeitreihe || json.zeitreihe.length === 0) {
+                    zeigeLeereSeite(json, url);
+                    return;
+                }
+                renderDashboard();
+            })
+            .catch(err => {
+                document.getElementById('lcRoot').innerHTML = `
+                    <div class="lc-empty">
+                        <div style="font-size:28px;color:#f85149;margin-bottom:8px">❌</div>
+                        <div style="color:#e6edf3;margin-bottom:6px">Fehler beim Laden</div>
+                        <div class="lc-debug">${err.message}<br><span style="color:#333">${url}</span></div>
+                        <button class="lc-reload-btn" onclick="ladeLeistungChart(true)">🔄 Neu laden</button>
+                    </div>`;
+            });
+    };
+
+    window.lcNeuLaden = () => ladeLeistungChart(true);
+
+    // ── Leere Seite ──────────────────────────────────────────────────────────
+    function zeigeLeereSeite(json, url) {
+        const d = json.debug || {};
+        document.getElementById('lcRoot').innerHTML = `
+            <div class="lc-empty">
+                <div style="font-size:36px;margin-bottom:10px">📭</div>
+                <div style="font-size:16px;color:#e6edf3;margin-bottom:6px">Keine Daten im Zeitraum</div>
+                <div style="font-size:13px">Bitte Datum/Maschine anpassen → <strong style="color:#58a6ff">Filtern</strong> → Tab wechseln</div>
+                <div class="lc-debug">
+                    Zeitraum: <span style="color:#58a6ff">${d.datumVon || '?'}</span> – <span style="color:#58a6ff">${d.datumBis || '?'}</span>
+                    &nbsp;·&nbsp; Maschine: <span style="color:#f0883e">${d.maschinenId || 'alle'}</span>
+                    &nbsp;·&nbsp; Zeilen: <span style="color:#f85149">${d.gesamtDatensaetze ?? 0}</span>
+                </div>
+                <button class="lc-reload-btn" onclick="lcNeuLaden()">🔄 Neu laden</button>
+            </div>`;
+    }
+
+    // ════════════════════════════════════════════════════════════════════════
+    // Dashboard rendern
+    // ════════════════════════════════════════════════════════════════════════
+    function renderDashboard() {
+        const d    = _daten;
+        const dbg  = d.debug || {};
+        const prog = d.programme || [];
+
+        // Gesamt-Stats
+        const gesTakte  = prog.reduce((s, p) => s + p.takteSumme, 0);
+        const gesPack   = prog.reduce((s, p) => s + p.packungen, 0);
+        const topProg   = prog[0] || {};
+
+        function stat(label, val, col, sub) {
+            return `<div class="lc-stat">
+                <div class="lc-stat-label">${label}</div>
+                <div class="lc-stat-val" style="color:${col}">${val}</div>
+                <div class="lc-stat-sub">${sub}</div>
+            </div>`;
+        }
+
+        document.getElementById('lcRoot').innerHTML = `
+            <div class="lc-header">
+                <h4>⚡ Leistungs-Analyse</h4>
+                <p>${d.zeitreihe.length} Messpunkte · ${dbg.datumVon} – ${dbg.datumBis}
+                   · ${prog.length} Programme</p>
+            </div>
+
+            <div class="lc-stat-grid">
+                ${stat('Takte gesamt',    gesTakte.toLocaleString('de-DE'),  C.takte,  'Maschinentakte im Zeitraum')}
+                ${stat('Packungen',       gesPack.toLocaleString('de-DE'),   C.pack,   'Gesamt Packungszähler')}
+                ${stat('Programme',       prog.length,                        C.purple, 'Verschiedene PR-Nummern')}
+                ${stat('Top-Programm',    topProg.name || '–',               C.warn,   (topProg.takteSumme || 0).toLocaleString('de-DE') + ' Takte')}
+                ${stat('Ø Takte/Eintrag', prog.length > 0 ? Math.round(gesTakte / d.zeitreihe.length) : 0, C.muted, 'Durchschnitt pro Messung')}
+            </div>
+
+            <!-- Zeitverlauf mit Zoom -->
+            <div class="lc-box">
+                <div class="lc-box-title">📈 Maschinentakte über Zeit</div>
+                <div class="lc-box-hint">
+                    🖱 <strong>Maus ziehen</strong> = Zeitraum zoomen &nbsp;·&nbsp;
+                    🖱 <strong>Doppelklick</strong> = Zoom zurücksetzen &nbsp;·&nbsp;
+                    🖱 <strong>Scrollen</strong> = Rein-/Rauszoomen
+                </div>
+                <div class="lc-zoom-controls">
+                    <button class="lc-zoom-btn" onclick="lcZoomReset()">🔄 Zoom zurücksetzen</button>
+                    <button class="lc-zoom-btn" onclick="lcZoomLetzte('1h')">Letzte Stunde</button>
+                    <button class="lc-zoom-btn" onclick="lcZoomLetzte('6h')">6 Stunden</button>
+                    <button class="lc-zoom-btn" onclick="lcZoomLetzte('1d')">1 Tag</button>
+                    <span class="lc-zoom-hint">💡 Klicke ein Programm unten um es hervorzuheben</span>
+                </div>
+                <div class="lc-prog-filter" id="lcProgFilter"></div>
+                <div style="position:relative;height:300px">
+                    <canvas id="lcZeitCanvas"></canvas>
+                </div>
+            </div>
+
+            <!-- Stundenkurve -->
+            <div class="lc-box">
+                <div class="lc-box-title">🕐 Takte stündlich aggregiert</div>
+                <div class="lc-box-hint">Summe der Maschinentakte pro Stunde — zeigt Schichten und Pausen</div>
+                <div style="position:relative;height:220px">
+                    <canvas id="lcStundeCanvas"></canvas>
+                </div>
+            </div>
+
+            <!-- Programme Tabelle + Balkendiagramm -->
+            <div class="lc-box">
+                <div class="lc-box-title">🏭 Leistung pro Programm</div>
+                <div class="lc-box-hint">Klicke eine Zeile um den Zeitverlauf nur für dieses Programm anzuzeigen</div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:8px" id="lcProgGrid">
+                    <div style="position:relative;height:${Math.max(200, prog.length * 30 + 40)}px">
+                        <canvas id="lcProgCanvas"></canvas>
+                    </div>
+                    <div style="overflow-y:auto;max-height:${Math.max(200, prog.length * 30 + 40)}px">
+                        <table class="lc-prog-table" id="lcProgTable">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Programm</th>
+                                    <th style="text-align:right">Takte</th>
+                                    <th style="text-align:right">Packungen</th>
+                                    <th style="min-width:80px">Anteil</th>
+                                </tr>
+                            </thead>
+                            <tbody id="lcProgBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        // Charts aufbauen
+        baueProgrammFilter();
+        baueZeitChart(null);
+        baueStundeChart();
+        baueProgChart();
+        baueProgTabelle();
+    }
+
+    // ════════════════════════════════════════════════════════════════════════
+    // Programm-Filter-Buttons (über Zoom-Chart)
+    // ════════════════════════════════════════════════════════════════════════
+    function baueProgrammFilter() {
+        const prog = _daten.programme || [];
+        const container = document.getElementById('lcProgFilter');
+        if (!container) return;
+
+        let html = `<button class="lc-prog-btn active" id="lcPB_all"
+            style="background:#58a6ff22;border-color:#58a6ff;color:#58a6ff"
+            onclick="lcFilterProg(null)">Alle</button>`;
+
+        prog.forEach((p, i) => {
+            const col = PROG_FARBEN[i % PROG_FARBEN.length];
+            html += `<button class="lc-prog-btn" id="lcPB_${p.prNummer}"
+                style="border-color:${col}44;color:#8b949e"
+                onclick="lcFilterProg(${p.prNummer})">${p.name || 'PR' + p.prNummer}</button>`;
+        });
+
+        container.innerHTML = html;
+    }
+
+    window.lcFilterProg = function (prNr) {
+        _selectedPr = prNr;
+
+        // Button-Styles aktualisieren
+        const prog = _daten.programme || [];
+        document.getElementById('lcPB_all').style.cssText =
+            prNr === null
+                ? 'background:#58a6ff22;border-color:#58a6ff;color:#58a6ff;font-weight:600'
+                : 'background:transparent;border-color:#30363d;color:#8b949e';
+
+        prog.forEach((p, i) => {
+            const btn = document.getElementById('lcPB_' + p.prNummer);
+            if (!btn) return;
+            const col = PROG_FARBEN[i % PROG_FARBEN.length];
+            btn.style.cssText = (prNr === p.prNummer)
+                ? `background:${col}22;border-color:${col};color:${col};font-weight:600`
+                : 'background:transparent;border-color:#30363d;color:#8b949e';
+        });
+
+        // Zeitchart neu aufbauen mit Filter
+        baueZeitChart(prNr);
+    };
+
+    // ════════════════════════════════════════════════════════════════════════
+    // Zeitverlauf-Chart mit Zoom (Hauptchart)
+    // ════════════════════════════════════════════════════════════════════════
+    function baueZeitChart(prFilter) {
+        if (_chartZeit) { _chartZeit.destroy(); _chartZeit = null; }
+
+        const canvas = document.getElementById('lcZeitCanvas');
+        if (!canvas) return;
+
+        // Daten filtern
+        let punkte = _daten.zeitreihe;
+        if (prFilter !== null && prFilter !== undefined)
+            punkte = punkte.filter(p => p.prNummer === prFilter);
+
+        const labels = punkte.map(p => p.ts);
+
+        Chart.defaults.color = C.muted;
+
+        _chartZeit = new Chart(canvas.getContext('2d'), {
+            type: 'line',
+            data: {
+                labels,
+                datasets: [{
+                    label:           'Maschinentakte',
+                    data:            punkte.map(p => p.takte),
+                    borderColor:     C.takte,
+                    backgroundColor: C.takte + '22',
+                    borderWidth:     2,
+                    pointRadius:     punkte.length < 100 ? 3 : 0,
+                    pointHoverRadius: 5,
+                    fill:            true,
+                    tension:         0.3,
+                }, {
+                    label:           'Packungszähler',
+                    data:            punkte.map(p => p.packungen),
+                    borderColor:     C.pack,
+                    backgroundColor: 'transparent',
+                    borderWidth:     1.5,
+                    pointRadius:     0,
+                    pointHoverRadius: 4,
+                    fill:            false,
+                    tension:         0.3,
+                    borderDash:      [4, 3],
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: { mode: 'index', intersect: false },
+                animation: { duration: 300 },
+                plugins: {
+                    legend: {
+                        labels: { color: C.muted, font: { size: 12 }, boxWidth: 20 }
+                    },
+                    tooltip: {
+                        backgroundColor: '#0d1117ee',
+                        borderColor: C.border,
+                        borderWidth: 1,
+                        titleColor: C.muted,
+                        bodyColor: '#e6edf3',
+                        callbacks: {
+                            title: items => '🕐 ' + items[0].label,
+                            label: ctx  => ` ${ctx.dataset.label}: ${ctx.parsed.y.toLocaleString('de-DE')}`
+                        }
+                    },
+                    // ── ZOOM-PLUGIN ────────────────────────────────────────
+                    zoom: {
+                        pan: {
+                            enabled: true,
+                            mode:    'x',
+                        },
+                        zoom: {
+                            wheel:  { enabled: true },
+                            pinch:  { enabled: true },
+                            drag: {
+                                enabled:         true,
+                                backgroundColor: '#58a6ff22',
+                                borderColor:     '#58a6ff',
+                                borderWidth:     1,
+                            },
+                            mode: 'x',
+                            onZoomComplete: ({ chart }) => {
+                                // Zeige wie viele Punkte im aktuellen Zoom
+                                const min = chart.scales.x.min;
+                                const max = chart.scales.x.max;
+                                // (optional: könnte Statistik aktualisieren)
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        ticks: { color: C.muted, maxTicksLimit: 12, font: { size: 10 } },
+                        grid:  { color: C.border + '44' }
+                    },
+                    y: {
+                        ticks: { color: C.muted, font: { size: 10 } },
+                        grid:  { color: C.border + '44' },
+                        title: { display: true, text: 'Takte', color: C.muted }
+                    }
+                }
+            }
+        });
+    }
+
+    // ── Zoom-Steuerung ────────────────────────────────────────────────────────
+    window.lcZoomReset = () => _chartZeit?.resetZoom();
+
+    window.lcZoomLetzte = function (bereich) {
+        if (!_chartZeit || !_daten.zeitreihe.length) return;
+        const labels = _daten.zeitreihe.map(p => p.ts);
+        const letzter = labels.length - 1;
+        let offset = 0;
+        if (bereich === '1h') offset = Math.max(0, letzter - 12);
+        if (bereich === '6h') offset = Math.max(0, letzter - 72);
+        if (bereich === '1d') offset = Math.max(0, letzter - 288);
+        _chartZeit.zoomScale('x', { min: offset, max: letzter }, 'default');
+    };
+
+    // ════════════════════════════════════════════════════════════════════════
+    // Stundenkurve
+    // ════════════════════════════════════════════════════════════════════════
+    function baueStundeChart() {
+        if (_chartZeit?._stundeChart) _chartZeit._stundeChart.destroy();
+
+        const canvas = document.getElementById('lcStundeCanvas');
+        if (!canvas || !_daten.stundenkurve?.length) return;
+
+        const sk = _daten.stundenkurve;
+
+        new Chart(canvas.getContext('2d'), {
+            type: 'bar',
+            data: {
+                labels: sk.map(s => s.label),
+                datasets: [{
+                    label:           'Takte/Stunde',
+                    data:            sk.map(s => s.takte),
+                    backgroundColor: C.takte + 'aa',
+                    borderColor:     C.takte,
+                    borderWidth:     1,
+                    borderRadius:    3,
+                }, {
+                    label:           'Packungen/Stunde',
+                    data:            sk.map(s => s.packungen),
+                    backgroundColor: C.pack + 'aa',
+                    borderColor:     C.pack,
+                    borderWidth:     1,
+                    borderRadius:    3,
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                animation: { duration: 300 },
+                plugins: {
+                    legend: { labels: { color: C.muted, font: { size: 12 }, boxWidth: 16 } },
+                    tooltip: {
+                        backgroundColor: '#0d1117ee', borderColor: C.border, borderWidth: 1,
+                        titleColor: C.muted, bodyColor: '#e6edf3',
+                        callbacks: { label: ctx => ` ${ctx.dataset.label}: ${ctx.parsed.y.toLocaleString('de-DE')}` }
+                    }
+                },
+                scales: {
+                    x: { ticks: { color: C.muted, maxTicksLimit: 16, font: { size: 9 } }, grid: { color: C.border + '33' } },
+                    y: { ticks: { color: C.muted, font: { size: 10 } }, grid: { color: C.border + '33' }, title: { display: true, text: 'Takte', color: C.muted } }
+                }
+            }
+        });
+    }
+
+    // ════════════════════════════════════════════════════════════════════════
+    // Programm-Balkendiagramm (horizontal)
+    // ════════════════════════════════════════════════════════════════════════
+    function baueProgChart() {
+        if (_chartProg) { _chartProg.destroy(); _chartProg = null; }
+
+        const canvas = document.getElementById('lcProgCanvas');
+        if (!canvas) return;
+
+        const prog = _daten.programme || [];
+        if (!prog.length) return;
+
+        const bgColors = prog.map((_, i) => PROG_FARBEN[i % PROG_FARBEN.length] + 'bb');
+        const brColors = prog.map((_, i) => PROG_FARBEN[i % PROG_FARBEN.length]);
+
+        _chartProg = new Chart(canvas.getContext('2d'), {
+            type: 'bar',
+            data: {
+                labels: prog.map(p => p.name || 'PR' + p.prNummer),
+                datasets: [{
+                    label:           'Maschinentakte',
+                    data:            prog.map(p => p.takteSumme),
+                    backgroundColor: bgColors,
+                    borderColor:     brColors,
+                    borderWidth:     1,
+                    borderRadius:    4,
+                }]
+            },
+            options: {
+                indexAxis: 'y',
+                responsive: true,
+                maintainAspectRatio: false,
+                animation: { duration: 400 },
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        backgroundColor: '#0d1117ee', borderColor: C.border, borderWidth: 1,
+                        titleColor: C.muted, bodyColor: '#e6edf3',
+                        callbacks: {
+                            label: ctx => [
+                                `  Takte: ${ctx.parsed.x.toLocaleString('de-DE')}`,
+                                `  Packungen: ${prog[ctx.dataIndex].packungen.toLocaleString('de-DE')}`,
+                                `  Ø Takte: ${prog[ctx.dataIndex].takteAvg}`
+                            ]
+                        }
+                    }
+                },
+                scales: {
+                    x: { ticks: { color: C.muted, font: { size: 10 } }, grid: { color: C.border + '44' } },
+                    y: { ticks: { color: '#e6edf3', font: { size: 11 }, crossAlign: 'far' }, grid: { display: false } }
+                },
+                onClick: (evt, elements) => {
+                    if (elements.length > 0) {
+                        const pr = prog[elements[0].index].prNummer;
+                        lcFilterProg(_selectedPr === pr ? null : pr);
+                    }
+                }
+            }
+        });
+    }
+
+    // ════════════════════════════════════════════════════════════════════════
+    // Programm-Tabelle
+    // ════════════════════════════════════════════════════════════════════════
+    function baueProgTabelle() {
+        const tbody = document.getElementById('lcProgBody');
+        if (!tbody) return;
+
+        const prog    = _daten.programme || [];
+        const maxTakt = prog.length > 0 ? prog[0].takteSumme : 1;
+
+        tbody.innerHTML = prog.map((p, i) => {
+            const col = PROG_FARBEN[i % PROG_FARBEN.length];
+            const pct = Math.round(p.takteSumme / maxTakt * 100);
+            return `
+                <tr onclick="lcFilterProg(${_selectedPr === p.prNummer ? 'null' : p.prNummer})"
+                    id="lcRow_${p.prNummer}">
+                    <td style="color:#555;font-family:monospace;font-size:11px">${i+1}</td>
+                    <td>
+                        <span style="display:inline-block;width:8px;height:8px;border-radius:50%;
+                            background:${col};margin-right:6px"></span>
+                        ${p.name || 'PR' + p.prNummer}
+                        <div style="font-size:10px;color:#8b949e">PR${p.prNummer} · ${p.eintraege} Messungen</div>
+                    </td>
+                    <td style="text-align:right;font-family:'Courier New',monospace;font-weight:700;color:${col}">
+                        ${p.takteSumme.toLocaleString('de-DE')}
+                        <div style="font-size:10px;color:#8b949e">Ø ${p.takteAvg}</div>
+                    </td>
+                    <td style="text-align:right;font-family:'Courier New',monospace;color:${C.pack}">
+                        ${p.packungen.toLocaleString('de-DE')}
+                    </td>
+                    <td>
+                        <div style="font-size:10px;color:#8b949e">${pct}%</div>
+                        <div class="lc-bar">
+                            <div class="lc-bar-fill" style="width:${pct}%;background:${col}"></div>
+                        </div>
+                    </td>
+                </tr>`;
+        }).join('');
+    }
+
+})();
+</script>
