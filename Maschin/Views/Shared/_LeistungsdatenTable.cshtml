@@ -13,6 +13,7 @@
     @await Html.PartialAsync("_PartialFilter")
 
     <ul class="nav nav-tabs mb-3">
+
         <li class="nav-item">
             <button class="nav-link active"
                     data-bs-toggle="tab"
@@ -25,10 +26,11 @@
             <button class="nav-link"
                     data-bs-toggle="tab"
                     data-bs-target="#chartTab"
-                    onclick="loadDashboard()">
+                    onclick="initChart()">
                 📊 Analyse
             </button>
         </li>
+
     </ul>
 
     <div class="tab-content">
