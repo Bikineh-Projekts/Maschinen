@@ -10,7 +10,7 @@ using MaschinenDataein.Models;
 using MaschinenDataein.Models.ModelView;
 using MaschinenDataein.Models.PaginatedModel;
 using X.PagedList;
-
+using X.PagedList.Extensions;
 
 namespace MaschinenDataein.Controllers
 {
@@ -92,12 +92,28 @@ namespace MaschinenDataein.Controllers
                 if (maschinenId.HasValue && maschinenId.Value > 0)
                     model.MaschinenId = maschinenId.Value;
 
-                // Fallback: Datum nie gesetzt → letzte 7 Tage
+                // Fallback: Datum nie gesetzt → letztes verfügbares Datum aus DB
                 bool vonLeer = model.DatumVon == default || model.DatumVon == DateTime.MinValue;
                 bool bisLeer = model.DatumBis == default || model.DatumBis == DateTime.MinValue;
-                if (vonLeer && bisLeer) { model.DatumBis = DateTime.Today; model.DatumVon = DateTime.Today.AddDays(-7); }
-                else if (vonLeer)       model.DatumVon = model.DatumBis.AddDays(-7);
-                else if (bisLeer)       model.DatumBis = DateTime.Today;
+
+                if (vonLeer || bisLeer)
+                {
+                    // Letzten Timestamp in der DB suchen
+                    var letzterTs = _context.Leistungsdaten
+                        .OrderByDescending(x => x.Timestamp)
+                        .Select(x => (DateTime?)x.Timestamp)
+                        .FirstOrDefault();
+
+                    var basisDatum = letzterTs?.Date ?? DateTime.Today;
+
+                    if (vonLeer && bisLeer)
+                    {
+                        model.DatumBis = basisDatum;
+                        model.DatumVon = basisDatum.AddDays(-7);
+                    }
+                    else if (vonLeer) model.DatumVon = model.DatumBis.AddDays(-7);
+                    else if (bisLeer) model.DatumBis = basisDatum;
+                }
 
                 if (model.DatumVon > model.DatumBis)
                     (model.DatumVon, model.DatumBis) = (model.DatumBis, model.DatumVon);
