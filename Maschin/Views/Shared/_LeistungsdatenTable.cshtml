@@ -3,38 +3,9 @@
 @model List<LeistungsdatenModelView>
 
 @{
-    var pagInfo = ViewData["PaginatedListItem"] as PaginatedListItem;
-    bool zeigId = ViewData["IsShowId"] is bool b && b;
+    bool IsShowId = Convert.ToBoolean(ViewData["IsShowId"]);
+    PaginatedListItem paginatedListItem = ViewData["PaginatedListItem"] as PaginatedListItem;
 }
-
-@if (Model != null && Model.Count > 0)
-{
-    @* ── Pagination oben ──────────────────────────────────────────────────── *@
-    @if (pagInfo != null)
-    {
-        <div class="d-flex justify-content-between align-items-center mb-2 px-1">
-            <span class="text-muted" style="font-size:13px">
-                Seite <strong>@pagInfo.PageNumber</strong> von <strong>@pagInfo.PageCount</strong>
-                &nbsp;·&nbsp; @Model.Count Einträge
-            </span>
-            <div class="d-flex gap-1">
-                @if (!pagInfo.IsFirstPage)
-                {
-                    <a class="btn btn-sm btn-outline-secondary"
-                       href="javascript:void(0)"
-                       onclick="ladeSeite(@(pagInfo.PageNumber - 1))">‹ Zurück</a>
-                }
-                @if (!pagInfo.IsLastPage)
-                {
-                    <a class="btn btn-sm btn-outline-primary"
-                       href="javascript:void(0)"
-                       onclick="ladeSeite(@(pagInfo.PageNumber + 1))">Weiter ›</a>
-                }
-            </div>
-        </div>
-    }
-
-    @* ── Tabelle ──────────────────────────────────────────────────────────── *@
     <div class="table-responsive">
         <table class="table table-bordered table-hover table-sm align-middle mb-0"
                style="font-size:13px">
