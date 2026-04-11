@@ -1,4 +1,4 @@
-﻿@using MaschinenDataein.Models.ModelView
+@using MaschinenDataein.Models.ModelView
 @using MaschinenDataein.Models.Data
 @using MaschinenDataein.Helper
 @model DashboardModelView
@@ -67,7 +67,12 @@
                         }
                     }
                     <tr class="text-center">
-                        <td>@item.Timestamp.ToString("yyyy-MM-dd HH:mm:ss")</td>
+                        <td class="text-center" style="white-space:nowrap">
+                            @item.Timestamp.ToString("dd.MM.yyyy")
+                            <span class="text-muted" style="font-size:11px; margin-left:6px;">
+                                @item.Timestamp.ToString("HH:mm:ss")
+                            </span>
+                        </td>
                         <td>@item.Maschine?.Bezeichnung</td>
                         <td>
                             @if (aktiveMeldungen.Any())
@@ -100,7 +105,12 @@
                 @foreach (var item in Model.ZustandsDatenList ?? Enumerable.Empty<ZustandsDaten>())
                 {
                     <tr class="text-center">
-                        <td>@item.Timestamp.ToString("yyyy-MM-dd HH:mm:ss")</td>
+                        <td class="text-center" style="white-space:nowrap">
+                            @item.Timestamp.ToString("dd.MM.yyyy")
+                            <span class="text-muted" style="font-size:11px; margin-left:6px;">
+                                @item.Timestamp.ToString("HH:mm:ss")
+                            </span>
+                        </td>
                         <td>@item.Maschine?.Bezeichnung</td>
                         <td>@item.Zustandsmeldung?.Meldung</td>
                     </tr>
@@ -124,7 +134,12 @@
                 @foreach (var item in Model.StoerungsDatenList ?? Enumerable.Empty<StoerungsDaten>())
                 {
                     <tr class="text-center">
-                        <td>@item.Timestamp.ToString("yyyy-MM-dd HH:mm:ss")</td>
+                        <td class="text-center" style="white-space:nowrap">
+                            @item.Timestamp.ToString("dd.MM.yyyy")
+                            <span class="text-muted" style="font-size:11px; margin-left:6px;">
+                                @item.Timestamp.ToString("HH:mm:ss")
+                            </span>
+                        </td>
                         <td>@item.Maschine?.Bezeichnung</td>
                         <td>@item.Stoerungsmeldung?.Meldung</td>
                     </tr>
