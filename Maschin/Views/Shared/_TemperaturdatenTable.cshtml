@@ -35,7 +35,11 @@
                     {
                         <td>@TemperaturDaten.Id</td>
                     }
-                    <td>@TemperaturDaten.Timestamp.ToString("yyyy-MM-dd HH:mm:ss")</td>
+                    <td class="text-center" style="white-space:nowrap">
+                        @TemperaturDaten.Timestamp.ToString("dd.MM.yyyy")
+                        <span class="text-muted" style="font-size:11px">
+                            @TemperaturDaten.Timestamp.ToString("HH:mm:ss")
+                        </span>
                     <td>@TemperaturDaten.Maschine</td>
                     <td>@TemperaturDaten.Name</td>
 
