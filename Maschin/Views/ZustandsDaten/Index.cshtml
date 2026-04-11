@@ -28,7 +28,11 @@
                 {
                     <tr>
                         <td>@zustandsDaten.Id</td>
-                        <td>@zustandsDaten.Timestamp.ToString("yyyy-MM-dd HH:mm:ss")</td>
+                        <td class="text-center" style="white-space:nowrap">
+                        @zustandsDaten.Timestamp.ToString("dd.MM.yyyy")
+                        <span class="text-muted" style="font-size:11px">
+                        @zustandsDaten.Timestamp.ToString("HH:mm:ss")
+                        </span>
                         <td>@zustandsDaten.Maschine?.Bezeichnung</td>
                         <td>@zustandsDaten.Zustandsmeldung?.Meldung</td>
                     </tr>
