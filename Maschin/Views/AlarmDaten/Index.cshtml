@@ -61,8 +61,13 @@
                         {
                             <tr class="text-center">
                                 <td>@item.Id</td>
-                                <td>@item.Timestamp.ToString("yyyy-MM-dd HH:mm:ss")</td>
-                                <td>@item.Maschine?.Bezeichnung</td>
+                                 <td class="text-center" style="white-space:nowrap">
+                                  @item.Timestamp.ToString("dd.MM.yyyy")
+                                  <span class="text-muted" style="font-size:11px; margin-left:6px;">
+                                 @item.Timestamp.ToString("HH:mm:ss")
+                                    </span>
+                               </td>
+                               <td>@item.Maschine?.Bezeichnung</td>
                                 <td>
                                     @string.Join(", ", aktiveMeldungen)
                                 </td>
