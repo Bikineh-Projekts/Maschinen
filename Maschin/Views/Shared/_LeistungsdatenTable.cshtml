@@ -4,82 +4,69 @@
 
 @{
     bool IsShowId = Convert.ToBoolean(ViewData["IsShowId"]);
-    PaginatedListItem paginatedListItem = ViewData["PaginatedListItem"] as PaginatedListItem;
+    PaginatedListItem? pagInfo = ViewData["PaginatedListItem"] as PaginatedListItem;
 }
+
+@if (Model != null && Model.Count > 0)
+{
     <div class="table-responsive">
         <table class="table table-bordered table-hover table-sm align-middle mb-0"
                style="font-size:13px">
             <thead class="table-dark text-center">
                 <tr>
-                    @if (zeigId)
+                    @if (IsShowId)
                     {
                         <th style="width:60px">ID</th>
                     }
                     <th>Zeitstempel</th>
                     <th>Maschine</th>
                     <th>Programm</th>
-                    <th title="Tagestaktzähler">Tagesz.</th>
-                    <th title="Maschinentakte">Takte</th>
-                    <th title="Packungszähler">Packungen</th>
+                    <th>Tagesz.</th>
+                    <th>Takte</th>
+                    <th>Packungen</th>
                     <th>Takte-Balken</th>
                 </tr>
             </thead>
             <tbody>
                 @{
-                    int maxTakte = Model.Max(x => x.Maschinentakte);
+                    int maxTakte = Model.Any() ? Model.Max(x => x.Maschinentakte) : 1;
                     if (maxTakte < 1) maxTakte = 1;
                 }
+
                 @foreach (var item in Model)
                 {
                     int pct = (int)(item.Maschinentakte * 100.0 / maxTakte);
 
-                    @* Farbe nach Auslastung *@
                     string barColor = pct >= 80 ? "#3fb950"
                                     : pct >= 40 ? "#e3b341"
-                                    :             "#f85149";
+                                    : "#f85149";
 
                     <tr>
-                        @if (zeigId)
+                        @if (IsShowId)
                         {
-                            <td class="text-center text-muted" style="font-family:monospace;font-size:11px">
-                                @item.Id
-                            </td>
+                            <td class="text-center text-muted">@item.Id</td>
                         }
+
                         <td class="text-center" style="white-space:nowrap">
                             @item.Timestamp.ToString("dd.MM.yyyy")
-                            <span class="text-muted" style="font-size:11px">
+                            <span class="text-muted" style="font-size:11px; margin-left:6px;">
                                 @item.Timestamp.ToString("HH:mm:ss")
                             </span>
                         </td>
-                        <td class="text-center">
-                            @(item.Maschine ?? "–")
-                        </td>
-                        <td>
-                            @if (!string.IsNullOrWhiteSpace(item.Name))
-                            {
-                                <span title="PR @item.MaschinenId">@item.Name</span>
-                            }
-                            else
-                            {
-                                <span class="text-muted">–</span>
-                            }
-                        </td>
-                        <td class="text-end" style="font-family:monospace">
-                            @item.Tagestaktzaehler.ToString("N0")
-                        </td>
-                        <td class="text-end fw-bold" style="font-family:monospace">
-                            @item.Maschinentakte.ToString("N0")
-                        </td>
-                        <td class="text-end" style="font-family:monospace">
-                            @item.Packungszaehler.ToString("N0")
-                        </td>
+
+                        <td class="text-center">@(item.Maschine ?? "–")</td>
+                        <td>@(string.IsNullOrWhiteSpace(item.Name) ? "–" : item.Name)</td>
+
+                        <td class="text-end">@item.Tagestaktzaehler.ToString("N0")</td>
+                        <td class="text-end fw-bold">@item.Maschinentakte.ToString("N0")</td>
+                        <td class="text-end">@item.Packungszaehler.ToString("N0")</td>
+
                         <td style="min-width:100px;padding:6px 10px">
                             <div style="display:flex;align-items:center;gap:6px">
-                                <div style="flex:1;height:8px;background:#21262d;border-radius:4px;overflow:hidden">
-                                    <div style="width:@(pct)%;height:100%;background:@barColor;
-                                                border-radius:4px;transition:width .3s"></div>
+                                <div style="flex:1;height:8px;background:#21262d;border-radius:4px">
+                                    <div style="width:@(pct)%;height:100%;background:@barColor;"></div>
                                 </div>
-                                <span style="font-size:10px;color:#8b949e;min-width:28px;text-align:right">
+                                <span style="font-size:10px;color:#8b949e">
                                     @(pct)%
                                 </span>
                             </div>
@@ -90,82 +77,15 @@
         </table>
     </div>
 
-    @* ── Pagination unten ─────────────────────────────────────────────────── *@
-    @if (pagInfo != null && pagInfo.PageCount > 1)
+    @* 👉 EINZIGE Pagination *@
+    @if (pagInfo != null)
     {
-        <div class="d-flex justify-content-center gap-1 mt-3">
-            @if (!pagInfo.IsFirstPage)
-            {
-                <button class="btn btn-sm btn-outline-secondary"
-                        onclick="ladeSeite(@(pagInfo.PageNumber - 1))">
-                    ‹ Zurück
-                </button>
-            }
-
-            @* Seitenzahlen *@
-            @{
-                int von  = Math.Max(1, pagInfo.PageNumber - 2);
-                int bis  = Math.Min(pagInfo.PageCount, pagInfo.PageNumber + 2);
-            }
-            @for (int p = von; p <= bis; p++)
-            {
-                if (p == pagInfo.PageNumber)
-                {
-                    <button class="btn btn-sm btn-primary" disabled>@p</button>
-                }
-                else
-                {
-                    <button class="btn btn-sm btn-outline-secondary"
-                            onclick="ladeSeite(@p)">@p</button>
-                }
-            }
-
-            @if (!pagInfo.IsLastPage)
-            {
-                <button class="btn btn-sm btn-outline-primary"
-                        onclick="ladeSeite(@(pagInfo.PageNumber + 1))">
-                    Weiter ›
-                </button>
-            }
-        </div>
+        @await Html.PartialAsync("_PaginatedItem", pagInfo)
     }
 }
 else
 {
     <div class="alert alert-info text-center mt-3">
-        <div style="font-size:28px;margin-bottom:8px">📭</div>
-        <strong>Keine Leistungsdaten vorhanden</strong><br>
-        <span class="text-muted" style="font-size:13px">
-            Bitte Datum und Maschine auswählen und auf <strong>Filtern</strong> klicken.
-        </span>
+        Keine Daten vorhanden
     </div>
 }
-
-@* ── AJAX Pagination ──────────────────────────────────────────────────────── *@
-<script>
-    function ladeSeite(pageNumber) {
-        const datumVon    = document.getElementById('DatumVon')?.value    || '';
-        const datumBis    = document.getElementById('DatumBis')?.value    || '';
-        const maschinenId = document.getElementById('MaschinenId')?.value || '0';
-
-        const params = new URLSearchParams({
-            pageNumber,
-            datumVon,
-            datumBis,
-            maschinenId
-        });
-
-        fetch('/Leistungsdaten/Data?' + params.toString(), {
-            headers: { 'X-Requested-With': 'XMLHttpRequest' }
-        })
-        .then(r => r.text())
-        .then(html => {
-            // Nur den Tabellen-Container ersetzen
-            const container = document.getElementById('leistTabelle');
-            if (container) container.innerHTML = html;
-            // Nach oben scrollen
-            container?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        })
-        .catch(err => console.error('Pagination Fehler:', err));
-    }
-</script>
