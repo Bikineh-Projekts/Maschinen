@@ -1,11 +1,10 @@
-﻿@using MaschinenDataein.Helper
+@using MaschinenDataein.Helper
 @using MaschinenDataein.Models.ModelView
 @using MaschinenDataein.Models.PaginatedModel
 
 @{
     bool IsShowId = Convert.ToBoolean(ViewData["IsShowId"]);
     PaginatedListItem paginatedListItem = ViewData["PaginatedListItem"] as PaginatedListItem;
-
 }
 
 @model List<AbzugsdatenModelView>
@@ -20,7 +19,7 @@
                     <th>Id</th>
                 }
                 
-                <th>Zeitstempel</th>
+                <th class="text-center">Zeitstempel</th>
                 <th>Maschine</th>
                 <th>PR-Name</th>
                 <th>Packungen pro Abzug</th>
@@ -31,9 +30,11 @@
             @foreach (var AbzugsDaten in Model)
             {
                 <tr>
-                    @if(IsShowId){
+                    @if (IsShowId)
+                    {
                         <td>@AbzugsDaten.Id</td>
                     }
+
                     <td class="text-center" style="white-space:nowrap">
                         @AbzugsDaten.Timestamp.ToString("dd.MM.yyyy")
                         <br />
@@ -41,6 +42,7 @@
                             @AbzugsDaten.Timestamp.ToString("HH:mm:ss")
                         </span>
                     </td>
+
                     <td>@AbzugsDaten.Maschine</td>
                     <td>@AbzugsDaten.Name</td>
                     <td>@AbzugsDaten.PackungenproAbzug Stück</td>
@@ -49,6 +51,7 @@
             }
         </tbody>
     </table>
+
     @if (paginatedListItem != null)
     {
         @await Html.PartialAsync("_PaginatedItem", paginatedListItem)
