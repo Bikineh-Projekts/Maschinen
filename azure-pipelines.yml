@@ -1,7 +1,3 @@
-# Docker
-# Build a Docker image
-# https://docs.microsoft.com/azure/devops/pipelines/languages/docker
-
 trigger:
 - main
 
@@ -10,20 +6,48 @@ resources:
 
 variables:
   tag: '$(Build.BuildId)'
+  imageRepository: 'maschinen'
+  containerRegistry: 'maschinenacr.azurecr.io'
+  dockerfilePath: '$(Build.SourcesDirectory)/Dockerfile'
 
 stages:
 - stage: Build
-  displayName: Build image
+  displayName: 🔨 Build & Push
   jobs:
   - job: Build
-    displayName: Build
     pool:
       vmImage: ubuntu-latest
     steps:
+    - checkout: self
+
     - task: Docker@2
-      displayName: Build an image
+      displayName: Build and Push to ACR
       inputs:
-        command: build
-        dockerfile: '$(Build.SourcesDirectory)/Dockerfile'
+        command: buildAndPush
+        repository: $(imageRepository)
+        dockerfile: $(dockerfilePath)
+        containerRegistry: 'AzureCR'
         tags: |
           $(tag)
+          latest
+
+- stage: Deploy
+  displayName: 🚀 Deploy to Container Apps
+  dependsOn: Build
+  condition: succeeded()
+  jobs:
+  - job: Deploy
+    pool:
+      vmImage: ubuntu-latest
+    steps:
+    - task: AzureCLI@2
+      displayName: Deploy to Container Apps
+      inputs:
+        azureSubscription: 'AzureServiceConnection'
+        scriptType: bash
+        scriptLocation: inlineScript
+        inlineScript: |
+          az containerapp update \
+            --name maschinen-app \
+            --resource-group maschinen-rg \
+            --image maschinenacr.azurecr.io/maschinen:$(tag)
