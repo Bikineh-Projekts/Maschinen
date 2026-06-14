@@ -12,7 +12,7 @@ variables:
 
 stages:
 - stage: Build
-  displayName: 🔨 Build & Push
+  displayName: Build & Push
   jobs:
   - job: Build
     pool:
@@ -32,7 +32,7 @@ stages:
           latest
 
 - stage: Deploy
-  displayName: 🚀 Deploy to Container Apps
+  displayName: Deploy to Container Apps
   dependsOn: Build
   condition: succeeded()
   jobs:
@@ -50,4 +50,6 @@ stages:
           az containerapp update \
             --name maschinen-app \
             --resource-group maschinen-rg \
-            --image maschinenacr.azurecr.io/maschinen:$(tag)
+            --image maschinenacr.azurecr.io/maschinen:$(tag) \
+            --target-port 10000 \
+            --ingress external
