@@ -1,0 +1,53 @@
+trigger:
+- main
+
+resources:
+- repo: self
+
+variables:
+  tag: '$(Build.BuildId)'
+  imageRepository: 'maschinen'
+  containerRegistry: 'maschinenacr.azurecr.io'
+  dockerfilePath: '$(Build.SourcesDirectory)/Dockerfile'
+
+stages:
+- stage: Build
+  displayName: 🔨 Build & Push
+  jobs:
+  - job: Build
+    pool:
+      vmImage: ubuntu-latest
+    steps:
+    - checkout: self
+
+    - task: Docker@2
+      displayName: Build and Push to ACR
+      inputs:
+        command: buildAndPush
+        repository: $(imageRepository)
+        dockerfile: $(dockerfilePath)
+        containerRegistry: 'AzureCR'
+        tags: |
+          $(tag)
+          latest
+
+- stage: Deploy
+  displayName: 🚀 Deploy to Container Apps
+  dependsOn: Build
+  condition: succeeded()
+  jobs:
+  - job: Deploy
+    pool:
+      vmImage: ubuntu-latest
+    steps:
+    - task: AzureCLI@2
+      displayName: Deploy to Container Apps
+      inputs:
+        azureSubscription: 'AzureServiceConnection'
+        scriptType: bash
+        scriptLocation: inlineScript
+        inlineScript: |
+          az containerapp update \
+            --name maschinen-app \
+            --resource-group maschinen-rg \
+            --image maschinenacr.azurecr.io/maschinen:$(tag)
