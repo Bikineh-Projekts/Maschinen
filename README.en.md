@@ -11,20 +11,21 @@ This repository contains the database foundation of a system for the **digitaliz
 
 ## Goals
 
-- Replacing manual/paper-based logging with automated machine data acquisition (a core MES function)
-- Uniform, standardized data transfer via OPC UA/DA, as is common in SCADA systems
-- Persistent, structured storage of all relevant machine, state, alarm, and performance data
-- Foundation for data analysis and visualization, including **OEE** calculation, downtime analysis, and temperature monitoring
-- Contribution to networked production in the spirit of Industry 4.0
+- **Replacing manual, paper-based logging** with automated machine data acquisition — the core function of an MES.
+- **Uniform, standardized data transfer via the OPC DA protocol**, in a form comparable to what is common in SCADA systems; a later migration to OPC UA is planned.
+- **Persistent, structured storage of all relevant machine, state, alarm, and performance data.** When a technician selects a machine in the web interface, the corresponding current alarm messages and any other faults that have occurred are displayed immediately — providing a basis for fast fault diagnosis.
+- **Calculating the performance of all machines from the package counter** (daily cycle counter, machine cycles) as a reliable data basis for production planning — one of the project's central goals.
+- **Foundation for data analysis and visualization**, including **OEE** calculation, downtime analysis, and temperature monitoring.
+- **Contribution to networked production in the spirit of Industry 4.0.**
 
 ## Tech stack
 
 | Area | Technology |
 |---|---|
-| Backend | .NET (C#, ASP.NET Core) |
-| Data acquisition | Softing OPC UA/DA |
-| Data analysis | Python |
-| Data storage | SQL Server (database project, SSDT) |
+| Backend | .NET (C#, ASP.NET Core MVC) |
+| Data acquisition | Softing dataFEED OPC Suite (OPC DA), ODBC |
+| Data visualization | Chart.js, Highcharts |
+| Data storage | SQL Server (database project, SSDT), Entity Framework Core |
 
 ## Project structure
 
@@ -184,8 +185,8 @@ Data is transferred from the machine to the database by configuring an "SQL data
 
 - SQL Server (local or a network instance)
 - Visual Studio with SQL Server Data Tools (SSDT) to open `Maschinendaten.slnx`
-- .NET SDK for the connector component
-- Python environment for analysis/visualization
+- .NET SDK for the web application
+- Softing dataFEED OPC Suite to configure the OPC DA connection
 
 ## Installation & setup
 
@@ -274,7 +275,7 @@ The thesis yields the following recommendations for further development of the s
 This repository forms the technical foundation of the following master's thesis:
 
 > Bikineh, M. (2025). *Analysetechniken zur Steigerung der Betriebseffizienz von Verpackungsmaschinen* [Analysis techniques for increasing the operational efficiency of packaging machines]. Master's thesis, University of Rostock, Faculty of Computer Science and Electrical Engineering (IEF), Master ITTI program.
-
+> 1st reviewer: Dr. Holger Meyer · 2nd reviewer: M.Sc. Daniel Tempelmann · Submission date: 22 July 2025
 
 ## Status
 
@@ -284,6 +285,6 @@ The core components — the database schema, OPC DA data acquisition via the Sof
 
 Master's thesis by Mohammadhossein Bikineh (Master ITTI, University of Rostock), in cooperation with Rostocker Wurst- und Schinkenspezialitäten GmbH.
 
-
+## License
 
 Not yet defined.
