@@ -227,6 +227,5 @@ The core components — the database schema, OPC data acquisition via the .NET a
 
 Master's thesis in cooperation with Rostocker Wurst- und Schinkenspezialitäten GmbH.
 
-## License
 
 Not yet defined.
