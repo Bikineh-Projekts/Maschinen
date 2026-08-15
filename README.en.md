@@ -11,10 +11,10 @@ This repository contains the database foundation of a system for the **digitaliz
 
 ## Goals
 
-- **Replacing manual, paper-based logging** with automated machine data acquisition — the core function of an MES.
+- **Replacing manual, paper-based logging** with automated machine data acquisition  the core function of an MES.
 - **Uniform, standardized data transfer via the OPC DA protocol**, in a form comparable to what is common in SCADA systems; a later migration to OPC UA is planned.
-- **Persistent, structured storage of all relevant machine, state, alarm, and performance data.** When a technician selects a machine in the web interface, the corresponding current alarm messages and any other faults that have occurred are displayed immediately — providing a basis for fast fault diagnosis.
-- **Calculating the performance of all machines from the package counter** (daily cycle counter, machine cycles) as a reliable data basis for production planning — one of the project's central goals.
+- **Persistent, structured storage of all relevant machine, state, alarm, and performance data.** When a technician selects a machine in the web interface, the corresponding current alarm messages and any other faults that have occurred are displayed immediately  providing a basis for fast fault diagnosis.
+- **Calculating the performance of all machines from the package counter** (daily cycle counter, machine cycles) as a reliable data basis for production planning one of the project's central goals.
 - **Foundation for data analysis and visualization**, including **OEE** calculation, downtime analysis, and temperature monitoring.
 - **Contribution to networked production in the spirit of Industry 4.0.**
 
