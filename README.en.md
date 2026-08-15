@@ -2,11 +2,12 @@
 
 🌐 **Language:** [Deutsch](README.md) | English
 
-> Master's thesis in cooperation with **Rostocker Wurst- und Schinkenspezialitäten GmbH**
+> Master's thesis *"Analysis Techniques for Increasing the Operational Efficiency of Packaging Machines"*, in cooperation with **Rostocker Wurst- und Schinkenspezialitäten GmbH**
+> University of Rostock, Faculty of Computer Science and Electrical Engineering (IEF), Master ITTI program
 
 ## About the project
 
-This repository contains the database foundation of a system for the **digitalization and optimization of production processes** through machine data acquisition, in the spirit of **Industry 4.0**. Production machines are connected via **Softing OPC programs** and, similar to a **SCADA** connection, deliver process, state, alarm, and performance data in a standardized way via the **OPC UA/DA protocol**, which is stored in a central SQL database. This provides the data basis for typical **MES** functions (production and machine data acquisition, fault tracking) as well as for deriving metrics such as **OEE (Overall Equipment Effectiveness)**.
+This repository contains the database foundation of a system for the **digitalization and optimization of production processes** through machine data acquisition, in the spirit of **Industry 4.0**. The Rostock plant uses **VARIOVAC** packaging machines (including *Primus* and *Multipower* models) with **Siemens S7 controllers**. The machines deliver process, state, alarm, and performance data via the **OPC DA protocol** (COM/DCOM-based, RFC1006), which is read out using **Softing dataFEED OPC Suite** and written to a central SQL database via an **ODBC interface** — an architecture that conceptually corresponds to a classic **SCADA** connection. This provides the data basis for typical **MES** functions (production and machine data acquisition, fault tracking) as well as for deriving metrics such as **OEE (Overall Equipment Effectiveness)**. Migrating to the more modern, platform-independent **OPC UA** protocol is recommended as a sensible next step in the underlying thesis (see [Recommendations](#recommendations--outlook)).
 
 ## Goals
 
@@ -144,20 +145,40 @@ erDiagram
 | `Zustandsdaten` | Timestamp and reference to a machine state |
 | `Zustandsmeldung` | Plain-text state messages |
 
+## Origin of the machine data
+
+The recorded values come directly from the memory of the Siemens S7 controller of the VARIOVAC machines and are addressed as OPC tags via fixed data block addresses (DB addresses), e.g.:
+
+| OPC tag | PLC address | Unit | Description |
+|---|---|---|---|
+| `OPC_Daten/T_SOLL2` | `DB85.DBW30:INT` | °C (1/10) | Target temperature, control loop 2, mold upper part |
+| `OPC_Daten/Isttemp_FWZ_Ob1` | `DB85.DBW494:INT` | °C (1/10) | Actual temperature, upper heating unit of the mold |
+| `OPC_Daten/T_SOLL4` | `DB85.DBW34:INT` | °C (1/10) | Target temperature, control loop 4, sealing tool |
+| `OPC_Daten/Isttemp_SWZ` | `DB85.DBW490:INT` | °C (1/10) | Actual temperature, sealing tool |
+
+**Scaling:** Temperature and length values are stored in the PLC as integers (`INT`) in a 1/10 format — a raw value of `432` corresponds to `43.2 °C`, for example. Binary alarm and state indicators are transmitted as `BOOL` (0/1). This scaling is applied when the data is written to the database.
+
+State and fault messages (`Zustandsmeldung`, `Stoerungsmeldung`) are plain-text translations of numeric codes provided by the controller at defined byte addresses (e.g. `DB85.DBB530:BYTE` for state messages, `DB85.DBB453:BYTE` for fault messages), catalogued based on the VARIOVAC manufacturer documentation.
+
 ## Data flow
 
 ```
-Production machine
-      │  (OPC UA/DA)
+VARIOVAC packaging machine (Siemens S7)
+      │  OPC DA protocol (COM/DCOM, RFC1006)
       ▼
-Softing OPC program
-      │
+Softing dataFEED OPC Suite  (OPC DA server)
+      │  ODBC driver (32-bit)
       ▼
-.NET connector (ASP.NET Core)
-      │
+SQL Server database
+      │  Entity Framework Core
       ▼
-SQL Server database  ──►  Python analysis & visualization
+ASP.NET Core MVC web application
+      │  Chart.js / Highcharts
+      ▼
+Browser-based live overview & analysis
 ```
+
+Data is transferred from the machine to the database by configuring an "SQL database" data destination in the Softing dataFEED OPC Suite: each OPC tag is mapped to a database field there, and the transfer is triggered on a schedule via `INSERT INTO` statements.
 
 ## Requirements
 
@@ -219,13 +240,50 @@ The page also offers a **Reload** function to manually refresh the live view.
 
 > These views directly reflect the content of the database tables described above (`Leistungsdaten`, `Abzugsdaten`, `Temperaturdaten`, `Alarmdaten`, `Zustandsdaten`, `Stoerungsdaten`), confirming that the full pipeline machine → OPC → .NET → SQL Server → web interface is already in productive use.
 
+## Software architecture
+
+The ASP.NET Core MVC application consistently follows the MVC pattern with a clear separation of controllers, data models, and view models:
+
+- **Controllers** (one per data area, e.g. `AbzugsDatenController`, `AlarmDatenController`, `LeistungsDatenController`, `StoerungsDatenController`, `ZustandsDatenController`, `ProgrammenController`) read filter settings from cookies, filter data by time range and machine ID, and pass it to the view layer. A `TableSelectionController` handles routing between the table views.
+- **`MaschinenDbContext`** (Entity Framework Core) defines all tables as `DbSet<T>` and sets the primary keys in `OnModelCreating`.
+- **View model layer** (including `AbzugsdatenModelView`, `DashboardModelView`, `LeistungsdatenModelView`, `TemperaturdatenModelView`, `HaeufigkeitModelView`) prepares the raw data for display, e.g. combining program name and measured values, and feeds the dashboard.
+- **`PaginatedList<T>`** implements generic server-side pagination for all data tables in the application.
+- The `Programmen` class automatically converts the numeric fields `pr00`–`pr09` into a readable program name via ASCII conversion (e.g. "1KG VAC").
+
+## Analysis methods for fault detection
+
+Based on the recorded temperature data, several analysis methods were investigated as part of the thesis to assess operational stability and detect faults:
+
+- **Piecewise regression / piecewise polynomial regression**: segmenting the temperature curve into characteristic process phases (heating, holding, cooling), each with a separate quadratic regression model.
+- **10th-degree polynomial regression**: global modeling of the temperature curve as a comparison baseline for the piecewise regression.
+- **Error probability model**: estimating the daily fault probability based on several independent influencing factors — temperature deviation, program changes, product sensitivity, draw speed, and the particularly fault-prone shift start-up phase (first 15 minutes).
+- **Fault flow diagram**: a structured decision tree for distinguishing between user and equipment faults in the event of temperature deviations, and for verifying that a fault has been resolved.
+- **Exploratory charts**: line chart, histogram, boxplot, and bar chart of temperature deviations per sensor to identify outliers, spread, and recurring patterns.
+
+## Recommendations & outlook
+
+The thesis yields the following recommendations for further development of the system:
+
+1. **Operator training** on correctly matching tool, film, and program number to avoid operating errors.
+2. **Locking changes during active production** (program switches, target temperature adjustments) to prevent unwanted temperature deviations.
+3. **Displaying the temperature deviation on the operator panel**, including program-specific documented tolerance ranges.
+4. **Migrating from OPC DA to OPC UA** to achieve platform independence, higher security (encryption, certificates), and easier cloud connectivity (e.g. Siemens MindSphere, AWS IoT, Azure IoT Hub).
+
+## Related master's thesis
+
+This repository forms the technical foundation of the following master's thesis:
+
+> Bikineh, M. (2025). *Analysetechniken zur Steigerung der Betriebseffizienz von Verpackungsmaschinen* [Analysis techniques for increasing the operational efficiency of packaging machines]. Master's thesis, University of Rostock, Faculty of Computer Science and Electrical Engineering (IEF), Master ITTI program.
+> 1st reviewer: Dr. Holger Meyer · 2nd reviewer: M.Sc. Daniel Tempelmann · Submission date: 22 July 2025
+
 ## Status
 
-The core components — the database schema, OPC data acquisition via the .NET application, and the web interface for live evaluation — are already in productive use (see [Live application](#live-application--demo)). Further analyses and visualizations (including Python-based analytics and OEE metrics) are planned as part of the ongoing master's thesis.
+The core components — the database schema, OPC DA data acquisition via the Softing dataFEED OPC Suite, and the ASP.NET Core MVC web application for live evaluation — are already in productive use (see [Live application](#live-application--demo)). The analysis methods developed as part of the thesis (regression models, error probability model) exist as standalone evaluations; integrating them as permanent parts of the web interface, as well as migrating to OPC UA, are planned as next steps.
 
 ## Author
 
-Master's thesis in cooperation with Rostocker Wurst- und Schinkenspezialitäten GmbH.
+Master's thesis by Mohammadhossein Bikineh (Master ITTI, University of Rostock), in cooperation with Rostocker Wurst- und Schinkenspezialitäten GmbH.
 
+## License
 
 Not yet defined.
