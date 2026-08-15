@@ -2,11 +2,12 @@
 
 🌐 **Sprache:** Deutsch | [English](README.en.md)
 
-> Masterarbeit im Rahmen der Zusammenarbeit mit der **Rostocker Wurst- und Schinkenspezialitäten GmbH**
+> Masterarbeit *„Analysetechniken zur Steigerung der Betriebseffizienz von Verpackungsmaschinen“* im Rahmen der Zusammenarbeit mit der **Rostocker Wurst- und Schinkenspezialitäten GmbH**
+> Universität Rostock, Fakultät für Informatik und Elektrotechnik (IEF), Studiengang Master ITTI
 
 ## Über das Projekt
 
-Dieses Repository enthält die Datenbankgrundlage eines Systems zur **Digitalisierung und Optimierung von Produktionsprozessen** mittels Maschinendatenerfassung im Sinne der **Industrie 4.0**. Produktionsmaschinen werden über **Softing OPC-Programme** angebunden und liefern – vergleichbar mit einer **SCADA**-Anbindung – standardisiert über das **OPC UA/DA-Protokoll** Prozess-, Zustands-, Alarm- und Leistungsdaten, die in einer zentralen SQL-Datenbank gespeichert werden. Damit legt das System die Datenbasis für typische **MES**-Funktionen (Betriebs- und Maschinendatenerfassung, Störungsverfolgung) sowie für die Ableitung von Kennzahlen wie der **OEE (Overall Equipment Effectiveness)**.
+Dieses Repository enthält die Datenbankgrundlage eines Systems zur **Digitalisierung und Optimierung von Produktionsprozessen** mittels Maschinendatenerfassung im Sinne der **Industrie 4.0**. Im Werk Rostock kommen **VARIOVAC**-Verpackungsmaschinen (u. a. *Primus* und *Multipower*) mit **Siemens-S7-Steuerungen** zum Einsatz. Die Maschinen liefern Prozess-, Zustands-, Alarm- und Leistungsdaten über das **OPC-DA-Protokoll** (COM/DCOM-basiert, RFC1006), das mithilfe der Software **Softing dataFEED OPC Suite** ausgelesen und über eine **ODBC-Schnittstelle** in eine zentrale SQL-Datenbank geschrieben wird – ein Aufbau, der konzeptionell einer klassischen **SCADA**-Anbindung entspricht. Damit legt das System die Datenbasis für typische **MES**-Funktionen (Betriebs- und Maschinendatenerfassung, Störungsverfolgung) sowie für die Ableitung von Kennzahlen wie der **OEE (Overall Equipment Effectiveness)**. Eine Migration auf das modernere, plattformunabhängige **OPC-UA**-Protokoll wird in der zugrunde liegenden Masterarbeit als sinnvoller nächster Schritt empfohlen (siehe [Empfehlungen](#empfehlungen--ausblick)).
 
 ## Ziele
 
@@ -144,20 +145,40 @@ erDiagram
 | `Zustandsdaten` | Zeitpunkt und Referenz auf einen Maschinenzustand |
 | `Zustandsmeldung` | Klartext-Zustandsmeldungen |
 
+## Herkunft der Maschinendaten
+
+Die erfassten Werte stammen unmittelbar aus dem Speicher der Siemens-S7-Steuerung der VARIOVAC-Maschinen und werden als OPC-Tags über feste Datenbausteinadressen (DB-Adressen) angesprochen, z. B.:
+
+| OPC-Tag | SPS-Adresse | Einheit | Beschreibung |
+|---|---|---|---|
+| `OPC_Daten/T_SOLL2` | `DB85.DBW30:INT` | °C (1/10) | Solltemperatur Regelkreis 2, Formwerkzeug Oberteil |
+| `OPC_Daten/Isttemp_FWZ_Ob1` | `DB85.DBW494:INT` | °C (1/10) | Isttemperatur obere Heizeinheit Formwerkzeug |
+| `OPC_Daten/T_SOLL4` | `DB85.DBW34:INT` | °C (1/10) | Solltemperatur Regelkreis 4, Siegelwerkzeug |
+| `OPC_Daten/Isttemp_SWZ` | `DB85.DBW490:INT` | °C (1/10) | Isttemperatur Siegelwerkzeug |
+
+**Skalierung:** Temperatur- und Längenwerte werden in der SPS als Ganzzahlen (`INT`) im Format 1/10 gespeichert – der Rohwert `432` entspricht z. B. `43,2 °C`. Binäre Alarm- und Zustandsmelder werden als `BOOL` (0/1) übertragen. Diese Skalierung wird beim Einlesen in die Datenbank berücksichtigt.
+
+Zustands- und Störungsmeldungen (`Zustandsmeldung`, `Stoerungsmeldung`) sind Klartext-Übersetzungen numerischer Codes, die die Steuerung an definierten Byte-Adressen bereitstellt (z. B. `DB85.DBB530:BYTE` für Zustandsmeldungen, `DB85.DBB453:BYTE` für Störungsmeldungen), und wurden anhand der Herstellerdokumentation der VARIOVAC-Maschinen katalogisiert.
+
 ## Datenfluss
 
 ```
-Produktionsmaschine
-      │  (OPC UA/DA)
+VARIOVAC-Verpackungsmaschine (Siemens S7)
+      │  OPC-DA-Protokoll (COM/DCOM, RFC1006)
       ▼
-Softing OPC-Programm
-      │
+Softing dataFEED OPC Suite  (OPC-DA-Server)
+      │  ODBC-Treiber (32-Bit)
       ▼
-.NET-Anbindung (ASP.NET Core)
-      │
+SQL-Server-Datenbank
+      │  Entity Framework Core
       ▼
-SQL-Server-Datenbank  ──►  Python-Analyse & Visualisierung
+ASP.NET Core MVC – Webanwendung
+      │  Chart.js / Highcharts
+      ▼
+Browserbasierte Live-Übersicht & Analyse
 ```
+
+Die Übertragung von der Maschine in die Datenbank erfolgt durch Konfiguration eines Datenziels vom Typ „SQL-Datenbank“ in der Softing dataFEED OPC Suite: Jedem OPC-Tag wird dort ein Datenbankfeld zugeordnet und die Übertragung per `INSERT INTO`-Anweisung zeitgesteuert ausgelöst.
 
 ## Voraussetzungen
 
@@ -219,14 +240,50 @@ Die Seite bietet zudem eine **Reload**-Funktion zum manuellen Aktualisieren der 
 
 > Die Ansichten spiegeln direkt den Inhalt der oben beschriebenen Datenbanktabellen (`Leistungsdaten`, `Abzugsdaten`, `Temperaturdaten`, `Alarmdaten`, `Zustandsdaten`, `Stoerungsdaten`) wider und bestätigen, dass die Pipeline Maschine → OPC → .NET → SQL-Server → Weboberfläche bereits produktiv im Einsatz ist.
 
+## Softwarearchitektur
+
+Die ASP.NET-Core-MVC-Anwendung folgt konsequent dem MVC-Muster mit klarer Trennung von Controllern, Datenmodellen und ViewModels:
+
+- **Controller** (je Datenbereich, z. B. `AbzugsDatenController`, `AlarmDatenController`, `LeistungsDatenController`, `StoerungsDatenController`, `ZustandsDatenController`, `ProgrammenController`) lesen Filtereinstellungen aus Cookies, filtern Daten nach Zeitraum und Maschinen-ID und übergeben sie an die View-Schicht. Ein `TableSelectionController` übernimmt das Routing zwischen den Tabellenansichten.
+- **`MaschinenDbContext`** (Entity Framework Core) definiert alle Tabellen als `DbSet<T>` und legt die Primärschlüssel in `OnModelCreating` fest.
+- **ViewModel-Schicht** (u. a. `AbzugsdatenModelView`, `DashboardModelView`, `LeistungsdatenModelView`, `TemperaturdatenModelView`, `HaeufigkeitModelView`) bereitet die Rohdaten für die Anzeige auf, kombiniert z. B. Programmname und Messwerte und speist das Dashboard.
+- **`PaginatedList<T>`** implementiert generische serverseitige Seitennummerierung für alle Datentabellen der Anwendung.
+- Die Klasse `Programmen` wandelt die numerischen Felder `pr00`–`pr09` automatisch per ASCII-Konvertierung in einen lesbaren Programmnamen (z. B. „1KG VAC“) um.
+
+## Analysemethoden zur Fehlererkennung
+
+Auf Basis der erfassten Temperaturdaten wurden im Rahmen der Masterarbeit mehrere Analyseverfahren zur Bewertung der Betriebsstabilität und Fehlererkennung untersucht:
+
+- **Stückweise Regression / stückweise polynomiale Regression**: Segmentierung des Temperaturverlaufs in charakteristische Prozessphasen (Aufheizen, Halten, Abkühlen) mit jeweils separatem quadratischem Regressionsmodell je Segment.
+- **Polynomiale Regression 10. Grades**: globale Modellierung des Temperaturverlaufs als Vergleichsbasis zur stückweisen Regression.
+- **Fehlerwahrscheinlichkeitsmodell**: Schätzung der Fehlerwahrscheinlichkeit pro Tag auf Basis mehrerer unabhängiger Einflussfaktoren – Temperaturabweichung, Programmwechsel, Produktsensitivität, Abzugsgeschwindigkeit sowie die besonders fehleranfällige Anlaufphase der Schicht (erste 15 Minuten).
+- **Fehlerflussdiagramm**: strukturierter Entscheidungsbaum zur Unterscheidung von Anwender- und Gerätefehlern bei Temperaturabweichungen sowie zur Verifikation der Fehlerbehebung.
+- **Explorative Diagramme**: Liniendiagramm, Histogramm, Boxplot und Balkendiagramm der Temperaturabweichungen je Sensor zur Identifikation von Ausreißern, Streuung und wiederkehrenden Mustern.
+
+## Empfehlungen & Ausblick
+
+Aus der Masterarbeit ergeben sich folgende Empfehlungen für die Weiterentwicklung des Systems:
+
+1. **Schulung der Anwender** zur korrekten Zuordnung von Werkzeug, Folie und Programmnummer, um Bedienfehler zu vermeiden.
+2. **Sperrung von Änderungen während laufender Produktion** (Programmwechsel, Solltemperatur-Anpassung), um ungewollte Temperaturabweichungen zu verhindern.
+3. **Anzeige der Temperaturabweichung im Bedienpanel** inkl. programmspezifisch dokumentierter Toleranzbereiche.
+4. **Migration von OPC DA zu OPC UA**, um Plattformunabhängigkeit, höhere Sicherheit (Verschlüsselung, Zertifikate) und eine einfachere Cloud-Anbindung (z. B. Siemens MindSphere, AWS IoT, Azure IoT Hub) zu erreichen.
+
+## Zugehörige Masterarbeit
+
+Dieses Repository bildet die technische Grundlage der folgenden Masterarbeit:
+
+> Bikineh, M. (2025). *Analysetechniken zur Steigerung der Betriebseffizienz von Verpackungsmaschinen.* Masterarbeit, Universität Rostock, Fakultät für Informatik und Elektrotechnik (IEF), Studiengang Master ITTI.
+> 1. Gutachter: Dr. Holger Meyer · 2. Gutachter: M.Sc. Daniel Tempelmann · Abgabedatum: 22.07.2025
+
 ## Status
 
-Die Kernkomponenten – Datenbankschema, OPC-Datenerfassung über die .NET-Anwendung sowie die Weboberfläche zur Live-Auswertung – sind bereits produktiv im Einsatz (siehe [Live-Anwendung](#live-anwendung--demo)). Im Rahmen der laufenden Masterarbeit folgen weiterführende Auswertungen und Visualisierungen (u. a. Python-basierte Analysen, OEE-Kennzahlen).
+Die Kernkomponenten – Datenbankschema, OPC-DA-Datenerfassung über die Softing dataFEED OPC Suite sowie die ASP.NET-Core-MVC-Webanwendung zur Live-Auswertung – sind bereits produktiv im Einsatz (siehe [Live-Anwendung](#live-anwendung--demo)). Die im Rahmen der Masterarbeit entwickelten Analysemethoden (Regressionsmodelle, Fehlerwahrscheinlichkeitsmodell) liegen als Auswertungen vor; eine Integration als feste Bestandteile der Weboberfläche sowie eine Migration auf OPC UA sind als nächste Schritte vorgesehen.
 
 ## Autor
 
-Masterarbeit in Kooperation mit der Rostocker Wurst- und Schinkenspezialitäten GmbH.
+Masterarbeit von Mohammadhossein Bikineh (Master ITTI, Universität Rostock) in Kooperation mit der Rostocker Wurst- und Schinkenspezialitäten GmbH.
 
-
+## Lizenz
 
 Noch nicht festgelegt.
