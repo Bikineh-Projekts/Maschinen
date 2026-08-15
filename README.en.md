@@ -274,7 +274,7 @@ The thesis yields the following recommendations for further development of the s
 This repository forms the technical foundation of the following master's thesis:
 
 > Bikineh, M. (2025). *Analysetechniken zur Steigerung der Betriebseffizienz von Verpackungsmaschinen* [Analysis techniques for increasing the operational efficiency of packaging machines]. Master's thesis, University of Rostock, Faculty of Computer Science and Electrical Engineering (IEF), Master ITTI program.
-> 1st reviewer: Dr. Holger Meyer · 2nd reviewer: M.Sc. Daniel Tempelmann · Submission date: 22 July 2025
+
 
 ## Status
 
@@ -284,6 +284,6 @@ The core components — the database schema, OPC DA data acquisition via the Sof
 
 Master's thesis by Mohammadhossein Bikineh (Master ITTI, University of Rostock), in cooperation with Rostocker Wurst- und Schinkenspezialitäten GmbH.
 
-## License
+
 
 Not yet defined.
