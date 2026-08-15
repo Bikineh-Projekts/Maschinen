@@ -11,20 +11,21 @@ Dieses Repository enthält die Datenbankgrundlage eines Systems zur **Digitalisi
 
 ## Ziele
 
-- Ablösung manueller/papierbasierter Erfassung durch automatisierte Maschinendatenerfassung (Kern eines MES)
-- Einheitliche, standardisierte Datenübertragung über OPC UA/DA, wie sie auch in SCADA-Systemen üblich ist
-- Persistente, strukturierte Speicherung aller relevanten Maschinen-, Zustands-, Alarm- und Leistungsdaten
-- Grundlage für Datenanalyse und -visualisierung, u. a. zur Berechnung der **OEE**, für Stillstandsanalysen und Temperaturüberwachung
-- Beitrag zur Vernetzung der Produktion im Sinne der Industrie 4.0
+- **Ablösung der manuellen, papierbasierten Datenerfassung** durch eine automatisierte Maschinendatenerfassung – die Kernfunktion eines MES.
+- **Einheitliche, standardisierte Datenübertragung über das OPC-DA-Protokoll**, wie sie in vergleichbarer Form auch in SCADA-Systemen üblich ist; eine spätere Migration auf OPC UA ist vorgesehen.
+- **Persistente, strukturierte Speicherung aller relevanten Maschinen-, Zustands-, Alarm- und Leistungsdaten.** Wählt ein Techniker in der Weboberfläche eine Maschine aus, werden ihm die zugehörigen aktuellen Alarmmeldungen sowie weitere aufgetretene Störungen unmittelbar angezeigt – als Grundlage für eine schnelle Fehlerdiagnose.
+- **Berechnung der Leistung aller Maschinen anhand des Packungszählers** (Tagestaktzähler, Maschinentakte) als belastbare Datengrundlage für die Produktionsplanung – eines der zentralen Ziele des Projekts.
+- **Grundlage für Datenanalyse und -visualisierung**, u. a. zur Berechnung der **OEE**, für Stillstandsanalysen und zur Temperaturüberwachung.
+- **Beitrag zur Vernetzung der Produktion im Sinne der Industrie 4.0.**
 
 ## Technologiestack
 
 | Bereich | Technologie |
 |---|---|
-| Backend | .NET (C#, ASP.NET Core) |
-| Datenanbindung | Softing OPC UA/DA |
-| Datenanalyse | Python |
-| Datenhaltung | SQL Server (Datenbankprojekt, SSDT) |
+| Backend | .NET (C#, ASP.NET Core MVC) |
+| Datenanbindung | Softing dataFEED OPC Suite (OPC DA), ODBC |
+| Datenvisualisierung | Chart.js, Highcharts |
+| Datenhaltung | SQL Server (Datenbankprojekt, SSDT), Entity Framework Core |
 
 ## Projektstruktur
 
@@ -184,8 +185,8 @@ Die Übertragung von der Maschine in die Datenbank erfolgt durch Konfiguration e
 
 - SQL Server (lokal oder Instanz im Netzwerk)
 - Visual Studio mit SQL Server Data Tools (SSDT) zum Öffnen von `Maschinendaten.slnx`
-- .NET SDK für die Anbindungskomponente
-- Python-Umgebung für Analyse/Visualisierung
+- .NET SDK für die Webanwendung
+- Softing dataFEED OPC Suite zur Konfiguration der OPC-DA-Anbindung
 
 ## Installation & Setup
 
@@ -274,7 +275,7 @@ Aus der Masterarbeit ergeben sich folgende Empfehlungen für die Weiterentwicklu
 Dieses Repository bildet die technische Grundlage der folgenden Masterarbeit:
 
 > Bikineh, M. (2025). *Analysetechniken zur Steigerung der Betriebseffizienz von Verpackungsmaschinen.* Masterarbeit, Universität Rostock, Fakultät für Informatik und Elektrotechnik (IEF), Studiengang Master ITTI.
-
+> 1. Gutachter: Dr. Holger Meyer · 2. Gutachter: M.Sc. Daniel Tempelmann · Abgabedatum: 22.07.2025
 
 ## Status
 
@@ -284,6 +285,6 @@ Die Kernkomponenten – Datenbankschema, OPC-DA-Datenerfassung über die Softing
 
 Masterarbeit von Mohammadhossein Bikineh (Master ITTI, Universität Rostock) in Kooperation mit der Rostocker Wurst- und Schinkenspezialitäten GmbH.
 
-
+## Lizenz
 
 Noch nicht festgelegt.
