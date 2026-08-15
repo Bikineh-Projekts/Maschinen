@@ -11,14 +11,15 @@
 
 ## Über das Projekt
 
-Dieses Repository enthält die Datenbankgrundlage eines Systems zur **Digitalisierung und Optimierung von Produktionsprozessen** mittels Maschinendatenerfassung. Produktionsmaschinen werden über **Softing OPC-Programme** angebunden und liefern standardisiert über das **OPC UA/DA-Protokoll** Prozess-, Zustands-, Alarm- und Leistungsdaten, die in einer zentralen SQL-Datenbank gespeichert werden. Auf dieser Datenbasis sollen anschließend effiziente Verfahren zur Datenanalyse und -visualisierung umgesetzt werden.
+Dieses Repository enthält die Datenbankgrundlage eines Systems zur **Digitalisierung und Optimierung von Produktionsprozessen** mittels Maschinendatenerfassung im Sinne der **Industrie 4.0**. Produktionsmaschinen werden über **Softing OPC-Programme** angebunden und liefern – vergleichbar mit einer **SCADA**-Anbindung – standardisiert über das **OPC UA/DA-Protokoll** Prozess-, Zustands-, Alarm- und Leistungsdaten, die in einer zentralen SQL-Datenbank gespeichert werden. Damit legt das System die Datenbasis für typische **MES**-Funktionen (Betriebs- und Maschinendatenerfassung, Störungsverfolgung) sowie für die Ableitung von Kennzahlen wie der **OEE (Overall Equipment Effectiveness)**.
 
 ## Ziele
 
-- Ablösung manueller/papierbasierter Erfassung durch automatisierte Maschinendatenerfassung
-- Einheitliche, standardisierte Datenübertragung über OPC UA/DA
+- Ablösung manueller/papierbasierter Erfassung durch automatisierte Maschinendatenerfassung (Kern eines MES)
+- Einheitliche, standardisierte Datenübertragung über OPC UA/DA, wie sie auch in SCADA-Systemen üblich ist
 - Persistente, strukturierte Speicherung aller relevanten Maschinen-, Zustands-, Alarm- und Leistungsdaten
-- Grundlage für Datenanalyse und -visualisierung (z. B. OEE-Kennzahlen, Stillstandsanalysen, Temperaturüberwachung)
+- Grundlage für Datenanalyse und -visualisierung, u. a. zur Berechnung der **OEE**, für Stillstandsanalysen und Temperaturüberwachung
+- Beitrag zur Vernetzung der Produktion im Sinne der Industrie 4.0
 
 ## Technologiestack
 
@@ -246,14 +247,15 @@ Noch nicht festgelegt.
 
 ## About the project
 
-This repository contains the database foundation of a system for the **digitalization and optimization of production processes** through machine data acquisition. Production machines are connected via **Softing OPC programs** and deliver process, state, alarm, and performance data in a standardized way via the **OPC UA/DA protocol**, which is stored in a central SQL database. This data forms the basis for subsequent efficient data analysis and visualization.
+This repository contains the database foundation of a system for the **digitalization and optimization of production processes** through machine data acquisition, in the spirit of **Industry 4.0**. Production machines are connected via **Softing OPC programs** and, similar to a **SCADA** connection, deliver process, state, alarm, and performance data in a standardized way via the **OPC UA/DA protocol**, which is stored in a central SQL database. This provides the data basis for typical **MES** functions (production and machine data acquisition, fault tracking) as well as for deriving metrics such as **OEE (Overall Equipment Effectiveness)**.
 
 ## Goals
 
-- Replacing manual/paper-based logging with automated machine data acquisition
-- Uniform, standardized data transfer via OPC UA/DA
+- Replacing manual/paper-based logging with automated machine data acquisition (a core MES function)
+- Uniform, standardized data transfer via OPC UA/DA, as is common in SCADA systems
 - Persistent, structured storage of all relevant machine, state, alarm, and performance data
-- Foundation for data analysis and visualization (e.g. OEE metrics, downtime analysis, temperature monitoring)
+- Foundation for data analysis and visualization, including **OEE** calculation, downtime analysis, and temperature monitoring
+- Contribution to networked production in the spirit of Industry 4.0
 
 ## Tech stack
 
