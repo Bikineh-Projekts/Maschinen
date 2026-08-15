@@ -222,8 +222,6 @@ Die Kernkomponenten – Datenbankschema, OPC-Datenerfassung über die .NET-Anwen
 
 ## Autor
 
-Masterarbeit in Kooperation mit der Rostocker Wurst- und Schinkenspezialitäten GmbH.
+Masterarbeit  in Kooperation mit der Rostocker Wurst- und Schinkenspezialitäten GmbH.
 
-## Lizenz
 
-Noch nicht festgelegt.
