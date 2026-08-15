@@ -227,6 +227,6 @@ Die Kernkomponenten – Datenbankschema, OPC-Datenerfassung über die .NET-Anwen
 
 Masterarbeit in Kooperation mit der Rostocker Wurst- und Schinkenspezialitäten GmbH.
 
-## Lizenz
+
 
 Noch nicht festgelegt.
