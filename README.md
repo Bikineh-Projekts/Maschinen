@@ -274,7 +274,7 @@ Aus der Masterarbeit ergeben sich folgende Empfehlungen für die Weiterentwicklu
 Dieses Repository bildet die technische Grundlage der folgenden Masterarbeit:
 
 > Bikineh, M. (2025). *Analysetechniken zur Steigerung der Betriebseffizienz von Verpackungsmaschinen.* Masterarbeit, Universität Rostock, Fakultät für Informatik und Elektrotechnik (IEF), Studiengang Master ITTI.
-> 1. Gutachter: Dr. Holger Meyer · 2. Gutachter: M.Sc. Daniel Tempelmann · Abgabedatum: 22.07.2025
+
 
 ## Status
 
@@ -284,6 +284,6 @@ Die Kernkomponenten – Datenbankschema, OPC-DA-Datenerfassung über die Softing
 
 Masterarbeit von Mohammadhossein Bikineh (Master ITTI, Universität Rostock) in Kooperation mit der Rostocker Wurst- und Schinkenspezialitäten GmbH.
 
-## Lizenz
+
 
 Noch nicht festgelegt.
