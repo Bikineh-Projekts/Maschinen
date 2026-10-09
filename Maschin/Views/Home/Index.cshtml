@@ -64,7 +64,10 @@
                         <td>
                             @if (aktiveMeldungen.Any())
                             {
-                                @string.Join(", ", aktiveMeldungen)
+                                foreach (var meldung in aktiveMeldungen)
+                                {
+                                    <span class="status-marke kritisch"><i class="bi bi-exclamation-octagon-fill" aria-hidden="true"></i>@meldung</span>
+                                }
                             }
                             else
                             {

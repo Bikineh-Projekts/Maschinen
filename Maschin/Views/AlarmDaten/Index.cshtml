@@ -1,4 +1,4 @@
-@using MaschinenDataein.Models.Data
+﻿@using MaschinenDataein.Models.Data
 @using MaschinenDataein.Models.PaginatedModel
 @using MaschinenDataein.Helper
 @model List<Alarmdaten>
@@ -46,7 +46,7 @@
                             <td>
                                 @foreach (var meldung in aktiveMeldungen)
                                 {
-                                    <span class="badge rounded-pill text-bg-danger bg-opacity-75 fw-normal me-1 mb-1 text-wrap text-start">@meldung</span>
+                                    <span class="status-marke kritisch"><i class="bi bi-exclamation-octagon-fill" aria-hidden="true"></i>@meldung</span>
                                 }
                             </td>
                         </tr>

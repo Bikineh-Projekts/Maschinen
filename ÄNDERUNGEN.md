@@ -76,3 +76,17 @@ Render-Dashboard per User Secrets setzen (Rechtsklick Projekt → „Geheime Ben
 - Diagramm-Seiten mit kleineren Abständen, Kennzahlen zweispaltig, Leistungs-Raster bricht um.
 - Häufige Meldungen: Überschrift war fast weiß auf hellem Hintergrund.
 - PC: breite Tabellen verbreitern die Seite nicht mehr.
+
+## Farbsystem „Leitstand“ mit Hell/Dunkel (Update 5)
+- Einheitliche Farben für alle Seiten als CSS-Variablen in `site.css`: Petrol als Akzent,
+  kühle Stahlgrau-Flächen, Schrift IBM Plex Sans. Alle Textfarben erfüllen WCAG-Kontrast (≥ 4,5:1).
+- Dunkler Modus: folgt automatisch dem Gerät, Umschalter (Mond/Sonne) in der Navigation,
+  Auswahl wird im Browser gemerkt. Eigene, für dunkle Flächen abgestimmte Farbstufen.
+- Statusfarben nur für Zustände (gut / Warnung / ernst / kritisch), immer mit Symbol oder Text:
+  Alarme als rote Markierungen mit Symbol, Leistungsbalken grün/gelb/rot.
+- Diagramme (Leistung, Temperatur, Häufigkeit): kein fester Dunkel-Look mehr, Farben kommen aus dem
+  Farbsystem und passen zu Hell und Dunkel. Serienfarben in fester Reihenfolge, geprüft auf
+  Farbenblindheit (beide Modi bestanden); ab der 9. Serie neutral grau statt Farbwiederholung.
+- Produktionsplanung ohne eigene bunte Verläufe, nutzt dieselben Farben.
+- Tabellenköpfe ruhig hellgrau statt schwarz, keine Schreibmaschinenschrift und keine
+  Großbuchstaben-Beschriftungen mehr.

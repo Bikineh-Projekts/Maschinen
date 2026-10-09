@@ -16,6 +16,39 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>@(ViewData["Title"] ?? "Übersicht") – MaschinenDataein</title>
 
+    <meta name="theme-color" content="#0f2c33" />
+
+    @* Hell/Dunkel vor dem ersten Zeichnen setzen (kein Aufblitzen) und Farb-Helfer für Diagramme *@
+    <script>
+        (function () {
+            var gespeichert = null;
+            try { gespeichert = localStorage.getItem('md-thema'); } catch (e) { }
+            var dunkel = gespeichert ? gespeichert === 'dark'
+                                     : window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+            var html = document.documentElement;
+            if (gespeichert) html.setAttribute('data-theme', gespeichert);
+            html.setAttribute('data-bs-theme', dunkel ? 'dark' : 'light');
+        })();
+
+        // Liefert eine Farbe aus dem Farbsystem (CSS-Variable), z. B. mdFarbe('viz-1')
+        function mdFarbe(name) {
+            return getComputedStyle(document.documentElement).getPropertyValue('--' + name).trim();
+        }
+        // Gleiche Farbe als "rgb(r, g, b)" – für Diagramme, die Transparenz anhängen
+        function mdRgb(name) {
+            var h = mdFarbe(name).replace('#', '');
+            if (h.length === 3) h = h.split('').map(function (c) { return c + c; }).join('');
+            return 'rgb(' + parseInt(h.substr(0, 2), 16) + ', ' + parseInt(h.substr(2, 2), 16) + ', ' + parseInt(h.substr(4, 2), 16) + ')';
+        }
+        // Serienfarben in fester Reihenfolge; ab der 9. Serie neutral ("weitere")
+        function mdSerie(i) {
+            return i < 8 ? mdFarbe('viz-' + (i + 1)) : mdFarbe('viz-weitere');
+        }
+    </script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
@@ -47,6 +80,11 @@
                     <li class="nav-item"><a class="nav-link @Aktiv("Haeufigkeit")" aria-current="@AriaAktiv("Haeufigkeit")" asp-controller="Haeufigkeit" asp-action="Index"><i class="bi bi-bar-chart"></i> Häufige Meldungen</a></li>
                     <li class="nav-item"><a class="nav-link @Aktiv("Planung")" aria-current="@AriaAktiv("Planung")" asp-controller="Planung" asp-action="Index"><i class="bi bi-calendar-check"></i> Planung</a></li>
                 </ul>
+                <div class="ms-xl-auto py-2 py-xl-0">
+                    <button type="button" class="thema-knopf" id="themaKnopf" aria-label="Hell/Dunkel umschalten" title="Hell/Dunkel umschalten">
+                        <i class="bi bi-moon-stars" aria-hidden="true"></i>
+                    </button>
+                </div>
             </div>
         </div>
     </nav>
