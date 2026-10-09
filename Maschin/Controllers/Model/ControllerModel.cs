@@ -1,4 +1,4 @@
-using MaschinenDataein.Helper;
+ï»¿using MaschinenDataein.Helper;
 using MaschinenDataein.Models;
 using MaschinenDataein.Models.Data;
 using MaschinenDataein.Models.ModelView;
@@ -21,8 +21,8 @@ namespace MaschinenDataein.Controllers.Model
         }
 
         /// <summary>
-        /// Speichert das übergebene Filtermodell in der Session
-        /// und leitet zur gewünschten Action weiter.
+        /// Speichert das Ã¼bergebene Filtermodell in der Session
+        /// und leitet zur gewÃ¼nschten Action weiter.
         /// </summary>
 
         public IActionResult Filter(FilterModelView filterModelView)
@@ -37,7 +37,7 @@ namespace MaschinenDataein.Controllers.Model
         }
        
         /// <summary>
-        /// Setzt Maschinenliste und Filterdaten für die ViewBag
+        /// Setzt Maschinenliste und Filterdaten fÃ¼r die ViewBag
         /// </summary>
         public void SetViewBagFilter(FilterModelView filterModelView, string lastPage, string moduleName)
         {
@@ -56,7 +56,7 @@ namespace MaschinenDataein.Controllers.Model
 
 
         /// <summary>
-        /// Lädt das Filtermodell aus der Session oder erstellt ein neues.
+        /// LÃ¤dt das Filtermodell aus der Session oder erstellt ein neues.
         /// </summary>
         public FilterModelView GetFilterModelViewCookie()
         {

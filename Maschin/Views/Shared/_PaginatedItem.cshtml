@@ -1,22 +1,109 @@
 ﻿@using MaschinenDataein.Models.PaginatedModel
+@model PaginatedListItem
+
 @*
-    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+    Seitennavigation im Stil von Google:
+    ‹ Zurück   1 … 4 5 [6] 7 8 … 42   Weiter ›
+    Links: Anzahl der Einträge, rechts: direkt zu einer Seite springen.
+    Tastatur: ← / → blättern (siehe site.js).
 *@
 
-@model PaginatedListItem
-@if (Model != null)
+@if (Model != null && Model.PageCount > 0)
 {
-    <div class="d-flex justify-content-between mt-3">
-        <a class="btn btn-primary @(!Model.IsFirstPage ? "" : "disabled")" asp-action="@Model.FunctionName"  asp-route-pageNumber="@(Model.PageNumber - 1)">
-            Zurück
-        </a>
+    int aktuell = Math.Clamp(Model.PageNumber, 1, Model.PageCount);
+    int gesamt = Model.PageCount;
 
-        <span class="align-self-center">Seite @Model.PageNumber von @Model.PageCount</span>
+    // Bis zu 7 Seitenzahlen um die aktuelle Seite, erste und letzte Seite immer sichtbar
+    const int fenster = 3;
+    int von = Math.Max(1, aktuell - fenster);
+    int bis = Math.Min(gesamt, aktuell + fenster);
 
-        <a class="btn btn-primary @(!Model.IsLastPage ? "" : "disabled")"
-           asp-action="@Model.FunctionName"
-           asp-route-pageNumber="@(Model.PageNumber + 1)">
-                    Weiter
-                </a>
-    </div>
+    // Am Rand das Fenster auffüllen, damit immer gleich viele Zahlen zu sehen sind
+    if (aktuell - von < fenster) bis = Math.Min(gesamt, bis + (fenster - (aktuell - von)));
+    if (bis - aktuell < fenster) von = Math.Max(1, von - (fenster - (bis - aktuell)));
+
+    <nav class="seiten-navigation" aria-label="Seitennavigation">
+
+        <div class="seiten-info">
+            @if (Model.TotalItemCount > 0)
+            {
+                <span>Einträge <strong>@Model.FirstItemOnPage.ToString("N0")–@Model.LastItemOnPage.ToString("N0")</strong>
+                      von <strong>@Model.TotalItemCount.ToString("N0")</strong></span>
+            }
+            else
+            {
+                <span>Seite <strong>@aktuell</strong> von <strong>@gesamt</strong></span>
+            }
+        </div>
+
+        @if (gesamt > 1)
+        {
+            <ul class="pagination mb-0">
+                <li class="page-item @(aktuell == 1 ? "disabled" : "")">
+                    <a class="page-link" data-seite="zurueck" rel="prev"
+                       asp-action="@Model.FunctionName" asp-route-pageNumber="@(aktuell - 1)">
+                        <i class="bi bi-chevron-left" aria-hidden="true"></i><span class="d-none d-md-inline ms-1">Zurück</span>
+                    </a>
+                </li>
+
+                @if (von > 1)
+                {
+                    <li class="page-item">
+                        <a class="page-link" asp-action="@Model.FunctionName" asp-route-pageNumber="1">1</a>
+                    </li>
+                    if (von > 2)
+                    {
+                        <li class="page-item disabled"><span class="page-link luecke">…</span></li>
+                    }
+                }
+
+                @for (int seite = von; seite <= bis; seite++)
+                {
+                    // Auf dem Handy nur die direkten Nachbarn der aktuellen Seite zeigen
+                    var klein = Math.Abs(seite - aktuell) > 1 ? "d-none d-sm-block" : "";
+
+                    if (seite == aktuell)
+                    {
+                        <li class="page-item active" aria-current="page">
+                            <span class="page-link">@seite</span>
+                        </li>
+                    }
+                    else
+                    {
+                        <li class="page-item @klein">
+                            <a class="page-link" asp-action="@Model.FunctionName" asp-route-pageNumber="@seite">@seite</a>
+                        </li>
+                    }
+                }
+
+                @if (bis < gesamt)
+                {
+                    if (bis < gesamt - 1)
+                    {
+                        <li class="page-item disabled"><span class="page-link luecke">…</span></li>
+                    }
+                    <li class="page-item">
+                        <a class="page-link" asp-action="@Model.FunctionName" asp-route-pageNumber="@gesamt">@gesamt</a>
+                    </li>
+                }
+
+                <li class="page-item @(aktuell == gesamt ? "disabled" : "")">
+                    <a class="page-link" data-seite="weiter" rel="next"
+                       asp-action="@Model.FunctionName" asp-route-pageNumber="@(aktuell + 1)">
+                        <span class="d-none d-md-inline me-1">Weiter</span><i class="bi bi-chevron-right" aria-hidden="true"></i>
+                    </a>
+                </li>
+            </ul>
+        }
+
+        @if (gesamt > 9)
+        {
+            <form method="get" asp-action="@Model.FunctionName" class="seiten-sprung">
+                <label for="seiteSprung" class="text-muted">Seite</label>
+                <input id="seiteSprung" type="number" name="pageNumber" min="1" max="@gesamt"
+                       value="@aktuell" class="form-control form-control-sm" inputmode="numeric" />
+                <button type="submit" class="btn btn-sm btn-outline-primary">Los</button>
+            </form>
+        }
+    </nav>
 }

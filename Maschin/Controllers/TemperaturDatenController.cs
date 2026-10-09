@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Linq;
 using System.Collections.Generic;
 using System.Globalization;
@@ -36,18 +36,19 @@ namespace MaschinenDataein.Controllers
             FilterModelView model = GetFilterModelViewCookie();
             SetViewBagFilter(model, "Index", "TemperaturDaten");
 
-            var datumBis = model.DatumBis.AddHours(23).AddMinutes(59).AddSeconds(59);
-
             var query = _context.Temperaturdaten
                 .Include(x => x.Maschine)
-                .Where(x => x.Timestamp >= model.DatumVon && x.Timestamp <= datumBis);
+                .ImZeitraum(model.DatumVon, model.DatumBis)
+                .FuerMaschine(model.MaschinenId)
+                .NeuesteZuerst();
 
-            if (model.MaschinenId > 0)
-                query = query.Where(x => x.MaschinenId == model.MaschinenId);
+            if (pageNumber <= 0)
+                pageNumber = 1;
 
-            var list = query.ToList();
+            // Nur die aktuelle Seite aus der Datenbank laden
+            var pagedList = query.ToPagedList(pageNumber, 50);
 
-            List<TemperaturdatenModelView> modelView = list
+            List<TemperaturdatenModelView> modelView = pagedList
                 .Select(x => new TemperaturdatenModelView
                 {
                     Id          = x.Id,
@@ -62,19 +63,18 @@ namespace MaschinenDataein.Controllers
                 })
                 .ToList();
 
-            if (pageNumber <= 0)
-                pageNumber = 1;
-
-            var pagedList = modelView.ToPagedList(pageNumber, 50);
-            modelView     = pagedList.ToList();
-
             PaginatedListItem paginatedListItem = new(
                 pagedList.PageNumber,
                 pagedList.PageCount,
                 pagedList.IsFirstPage,
                 pagedList.IsLastPage,
                 "Data"
-            );
+            )
+            {
+                TotalItemCount  = pagedList.TotalItemCount,
+                FirstItemOnPage = pagedList.FirstItemOnPage,
+                LastItemOnPage  = pagedList.LastItemOnPage
+            };
 
             ViewData["PaginatedListItem"] = paginatedListItem;
             ViewData["IsShowId"]          = true;
@@ -148,6 +148,7 @@ namespace MaschinenDataein.Controllers
 
             // ── 4. Datenbankabfrage ────────────────────────────────────────────
             var query = _context.Temperaturdaten
+                .AsNoTracking()
                 .Where(x => x.Timestamp >= vonStart && x.Timestamp <= bisEnd);
 
             if (model.MaschinenId > 0)

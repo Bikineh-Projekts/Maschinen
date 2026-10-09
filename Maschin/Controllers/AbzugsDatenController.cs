@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Linq;
 using System.Collections.Generic;
 using Microsoft.AspNetCore.Mvc;
@@ -33,20 +33,20 @@ namespace MaschinenDataein.Controllers
             FilterModelView model = GetFilterModelViewCookie();
             SetViewBagFilter(model, "Index", "Abzugsdaten");
 
-            var datumBis = model.DatumBis.AddHours(23).AddMinutes(59).AddSeconds(59);
-
-            // ✅ .Include(x => x.Maschine) damit Navigation-Property geladen wird
+            // Filter, Sortierung und Seitenaufteilung laufen in der Datenbank –
+            // es werden nur die 50 Datensätze der aktuellen Seite geladen.
             var query = _context.Abzugsdaten
                 .Include(x => x.Maschine)
-                .Where(x => x.Timestamp >= model.DatumVon && x.Timestamp <= datumBis);
+                .ImZeitraum(model.DatumVon, model.DatumBis)
+                .FuerMaschine(model.MaschinenId)
+                .NeuesteZuerst();
 
-            if (model.MaschinenId > 0)
-                query = query.Where(x => x.MaschinenId == model.MaschinenId);
+            if (pageNumber <= 0)
+                pageNumber = 1;
 
-            var list = query.ToList();
+            var pagedList = query.ToPagedList(pageNumber, 50);
 
-            // ✅ Name aus ProgrammnamenHelper befüllen
-            List<AbzugsdatenModelView> modelView = list
+            List<AbzugsdatenModelView> modelView = pagedList
                 .Select(x => new AbzugsdatenModelView(_context, x)
                 {
                     MaschinenId = x.MaschinenId,
@@ -54,19 +54,18 @@ namespace MaschinenDataein.Controllers
                 })
                 .ToList();
 
-            if (pageNumber <= 0)
-                pageNumber = 1;
-
-            var pagedList = modelView.ToPagedList(pageNumber, 50);
-            modelView = pagedList.ToList();
-
             PaginatedListItem paginatedListItem = new(
                 pagedList.PageNumber,
                 pagedList.PageCount,
                 pagedList.IsFirstPage,
                 pagedList.IsLastPage,
                 "Data"
-            );
+            )
+            {
+                TotalItemCount  = pagedList.TotalItemCount,
+                FirstItemOnPage = pagedList.FirstItemOnPage,
+                LastItemOnPage  = pagedList.LastItemOnPage
+            };
 
             ViewData["PaginatedListItem"] = paginatedListItem;
             ViewData["IsShowId"] = true;

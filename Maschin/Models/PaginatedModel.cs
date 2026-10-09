@@ -85,7 +85,16 @@ namespace MaschinenDataein.Models.PaginatedModel
                 Id = id;
 
             }
-            public string FunctionName { get; set; }
+            public string FunctionName { get; set; } = "Data";
+
+            /// <summary>Gesamtzahl aller Einträge im Filterzeitraum (für "Einträge 51–100 von 1.234").</summary>
+            public int TotalItemCount { get; set; }
+
+            /// <summary>Nummer des ersten Eintrags auf dieser Seite.</summary>
+            public int FirstItemOnPage { get; set; }
+
+            /// <summary>Nummer des letzten Eintrags auf dieser Seite.</summary>
+            public int LastItemOnPage { get; set; }
             public int Id { get; set; }
             public int PageNumber { get; set; }
             public int PageCount { get; set; }

@@ -1,4 +1,4 @@
-@using MaschinenDataein.Models.ModelView
+﻿@using MaschinenDataein.Models.ModelView
 @using MaschinenDataein.Models.PaginatedModel
 @model List<LeistungsdatenModelView>
 
@@ -9,9 +9,9 @@
 
 @if (Model != null && Model.Count > 0)
 {
+    <div class="tabelle-karte">
     <div class="table-responsive">
-        <table class="table table-bordered table-hover table-sm align-middle mb-0"
-               style="font-size:13px">
+        <table class="table table-hover table-striped align-middle">
             <thead class="table-dark text-center">
                 <tr>
                     @if (IsShowId)
@@ -47,11 +47,8 @@
                             <td class="text-center text-muted">@item.Id</td>
                         }
 
-                        <td class="text-center" style="white-space:nowrap">
-                            @item.Timestamp.ToString("dd.MM.yyyy")
-                            <span class="text-muted" style="font-size:11px; margin-left:6px;">
-                                @item.Timestamp.ToString("HH:mm:ss")
-                            </span>
+                        <td class="zeit-datum">
+                            @item.Timestamp.ToString("dd.MM.yyyy")<span class="zeit-uhr">@item.Timestamp.ToString("HH:mm:ss")</span>
                         </td>
 
                         <td class="text-center">@(item.Maschine ?? "–")</td>
@@ -63,10 +60,10 @@
 
                         <td style="min-width:100px;padding:6px 10px">
                             <div style="display:flex;align-items:center;gap:6px">
-                                <div style="flex:1;height:8px;background:#21262d;border-radius:4px">
-                                    <div style="width:@(pct)%;height:100%;background:@barColor;"></div>
+                                <div style="flex:1;height:8px;background:#e2e8f0;border-radius:4px;overflow:hidden">
+                                    <div style="width:@(pct)%;height:100%;background:@barColor;border-radius:4px"></div>
                                 </div>
-                                <span style="font-size:10px;color:#8b949e">
+                                <span style="font-size:11px;color:#64748b;min-width:2.5em;text-align:right">
                                     @(pct)%
                                 </span>
                             </div>
@@ -77,15 +74,13 @@
         </table>
     </div>
 
- 
     @if (pagInfo != null)
     {
         @await Html.PartialAsync("_PaginatedItem", pagInfo)
     }
+    </div>
 }
 else
 {
-    <div class="alert alert-info text-center mt-3">
-        Keine Daten vorhanden
-    </div>
+    @await Html.PartialAsync("_LeerHinweis", Model != null)
 }

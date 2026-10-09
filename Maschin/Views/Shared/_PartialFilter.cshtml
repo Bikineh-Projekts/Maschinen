@@ -1,11 +1,11 @@
-@using MaschinenDataein.Models.ModelView
+﻿@using MaschinenDataein.Models.ModelView
 @{
     FilterModelView filterModelView = ViewBag.FilterView as FilterModelView;
 }
 
 @if (filterModelView != null)
 {
-    <form asp-action="Filter" asp-controller="@filterModelView.ControllerName" method="post">
+    <form asp-action="Filter" asp-controller="@filterModelView.ControllerName" method="post" class="filter-karte">
         @Html.AntiForgeryToken()
         @Html.Hidden("ActionForm",      filterModelView.ActionForm      ?? "Index")
         @Html.Hidden("ControllerName",  filterModelView.ControllerName)
@@ -123,9 +123,9 @@
         </div>
 
         <div class="mb-3 text-end">
-            <button type="submit" class="btn btn-primary">Filtern</button>
             <a href="@Url.Action("Index", filterModelView.ControllerName)"
-               class="btn btn-secondary">Zurücksetzen</a>
+               class="btn btn-outline-secondary"><i class="bi bi-arrow-counterclockwise"></i> Zurücksetzen</a>
+            <button type="submit" class="btn btn-primary"><i class="bi bi-funnel"></i> Filtern</button>
         </div>
     </form>
 }
