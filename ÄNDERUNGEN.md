@@ -65,3 +65,14 @@ Render-Dashboard per User Secrets setzen (Rechtsklick Projekt → „Geheime Ben
 - Dockerfile mit ReadyToRun: schnellerer Start nach Neustarts und Deploys.
 - Hinweis: Render gibt 750 freie Stunden pro Monat und Workspace. Ein dauerhaft wacher Dienst
   braucht ~744 – zwei dauerhaft wache kostenlose Dienste im selben Workspace gehen sich nicht aus.
+
+## Smartphone-Ansicht (Update 4)
+- Unter 768 px werden alle Tabellen automatisch zu Karten („Bezeichnung … Wert“); die
+  Bezeichnungen setzt `site.js` aus dem Tabellenkopf – auch für später hinzugefügte Zeilen.
+  Eine Tabelle mit Klasse `tabelle-quer` bleibt eine normale Tabelle.
+- Planung: Eingabezeilen als zweispaltige Karten, Artikel und Störungsgrund über volle Breite.
+- Seitennavigation passt auf 360-px-Bildschirme in eine Zeile, größere Tippflächen.
+- Filter-Knöpfe nebeneinander in voller Breite, Eingabefelder mit 16 px (kein Auto-Zoom auf dem iPhone).
+- Diagramm-Seiten mit kleineren Abständen, Kennzahlen zweispaltig, Leistungs-Raster bricht um.
+- Häufige Meldungen: Überschrift war fast weiß auf hellem Hintergrund.
+- PC: breite Tabellen verbreitern die Seite nicht mehr.

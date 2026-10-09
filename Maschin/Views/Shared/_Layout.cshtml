@@ -1,4 +1,4 @@
-@* Views/Shared/_Layout.cshtml *@
+﻿@* Views/Shared/_Layout.cshtml *@
 @{
     var aktiverController = ViewContext.RouteData.Values["controller"]?.ToString() ?? "";
 
@@ -58,7 +58,7 @@
     <footer class="fuss no-print">
         <div class="container-fluid px-lg-4 d-flex flex-wrap justify-content-between gap-2">
             <span>&copy; @DateTime.Now.Year MaschinenDataein</span>
-            <span class="text-white-50">Tipp: Mit <kbd>←</kbd> <kbd>→</kbd> blättern Sie durch die Seiten</span>
+            <span class="text-white-50 tastatur-tipp">Tipp: Mit <kbd>←</kbd> <kbd>→</kbd> blättern Sie durch die Seiten</span>
         </div>
     </footer>
 

@@ -1,4 +1,4 @@
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+﻿<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/hammerjs@2.0.8/hammer.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.1/dist/chartjs-plugin-zoom.min.js"></script>
 
@@ -221,7 +221,7 @@
             <div class="lc-box">
                 <div class="lc-box-title">&#128202; Leistung % pro Programm</div>
                 <div class="lc-box-hint">100% = bestes Programm im Zeitraum &middot; Farbe: &#128994; &ge;80% &nbsp; &#128993; &ge;50% &nbsp; &#128308; &lt;50%</div>
-                <div style="display:grid;grid-template-columns:1fr 1.6fr;gap:16px;align-items:start">
+                <div class="lc-leist-grid" style="display:grid;grid-template-columns:1fr 1.6fr;gap:16px;align-items:start">
                     <div style="position:relative;height:${hoehe}px"><canvas id="lcLeistCanvas"></canvas></div>
                     <table class="lc-perf-table">
                         <thead><tr><th>#</th><th>Programm</th><th style="text-align:right">Pakete</th><th style="min-width:160px">Leistung</th></tr></thead>

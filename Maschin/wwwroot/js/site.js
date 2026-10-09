@@ -1,4 +1,4 @@
-// MaschinenDataein – kleine Komfortfunktionen für alle Seiten
+﻿// MaschinenDataein – kleine Komfortfunktionen für alle Seiten
 (function () {
     'use strict';
 
@@ -53,4 +53,83 @@
             window.scrollTo({ top: 0, behavior: 'smooth' });
         });
     }
+})();
+
+// ── Tabellen fürs Smartphone vorbereiten ─────────────────────────────────────
+// Schreibt die Spaltenüberschrift als data-label in jede Zelle. Das CSS zeigt sie
+// unter 768 px als Bezeichnung in der Kartenansicht an. Funktioniert auch für
+// Zeilen, die später per JavaScript hinzukommen (z. B. in der Planung).
+(function () {
+    'use strict';
+
+    function spaltenNamen(tabelle) {
+        const kopf = tabelle.tHead && tabelle.tHead.rows[0];
+        if (!kopf) return null;
+
+        const namen = [];
+        for (const th of kopf.cells) {
+            const versteckt = th.querySelector('.visually-hidden');
+            const text = th.textContent.replace(/\s+/g, ' ').trim();
+            // Nur unsichtbar beschriftete Spalten (z. B. "Aktionen") bekommen keine Bezeichnung
+            const name = versteckt && versteckt.textContent.trim() === text ? '' : text;
+            for (let i = 0; i < (th.colSpan || 1); i++) namen.push(name);
+        }
+        return namen;
+    }
+
+    function beschrifte(tabelle) {
+        const namen = spaltenNamen(tabelle);
+        if (!namen) return;
+
+        const zeilen = [];
+        for (const teil of tabelle.tBodies) zeilen.push(...teil.rows);
+        if (tabelle.tFoot) zeilen.push(...tabelle.tFoot.rows);
+
+        for (const zeile of zeilen) {
+            let spalte = 0;
+            for (const zelle of zeile.cells) {
+                const name = zelle.colSpan > 1 ? '' : (namen[spalte] || '');
+                if (zelle.getAttribute('data-label') !== name) zelle.setAttribute('data-label', name);
+                zelle.classList.toggle('ohne-label', !name);
+                zelle.classList.toggle('eingabe', !!zelle.querySelector('input:not([type=hidden]), select, textarea'));
+                spalte += zelle.colSpan || 1;
+            }
+            const hatEingabe = !!zeile.querySelector('input:not([type=hidden]), select, textarea');
+            zeile.classList.toggle('eingabe-zeile', hatEingabe);
+            // Textfelder für Grund/Beschreibung über die ganze Kartenbreite
+            for (const zelle of zeile.cells) {
+                zelle.classList.toggle('breit', hatEingabe && !!zelle.querySelector('input[name*="Grund"], input[name="artikel"], textarea'));
+            }
+            const erste = zeile.cells[0];
+            if (erste) erste.classList.toggle('kartenkopf', /^(id)$/i.test(erste.getAttribute('data-label') || ''));
+        }
+    }
+
+    function alleBeschriften() {
+        document.querySelectorAll('main table.table').forEach(beschrifte);
+    }
+
+    let geplant = false;
+    function spaeterBeschriften() {
+        if (geplant) return;
+        geplant = true;
+        requestAnimationFrame(function () { geplant = false; alleBeschriften(); });
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        alleBeschriften();
+        const main = document.querySelector('main');
+        if (main && 'MutationObserver' in window) {
+            new MutationObserver(function (aenderungen) {
+                for (const a of aenderungen) {
+                    for (const knoten of a.addedNodes) {
+                        if (knoten.nodeType === 1 && (knoten.tagName === 'TR' || knoten.querySelector && knoten.querySelector('table'))) {
+                            spaeterBeschriften();
+                            return;
+                        }
+                    }
+                }
+            }).observe(main, { childList: true, subtree: true });
+        }
+    });
 })();
