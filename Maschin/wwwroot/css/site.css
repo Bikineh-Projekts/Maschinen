@@ -1,7 +1,8 @@
 ﻿/* ==========================================================================
-   MaschinenDataein – Erscheinungsbild „Leitstand“
-   Petrol als Akzent (angelehnt an Bedienpanels in der Industrie), kühle
-   Stahlgrau-Flächen, Statusfarben nur für Zustände (gut / Warnung / ernst /
+   MaschinenDataein – Erscheinungsbild in den Hausfarben (maritimes Blau und Rot)
+   HAUSFARBEN ÄNDERN: nur --md-akzent… (Blau) und --md-marke-rot unten anpassen.
+   Blau trägt die Oberfläche, Rot nur den schmalen Markenstreifen – damit es nie
+   mit roten Alarmen verwechselt wird. Kühle Flächen, Statusfarben nur für Zustände (gut / Warnung / ernst /
    kritisch) – immer zusammen mit Symbol oder Text, nie Farbe allein.
    Heller und dunkler Modus: folgt dem Gerät, umschaltbar über die Navigation.
    ========================================================================== */
@@ -10,12 +11,12 @@
     color-scheme: light;
 
     /* Flächen */
-    --md-seite: #eef2f3;
+    --md-seite: #eef2f6;
     --md-flaeche: #ffffff;
-    --md-flaeche-2: #f6f8f9;
-    --md-flaeche-3: #edf1f3;
-    --md-rand: #d6dde1;
-    --md-rand-leise: #e8edf0;
+    --md-flaeche-2: #f6f8fb;
+    --md-flaeche-3: #ebf0f5;
+    --md-rand: #d5dde6;
+    --md-rand-leise: #e7ecf2;
 
     /* Schrift */
     --md-text: #13232c;
@@ -23,15 +24,16 @@
     --md-text-3: #66757f;
 
     /* Akzent (Petrol) */
-    --md-akzent: #006d6b;
-    --md-akzent-stark: #00524f;
-    --md-akzent-hell: #e0f1f0;
+    --md-akzent: #1f4f8f;
+    --md-akzent-stark: #173d70;
+    --md-akzent-hell: #e6eef8;
     --md-auf-akzent: #ffffff;
 
     /* Navigation */
-    --md-nav: #0f2c33;
-    --md-nav-text: #b8cdd0;
-    --md-nav-aktiv: #5fd4cf;
+    --md-nav: #0d2440;
+    --md-nav-text: #b9c8dc;
+    --md-nav-aktiv: #8fbaf0;
+    --md-marke-rot: #c8102e;   /* Hausfarbe Rot – nur Markenstreifen */
 
     /* Status: Flächen/Balken und lesbare Textvarianten */
     --status-gut: #0ca30c;
@@ -68,30 +70,30 @@
     --bs-secondary-color: var(--md-text-2);
     --bs-border-color: var(--md-rand);
     --bs-link-color: var(--md-akzent);
-    --bs-link-color-rgb: 0, 109, 107;
+    --bs-link-color-rgb: 31, 79, 143;
     --bs-link-hover-color: var(--md-akzent-stark);
-    --bs-link-hover-color-rgb: 0, 82, 79;
-    --bs-focus-ring-color: rgba(0, 109, 107, .35);
+    --bs-link-hover-color-rgb: 23, 61, 112;
+    --bs-focus-ring-color: rgba(31, 79, 143, .35);
 }
 
 /* Dunkler Modus: eigene, für dunkle Flächen abgestimmte Stufen – keine einfache Umkehrung */
 @media (prefers-color-scheme: dark) {
     :root:where(:not([data-theme="light"])) {
         color-scheme: dark;
-        --md-seite: #0e1418;
-        --md-flaeche: #161d22;
-        --md-flaeche-2: #1b242a;
-        --md-flaeche-3: #212c33;
-        --md-rand: #2c3941;
-        --md-rand-leise: #232e35;
+        --md-seite: #0d131a;
+        --md-flaeche: #151d26;
+        --md-flaeche-2: #1a2430;
+        --md-flaeche-3: #202c3a;
+        --md-rand: #2b3a4a;
+        --md-rand-leise: #223040;
         --md-text: #e5ecef;
         --md-text-2: #a9b6be;
         --md-text-3: #8796a0;
-        --md-akzent: #3fc1bc;
-        --md-akzent-stark: #6fd6d2;
-        --md-akzent-hell: #12312f;
-        --md-auf-akzent: #06201f;
-        --md-nav: #0a1a1f;
+        --md-akzent: #7fb0ef;
+        --md-akzent-stark: #a8c9f4;
+        --md-akzent-hell: #142338;
+        --md-auf-akzent: #0a1a2e;
+        --md-nav: #081627;
         --status-gut-text: #3ccb5a;
         --status-warnung-text: #f5b83d;
         --status-ernst-text: #f0915f;
@@ -108,27 +110,27 @@
         --viz-raster: #26323a;
         --md-tooltip: #05090bf0;
         --md-tooltip-text: #e5ecef;
-        --bs-link-color-rgb: 63, 193, 188;
-        --bs-link-hover-color-rgb: 111, 214, 210;
-        --bs-focus-ring-color: rgba(63, 193, 188, .4);
+        --bs-link-color-rgb: 127, 176, 239;
+        --bs-link-hover-color-rgb: 168, 201, 244;
+        --bs-focus-ring-color: rgba(127, 176, 239, .4);
     }
 }
 :root[data-theme="dark"] {
     color-scheme: dark;
-    --md-seite: #0e1418;
-    --md-flaeche: #161d22;
-    --md-flaeche-2: #1b242a;
-    --md-flaeche-3: #212c33;
-    --md-rand: #2c3941;
-    --md-rand-leise: #232e35;
+    --md-seite: #0d131a;
+    --md-flaeche: #151d26;
+    --md-flaeche-2: #1a2430;
+    --md-flaeche-3: #202c3a;
+    --md-rand: #2b3a4a;
+    --md-rand-leise: #223040;
     --md-text: #e5ecef;
     --md-text-2: #a9b6be;
     --md-text-3: #8796a0;
-    --md-akzent: #3fc1bc;
-    --md-akzent-stark: #6fd6d2;
-    --md-akzent-hell: #12312f;
-    --md-auf-akzent: #06201f;
-    --md-nav: #0a1a1f;
+    --md-akzent: #7fb0ef;
+    --md-akzent-stark: #a8c9f4;
+    --md-akzent-hell: #142338;
+    --md-auf-akzent: #0a1a2e;
+    --md-nav: #081627;
     --status-gut-text: #3ccb5a;
     --status-warnung-text: #f5b83d;
     --status-ernst-text: #f0915f;
@@ -145,9 +147,9 @@
     --viz-raster: #26323a;
     --md-tooltip: #05090bf0;
     --md-tooltip-text: #e5ecef;
-    --bs-link-color-rgb: 63, 193, 188;
-    --bs-link-hover-color-rgb: 111, 214, 210;
-    --bs-focus-ring-color: rgba(63, 193, 188, .4);
+    --bs-link-color-rgb: 127, 176, 239;
+    --bs-link-hover-color-rgb: 168, 201, 244;
+    --bs-focus-ring-color: rgba(127, 176, 239, .4);
 }
 
 /* Bootstrap-Variablen im dunklen Modus (data-bs-theme setzt das Layout-Skript) */
@@ -220,7 +222,7 @@ main { flex: 1; min-width: 0; width: 100%; }
 /* ── Navigation ─────────────────────────────────────────────────────────── */
 .navbar-md {
     background: var(--md-nav);
-    border-bottom: 3px solid var(--md-akzent);
+    border-bottom: 3px solid var(--md-marke-rot);
 }
 
 .navbar-md .navbar-brand { font-weight: 700; letter-spacing: .005em; }
@@ -239,7 +241,7 @@ main { flex: 1; min-width: 0; width: 100%; }
 
 .navbar-md .nav-link.active {
     color: #fff;
-    background: rgba(95, 212, 207, .14);
+    background: rgba(143, 186, 240, .14);
     box-shadow: inset 0 -2px 0 var(--md-nav-aktiv);
 }
 
@@ -507,6 +509,187 @@ main > .seiten-navigation,
     .navbar, .fuss, #nachOben, #ladebalken, .seiten-navigation, .filter-karte, .no-print { display: none !important; }
     body { background: #fff; color: #000; }
     .tabelle-karte { border: 0; }
+}
+
+/* ==========================================================================
+   Startseite: Maschinen-Kacheln und Ereignisverlauf
+   ========================================================================== */
+.kopfzeile {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: .75rem 1rem;
+    margin-bottom: 1rem;
+}
+.kopfzeile h1 { margin-bottom: .15rem !important; }
+.kopfzeile-info { color: var(--md-text-2); margin: 0; font-size: .9rem; }
+
+/* Lage auf einen Blick */
+.lage { display: flex; flex-wrap: wrap; gap: .5rem; margin-bottom: 1rem; }
+.lage-punkt {
+    display: inline-flex;
+    align-items: center;
+    gap: .4rem;
+    padding: .35rem .8rem;
+    border-radius: 999px;
+    background: var(--md-flaeche);
+    border: 1px solid var(--md-rand);
+    font-weight: 600;
+    font-size: .9rem;
+    font-variant-numeric: tabular-nums;
+}
+.lage-punkt.kritisch .bi { color: var(--status-kritisch); }
+.lage-punkt.warnung .bi { color: var(--status-warnung); }
+.lage-punkt.gut .bi { color: var(--status-gut); }
+
+/* Raster: so viele Spalten wie Platz ist, mindestens 300 px breit */
+.kachel-raster {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1.75rem;
+}
+
+.kachel {
+    --kachel-farbe: var(--md-rand);
+    --kachel-text: var(--md-text-2);
+    background: var(--md-flaeche);
+    border: 1px solid var(--md-rand);
+    border-top: 5px solid var(--kachel-farbe);
+    border-radius: var(--md-radius);
+    padding: 1rem 1.1rem .85rem;
+    display: flex;
+    flex-direction: column;
+    gap: .8rem;
+}
+.kachel.gut      { --kachel-farbe: var(--status-gut);      --kachel-text: var(--status-gut-text); }
+.kachel.warnung  { --kachel-farbe: var(--status-warnung);  --kachel-text: var(--status-warnung-text); }
+.kachel.kritisch { --kachel-farbe: var(--status-kritisch); --kachel-text: var(--status-kritisch-text); }
+.kachel.kritisch { background: color-mix(in srgb, var(--status-kritisch) 5%, var(--md-flaeche)); }
+
+.kachel-kopf { display: flex; align-items: flex-start; justify-content: space-between; gap: .75rem; }
+.kachel-kopf h2 { font-size: 1.2rem; font-weight: 700; margin: 0; letter-spacing: -.01em; }
+
+.kachel-status {
+    display: inline-flex;
+    align-items: center;
+    gap: .35rem;
+    color: var(--kachel-text);
+    font-weight: 600;
+    font-size: .9rem;
+    text-align: right;
+    max-width: 60%;
+}
+.kachel-status .bi { color: var(--kachel-farbe); font-size: 1.05rem; }
+
+.kachel-programm { display: flex; align-items: center; gap: .45rem; color: var(--md-text-2); font-weight: 500; }
+.kachel-programm .bi { color: var(--md-akzent); }
+
+.kachel-zahlen { display: flex; align-items: flex-end; justify-content: space-between; gap: 1rem; }
+.kachel-hauptzahl strong { display: block; font-size: 2.1rem; font-weight: 700; line-height: 1.05; letter-spacing: -.02em; }
+.kachel-hauptzahl span,
+.kachel-nebenzahl span,
+.kachel-klein { color: var(--md-text-2); font-size: .82rem; }
+.kachel-nebenzahl { text-align: right; }
+.kachel-nebenzahl strong { display: block; font-size: 1.1rem; font-weight: 600; font-variant-numeric: tabular-nums; }
+
+.kachel-soll { display: flex; flex-direction: column; gap: .2rem; }
+
+.kachel-verlauf { margin: 0; }
+.kachel-verlauf svg { width: 100%; height: 44px; display: block; }
+.kachel-verlauf rect { fill: var(--viz-1); }
+.kachel-verlauf rect:hover { fill: var(--md-akzent-stark); }
+.kachel-verlauf .grundlinie { stroke: var(--md-rand); stroke-width: 1; vector-effect: non-scaling-stroke; }
+.kachel-verlauf figcaption {
+    display: flex;
+    justify-content: space-between;
+    color: var(--md-text-3);
+    font-size: .72rem;
+    margin-top: .2rem;
+}
+
+.kachel-werte {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: .5rem;
+    margin: 0;
+    padding: .6rem .7rem;
+    background: var(--md-flaeche-2);
+    border-radius: var(--md-radius-klein);
+}
+.kachel-werte dt { font-weight: 500; font-size: .78rem; color: var(--md-text-2); }
+.kachel-werte dd { margin: 0; font-weight: 600; font-variant-numeric: tabular-nums; }
+.kachel-werte small { display: block; font-weight: 400; color: var(--md-text-3); font-size: .76rem; }
+
+.kachel-meldungen { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: .3rem; }
+.kachel-meldungen li { display: flex; gap: .45rem; align-items: baseline; font-size: .9rem; line-height: 1.35; }
+.kachel-meldungen li.kritisch { color: var(--status-kritisch-text); font-weight: 500; }
+.kachel-meldungen li.warnung { color: var(--status-warnung-text); font-weight: 500; }
+.kachel-meldungen li.leise { color: var(--md-text-2); }
+.kachel-meldungen li.mehr { color: var(--md-text-2); padding-left: 1.4rem; font-size: .82rem; }
+.kachel-meldungen small { color: var(--md-text-3); margin-left: .25rem; }
+
+.kachel-fuss {
+    margin-top: auto;
+    padding-top: .65rem;
+    border-top: 1px solid var(--md-rand-leise);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: .82rem;
+    color: var(--md-text-2);
+}
+.kachel-fuss .bi { margin-right: .2rem; }
+.kachel-fuss .veraltet { color: var(--status-warnung-text); }
+.kachel-fuss a { font-weight: 600; text-decoration: none; }
+
+/* Ereignisverlauf */
+.ereignisse {
+    background: var(--md-flaeche);
+    border: 1px solid var(--md-rand);
+    border-radius: var(--md-radius);
+    padding: 1rem 1.1rem;
+}
+.ereignisse-kopf { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: .5rem 1rem; margin-bottom: .6rem; }
+.ereignisse-kopf h2 { font-size: 1.1rem; font-weight: 700; margin: 0; }
+.ereignisse-links { display: flex; gap: 1rem; font-size: .88rem; font-weight: 500; }
+.ereignisse-links a { text-decoration: none; }
+
+.ereignis-liste { list-style: none; margin: 0; padding: 0; }
+.ereignis-liste li {
+    display: flex;
+    gap: .75rem;
+    padding: .6rem 0;
+    border-top: 1px solid var(--md-rand-leise);
+}
+.ereignis-liste li:first-child { border-top: 0; }
+
+.ereignis-symbol {
+    flex: 0 0 2rem;
+    height: 2rem;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--md-flaeche-3);
+    color: var(--md-text-2);
+}
+.ereignis-liste li.kritisch .ereignis-symbol { background: color-mix(in srgb, var(--status-kritisch) 14%, transparent); color: var(--status-kritisch-text); }
+.ereignis-liste li.warnung .ereignis-symbol { background: color-mix(in srgb, var(--status-warnung) 20%, transparent); color: var(--status-warnung-text); }
+.ereignis-liste li.gut .ereignis-symbol { background: var(--md-akzent-hell); color: var(--md-akzent); }
+
+.ereignis-inhalt { min-width: 0; flex: 1; }
+.ereignis-zeile { display: flex; flex-wrap: wrap; align-items: baseline; gap: .15rem .6rem; }
+.ereignis-art { color: var(--md-text-2); font-size: .82rem; }
+.ereignis-zeile time { margin-left: auto; color: var(--md-text-3); font-size: .82rem; font-variant-numeric: tabular-nums; }
+.ereignis-text { color: var(--md-text); overflow-wrap: anywhere; }
+
+@media (max-width: 575.98px) {
+    .kachel-raster { grid-template-columns: 1fr; gap: .75rem; }
+    .kachel { padding: .9rem .9rem .75rem; }
+    .kachel-hauptzahl strong { font-size: 1.8rem; }
+    .kopfzeile form, .kopfzeile .btn { width: 100%; }
 }
 
 /* ==========================================================================

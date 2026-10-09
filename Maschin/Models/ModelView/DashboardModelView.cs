@@ -12,5 +12,9 @@ namespace MaschinenDataein.Models.ModelView
         public List<Alarmdaten>? AlarmDatenList { get; set; } = new();
         public List<ZustandsDaten>? ZustandsDatenList { get; set; } = new();
         public List<StoerungsDaten>? StoerungsDatenList { get; set; } = new();
+
+        // Startseite: Maschinen-Kacheln und gemeinsamer Ereignisverlauf
+        public List<MaschinenKachel> Kacheln { get; set; } = new();
+        public List<Ereignis> Ereignisse { get; set; } = new();
     }
 }

@@ -90,3 +90,14 @@ Render-Dashboard per User Secrets setzen (Rechtsklick Projekt → „Geheime Ben
 - Produktionsplanung ohne eigene bunte Verläufe, nutzt dieselben Farben.
 - Tabellenköpfe ruhig hellgrau statt schwarz, keine Schreibmaschinenschrift und keine
   Großbuchstaben-Beschriftungen mehr.
+
+## Startseite mit Maschinen-Kacheln und Hausfarben (Update 6)
+- Startseite neu: pro Maschine eine Kachel mit Zustand (Farbe + Symbol + Text), Programm,
+  Packungen und Takten des Produktionstags, Fortschritt gegenüber der Soll-Menge aus der Planung,
+  Takte je Stunde als Verlauf, Temperaturen Ist/Soll, aktive Alarme bzw. letzte Störung und
+  „Stand vor …“ (zeigt sofort, ob Daten aktuell sind).
+- Lageanzeige oben: Anzahl Maschinen mit Alarm, mit Störung und ohne Meldung.
+- „Letzte Ereignisse“: Alarme, Störungen und Zustandswechsel aller Maschinen in einer Zeitleiste
+  statt drei getrennter Tabellen.
+- Hausfarben: maritimes Blau als Hauptfarbe, Rot als schmaler Markenstreifen unter der Navigation.
+  Ändern in `site.css` über `--md-akzent…` und `--md-marke-rot`.

@@ -1,157 +1,224 @@
 ﻿@using MaschinenDataein.Models.ModelView
-@using MaschinenDataein.Models.Data
-@using MaschinenDataein.Helper
 @model DashboardModelView
-
 @{
     Layout = "~/Views/Shared/_Layout.cshtml";
-    ViewData["Title"] = "Aktuelle-Übersicht";
-    ViewData["actionForm"] = "Index";
+    ViewData["Title"] = "Maschinen";
+    var de = System.Globalization.CultureInfo.GetCultureInfo("de-DE");
+    var jetzt = DateTime.Now;
+
+    string Klasse(KachelStatus s) => s switch
+    {
+        KachelStatus.Gut => "gut",
+        KachelStatus.Warnung => "warnung",
+        KachelStatus.Kritisch => "kritisch",
+        _ => "unbekannt"
+    };
+
+    string Symbol(KachelStatus s) => s switch
+    {
+        KachelStatus.Gut => "bi-check-circle-fill",
+        KachelStatus.Warnung => "bi-exclamation-triangle-fill",
+        KachelStatus.Kritisch => "bi-exclamation-octagon-fill",
+        _ => "bi-question-circle"
+    };
+
+    // "vor 5 Min." / "vor 3 Std." / "vor 2 Tagen" – zeigt sofort, ob Daten aktuell sind
+    string Vor(DateTime? zeit)
+    {
+        if (zeit is null) return "";
+        var d = jetzt - zeit.Value;
+        if (d.TotalMinutes < 1) return "gerade eben";
+        if (d.TotalMinutes < 60) return $"vor {(int)d.TotalMinutes} Min.";
+        if (d.TotalHours < 24) return $"vor {(int)d.TotalHours} Std.";
+        var tage = (int)d.TotalDays;
+        return tage == 1 ? "vor 1 Tag" : $"vor {tage:N0} Tagen";
+    }
+
+    string Grad(decimal? wert) => wert is null ? "–" : wert.Value.ToString("0.0", de) + " °C";
+
+    int anzahlKritisch = Model.Kacheln.Count(k => k.Status == KachelStatus.Kritisch);
+    int anzahlWarnung = Model.Kacheln.Count(k => k.Status == KachelStatus.Warnung);
+    int anzahlGut = Model.Kacheln.Count(k => k.Status == KachelStatus.Gut);
 }
 
-<h1><i class="bi bi-speedometer2 text-primary"></i> Aktuelle Übersicht</h1>
-
-@if (Model != null)
-{
-    <form asp-action="Index" asp-controller="Home" method="post">
+<div class="kopfzeile">
+    <div>
+        <h1><i class="bi bi-grid-3x2-gap"></i> Maschinen</h1>
+        <p class="kopfzeile-info">Aktualisiert sich jede Minute · zuletzt @jetzt.ToString("HH:mm", de) Uhr</p>
+    </div>
+    <form asp-action="Index" asp-controller="Home" method="post" class="no-print">
         @Html.AntiForgeryToken()
-        <button id="reload" type="submit" class="btn btn-outline-primary mb-3"><i class="bi bi-arrow-clockwise"></i> Aktualisieren</button> <span class="text-muted small ms-2">aktualisiert sich automatisch jede Minute</span>
+        <button id="reload" type="submit" class="btn btn-outline-primary"><i class="bi bi-arrow-clockwise"></i> Aktualisieren</button>
     </form>
+</div>
 
-    @* Leistungsdaten *@
-    <div class="table-responsive mt-3">
-        <h3>Leistungsdaten</h3>
-        @await Html.PartialAsync("_LeistungsdatenTable", Model.LeistungsDatenList ?? new List<LeistungsdatenModelView>())
-    </div>
+@if (ViewBag.Fehler is string fehler)
+{
+    <div class="alert alert-danger"><i class="bi bi-exclamation-octagon-fill me-2"></i>@fehler</div>
+}
 
-    @* Abzugsdaten *@
-    <div class="table-responsive mt-3">
-        <h3>Abzugsdaten</h3>
-        @await Html.PartialAsync("_AbzugsdatenTable", Model.AbzugsDatenList ?? new List<AbzugsdatenModelView>())
-    </div>
-
-    @* Temperaturdaten *@
-    <div class="table-responsive mt-3">
-        <h3>Temperaturdaten</h3>
-        @await Html.PartialAsync("_TemperaturdatenTable", Model.TemperaturDatenList ?? new List<TemperaturdatenModelView>())
-    </div>
-
-    @* Alarmdaten *@
-    <div class="table-responsive mt-3">
-        <h3>Alarmdaten</h3>
-        <table class="table table-bordered table-striped table-hover">
-            <thead class="table-dark text-center">
-                <tr>
-                    <th>Zeitstempel</th>
-                    <th>Maschine</th>
-                    <th>Meldung</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var item in Model.AlarmDatenList ?? Enumerable.Empty<Alarmdaten>())
-                {
-                    var aktiveMeldungen = item.AktiveAlarmNummern()
-                        .Select(i => AlarmnamenHelper.Alarmnamen.TryGetValue(i, out var meldung) ? meldung : $"Unbekannter Alarm {i}")
-                        .ToList();
-                    <tr class="text-center">
-                        <td class="text-center" style="white-space:nowrap">
-                            @item.Timestamp.ToString("dd.MM.yyyy")
-                            <span class="text-muted" style="font-size:11px; margin-left:6px;">
-                                @item.Timestamp.ToString("HH:mm:ss")
-                            </span>
-                        </td>
-                        <td>@item.Maschine?.Bezeichnung</td>
-                        <td>
-                            @if (aktiveMeldungen.Any())
-                            {
-                                foreach (var meldung in aktiveMeldungen)
-                                {
-                                    <span class="status-marke kritisch"><i class="bi bi-exclamation-octagon-fill" aria-hidden="true"></i>@meldung</span>
-                                }
-                            }
-                            else
-                            {
-                                <span class="text-muted">Keine</span>
-                            }
-                        </td>
-                    </tr>
-                }
-            </tbody>
-        </table>
-    </div>
-
-    @* Zustandsdaten *@
-    <div class="table-responsive mt-3">
-        <h3>Zustandsdaten</h3>
-        <table class="table table-bordered table-striped table-hover">
-            <thead class="table-dark text-center">
-                <tr>
-                    <th>Zeitstempel</th>
-                    <th>Maschine</th>
-                    <th>Meldung</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var item in Model.ZustandsDatenList ?? Enumerable.Empty<ZustandsDaten>())
-                {
-                    <tr class="text-center">
-                        <td class="text-center" style="white-space:nowrap">
-                            @item.Timestamp.ToString("dd.MM.yyyy")
-                            <span class="text-muted" style="font-size:11px; margin-left:6px;">
-                                @item.Timestamp.ToString("HH:mm:ss")
-                            </span>
-                        </td>
-                        <td>@item.Maschine?.Bezeichnung</td>
-                        <td>@item.Zustandsmeldung?.Meldung</td>
-                    </tr>
-                }
-            </tbody>
-        </table>
-    </div>
-
-    @* Störungsdaten *@
-    <div class="table-responsive mt-3">
-        <h3>Störungsdaten</h3>
-        <table class="table table-bordered table-striped table-hover">
-            <thead class="table-dark text-center">
-                <tr>
-                    <th>Zeitstempel</th>
-                    <th>Maschine</th>
-                    <th>Meldung</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var item in Model.StoerungsDatenList ?? Enumerable.Empty<StoerungsDaten>())
-                {
-                    <tr class="text-center">
-                        <td class="text-center" style="white-space:nowrap">
-                            @item.Timestamp.ToString("dd.MM.yyyy")
-                            <span class="text-muted" style="font-size:11px; margin-left:6px;">
-                                @item.Timestamp.ToString("HH:mm:ss")
-                            </span>
-                        </td>
-                        <td>@item.Maschine?.Bezeichnung</td>
-                        <td>@item.Stoerungsmeldung?.Meldung</td>
-                    </tr>
-                }
-            </tbody>
-        </table>
-    </div>
+@if (Model.Kacheln.Count == 0)
+{
+    @await Html.PartialAsync("_LeerHinweis", true)
 }
 else
 {
-    <div class="alert alert-warning text-center">
-        ❌ Keine Daten verfügbar
+    <div class="lage" role="status">
+        <span class="lage-punkt kritisch" title="Maschinen mit aktivem Alarm"><i class="bi bi-exclamation-octagon-fill"></i>@anzahlKritisch Alarm</span>
+        <span class="lage-punkt warnung" title="Maschinen mit aktueller Störung"><i class="bi bi-exclamation-triangle-fill"></i>@anzahlWarnung Störung</span>
+        <span class="lage-punkt gut" title="Maschinen ohne Alarm oder Störung"><i class="bi bi-check-circle-fill"></i>@anzahlGut ohne Meldung</span>
     </div>
+
+    <div class="kachel-raster">
+        @foreach (var k in Model.Kacheln)
+        {
+            var maxTakte = Math.Max(1, k.TakteProStunde.Max());
+            var veraltet = k.Stand.HasValue && (jetzt - k.Stand.Value).TotalMinutes > 30;
+            var tagText = !k.ProduktionsTag.HasValue ? "" : k.ProduktionsTag.Value.Date == jetzt.Date ? "heute" : "am " + k.ProduktionsTag.Value.ToString("dd.MM.", de);
+            var stoerSymbol = k.Status == KachelStatus.Warnung ? "bi-exclamation-triangle-fill" : "bi-exclamation-triangle";
+
+            <article class="kachel @Klasse(k.Status)" aria-labelledby="kachel-@k.MaschinenId">
+                <header class="kachel-kopf">
+                    <h2 id="kachel-@k.MaschinenId">@k.Bezeichnung</h2>
+                    <span class="kachel-status"><i class="bi @Symbol(k.Status)" aria-hidden="true"></i>@k.StatusText</span>
+                </header>
+
+                <div class="kachel-programm">
+                    <i class="bi bi-box-seam" aria-hidden="true"></i>
+                    <span>@(k.Programm ?? "Kein Programm")</span>
+                </div>
+
+                <div class="kachel-zahlen">
+                    <div class="kachel-hauptzahl">
+                        <strong>@k.Packungen.ToString("N0", de)</strong>
+                        <span>Packungen @tagText</span>
+                    </div>
+                    <div class="kachel-nebenzahl">
+                        <strong>@k.Takte.ToString("N0", de)</strong>
+                        <span>Takte</span>
+                    </div>
+                </div>
+
+                @if (k.SollProzent is int prozent)
+                {
+                    var stufe = prozent >= 90 ? "gut" : prozent >= 60 ? "warnung" : "kritisch";
+                    <div class="kachel-soll" title="Packungen im Verhältnis zur geplanten Soll-Menge">
+                        <div class="leistungs-balken @stufe">
+                            <div class="spur"><div class="fuellung" style="width:@Math.Min(prozent, 100)%"></div></div>
+                            <span class="wert">@prozent %</span>
+                        </div>
+                        <span class="kachel-klein">von @k.SollMenge.Value.ToString("N0", de) geplant</span>
+                    </div>
+                }
+
+                @if (k.Takte > 0)
+                {
+                    <figure class="kachel-verlauf">
+                        <svg viewBox="0 0 240 40" preserveAspectRatio="none" role="img"
+                             aria-label="Takte je Stunde am Produktionstag, höchster Wert @maxTakte.ToString("N0", de)">
+                            <line class="grundlinie" x1="0" y1="39.5" x2="240" y2="39.5" />
+                            @for (int h = 0; h < 24; h++)
+                            {
+                                var hoehe = k.TakteProStunde[h] == 0 ? 0 : Math.Max(2, Math.Round(36.0 * k.TakteProStunde[h] / maxTakte, 1));
+                                <rect x="@(h * 10 + 1)" y="@((40 - hoehe).ToString(System.Globalization.CultureInfo.InvariantCulture))" width="8"
+                                      height="@hoehe.ToString(System.Globalization.CultureInfo.InvariantCulture)" rx="2">
+                                    <title>@h.ToString("00"):00 Uhr: @k.TakteProStunde[h].ToString("N0", de) Takte</title>
+                                </rect>
+                            }
+                        </svg>
+                        <figcaption><span>0 Uhr</span><span>Takte je Stunde</span><span>24 Uhr</span></figcaption>
+                    </figure>
+                }
+
+                @if (k.Ist1.HasValue || k.Ist2.HasValue)
+                {
+                    <dl class="kachel-werte">
+                        <div>
+                            <dt>Unterfolie</dt>
+                            <dd>@Grad(k.Ist1) <small>Soll @Grad(k.Soll1)</small></dd>
+                        </div>
+                        <div>
+                            <dt>Oberfolie</dt>
+                            <dd>@Grad(k.Ist2) <small>Soll @Grad(k.Soll2)</small></dd>
+                        </div>
+                    </dl>
+                }
+
+                @if (k.AktiveAlarme.Count > 0)
+                {
+                    <ul class="kachel-meldungen">
+                        @foreach (var a in k.AktiveAlarme.Take(3))
+                        {
+                            <li class="kritisch"><i class="bi bi-exclamation-octagon-fill" aria-hidden="true"></i>@a</li>
+                        }
+                        @if (k.AktiveAlarme.Count > 3)
+                        {
+                            <li class="mehr">und @(k.AktiveAlarme.Count - 3) weitere</li>
+                        }
+                    </ul>
+                }
+                else if (k.LetzteStoerung != null)
+                {
+                    <ul class="kachel-meldungen">
+                        <li class="@(k.Status == KachelStatus.Warnung ? "warnung" : "leise")">
+                            <i class="bi @stoerSymbol" aria-hidden="true"></i>
+                            <span>Letzte Störung: @k.LetzteStoerung <small>@Vor(k.LetzteStoerungZeit)</small></span>
+                        </li>
+                    </ul>
+                }
+
+                <footer class="kachel-fuss">
+                    <span class="@(veraltet ? "veraltet" : "")" title="@(k.Stand?.ToString("dd.MM.yyyy HH:mm:ss", de))">
+                        <i class="bi bi-clock" aria-hidden="true"></i>
+                        @(k.Stand.HasValue ? "Stand " + Vor(k.Stand) : "Noch keine Daten")
+                    </span>
+                    <a asp-controller="LeistungsDaten" asp-action="Index">Details <i class="bi bi-chevron-right" aria-hidden="true"></i></a>
+                </footer>
+            </article>
+        }
+    </div>
+
+    <section class="ereignisse" aria-labelledby="ereignisse-titel">
+        <div class="ereignisse-kopf">
+            <h2 id="ereignisse-titel">Letzte Ereignisse</h2>
+            <div class="ereignisse-links">
+                <a asp-controller="AlarmDaten" asp-action="Index">Alarme</a>
+                <a asp-controller="StoerungsDaten" asp-action="Index">Störungen</a>
+                <a asp-controller="ZustandsDaten" asp-action="Index">Zustände</a>
+            </div>
+        </div>
+
+        @if (Model.Ereignisse.Count == 0)
+        {
+            <p class="text-muted mb-0">Noch keine Ereignisse erfasst.</p>
+        }
+        else
+        {
+            <ol class="ereignis-liste">
+                @foreach (var e in Model.Ereignisse)
+                {
+                    <li class="@Klasse(e.Stufe)">
+                        <span class="ereignis-symbol" aria-hidden="true"><i class="bi @(e.Art == "Zustand" ? "bi-activity" : Symbol(e.Stufe))"></i></span>
+                        <div class="ereignis-inhalt">
+                            <div class="ereignis-zeile">
+                                <strong>@e.Maschine</strong>
+                                <span class="ereignis-art">@e.Art</span>
+                                <time datetime="@e.Zeit.ToString("s")" title="@e.Zeit.ToString("dd.MM.yyyy HH:mm:ss", de)">@e.Zeit.ToString(e.Zeit.Date == jetzt.Date ? "HH:mm" : "dd.MM. HH:mm", de)</time>
+                            </div>
+                            <div class="ereignis-text">@e.Text</div>
+                        </div>
+                    </li>
+                }
+            </ol>
+        }
+    </section>
 }
 
 @section Scripts {
-    <script type="text/javascript">
-        $(document).ready(function () {
-            setInterval(clickReload, 60000);
-        });
-        function clickReload() {
-            $('#reload').click();
-        }
+    <script>
+        // Jede Minute neu laden – nur wenn die Seite sichtbar ist
+        setInterval(function () {
+            if (document.visibilityState === 'visible') document.getElementById('reload')?.click();
+        }, 60000);
     </script>
 }
