@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using MaschinenDataein.Models;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace MaschinenDataein.Helper
@@ -13,6 +14,8 @@ namespace MaschinenDataein.Helper
         public static List<SelectListItem> GetMaschinen(MaschinenDbContext context)
         {
             return context.Maschinen
+                .AsNoTracking()
+                .OrderBy(m => m.Bezeichnung)
                 .Select(m => new SelectListItem
                 {
                     Value = m.Id.ToString(),

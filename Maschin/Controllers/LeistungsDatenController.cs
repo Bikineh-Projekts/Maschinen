@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Linq;
 using System.Globalization;
 using System.Collections.Generic;
@@ -36,32 +36,32 @@ namespace MaschinenDataein.Controllers
             FilterModelView model = GetFilterModelViewCookie();
             SetViewBagFilter(model, "Index", "Leistungsdaten");
 
-            var datumBis = model.DatumBis.Date.AddHours(23).AddMinutes(59).AddSeconds(59);
-
             var query = _context.Leistungsdaten
                 .Include(x => x.Maschine)
-                .Where(x => x.Timestamp >= model.DatumVon.Date && x.Timestamp <= datumBis);
+                .ImZeitraum(model.DatumVon, model.DatumBis)
+                .FuerMaschine(model.MaschinenId)
+                .NeuesteZuerst();
 
-            if (model.MaschinenId > 0)
-                query = query.Where(x => x.MaschinenId == model.MaschinenId);
+            if (pageNumber <= 0) pageNumber = 1;
 
-            var list = query.ToList();
+            // Nur die aktuelle Seite aus der Datenbank laden
+            var pagedList = query.ToPagedList(pageNumber, 50);
 
-            var modelView = list
+            var modelView = pagedList
                 .Select(x => new LeistungsdatenModelView(_context, x)
                 {
                     Name = ProgrammnamenHelper.GetName(x.MaschinenId, x.PRnummer)
                 })
                 .ToList();
 
-            if (pageNumber <= 0) pageNumber = 1;
-
-            var pagedList = modelView.ToPagedList(pageNumber, 50);
-            modelView = pagedList.ToList();
-
             ViewData["PaginatedListItem"] = new PaginatedListItem(
                 pagedList.PageNumber, pagedList.PageCount,
-                pagedList.IsFirstPage, pagedList.IsLastPage, "Data");
+                pagedList.IsFirstPage, pagedList.IsLastPage, "Data")
+            {
+                TotalItemCount  = pagedList.TotalItemCount,
+                FirstItemOnPage = pagedList.FirstItemOnPage,
+                LastItemOnPage  = pagedList.LastItemOnPage
+            };
             ViewData["IsShowId"] = true;
 
             return View("Index", modelView);
@@ -100,6 +100,7 @@ namespace MaschinenDataein.Controllers
                 {
                     // Letzten Timestamp in der DB suchen
                     var letzterTs = _context.Leistungsdaten
+                        .AsNoTracking()
                         .OrderByDescending(x => x.Timestamp)
                         .Select(x => (DateTime?)x.Timestamp)
                         .FirstOrDefault();
@@ -123,6 +124,7 @@ namespace MaschinenDataein.Controllers
 
                 // ── 2. Datenbankabfrage ─────────────────────────────────────
                 var query = _context.Leistungsdaten
+                    .AsNoTracking()
                     .Where(x => x.Timestamp >= vonStart && x.Timestamp <= bisEnd);
 
                 if (model.MaschinenId > 0)
@@ -137,7 +139,7 @@ namespace MaschinenDataein.Controllers
                 bool fallbackVerwendet = false;
                 if (list.Count == 0)
                 {
-                    var fbQuery = _context.Leistungsdaten.AsQueryable();
+                    var fbQuery = _context.Leistungsdaten.AsNoTracking();
                     if (model.MaschinenId > 0)
                         fbQuery = fbQuery.Where(x => x.MaschinenId == model.MaschinenId);
 

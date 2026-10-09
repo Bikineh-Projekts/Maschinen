@@ -1,4 +1,4 @@
-@using MaschinenDataein.Models.ModelView
+﻿@using MaschinenDataein.Models.ModelView
 @using MaschinenDataein.Models.Data
 @using MaschinenDataein.Helper
 @model DashboardModelView
@@ -9,13 +9,13 @@
     ViewData["actionForm"] = "Index";
 }
 
-<h2 class="text-center mt-4 mb-4">Aktuelle-Übersicht</h2>
+<h1><i class="bi bi-speedometer2 text-primary"></i> Aktuelle Übersicht</h1>
 
 @if (Model != null)
 {
     <form asp-action="Index" asp-controller="Home" method="post">
         @Html.AntiForgeryToken()
-        <button id="reload" type="submit" class="btn btn-primary mb-3">Reload</button>
+        <button id="reload" type="submit" class="btn btn-outline-primary mb-3"><i class="bi bi-arrow-clockwise"></i> Aktualisieren</button> <span class="text-muted small ms-2">aktualisiert sich automatisch jede Minute</span>
     </form>
 
     @* Leistungsdaten *@
@@ -50,22 +50,9 @@
             <tbody>
                 @foreach (var item in Model.AlarmDatenList ?? Enumerable.Empty<Alarmdaten>())
                 {
-                    var aktiveMeldungen = new List<string>();
-                    for (int i = 1; i <= 94; i++)
-                    {
-                        var prop = item.GetType().GetProperty($"AM{i}");
-                        if (prop != null)
-                        {
-                            var value = prop.GetValue(item);
-                            if (value is bool boolValue && boolValue)
-                            {
-                                if (AlarmnamenHelper.Alarmnamen.TryGetValue(i, out var meldung))
-                                    aktiveMeldungen.Add(meldung);
-                                else
-                                    aktiveMeldungen.Add($"Unbekannter Alarm {i}");
-                            }
-                        }
-                    }
+                    var aktiveMeldungen = item.AktiveAlarmNummern()
+                        .Select(i => AlarmnamenHelper.Alarmnamen.TryGetValue(i, out var meldung) ? meldung : $"Unbekannter Alarm {i}")
+                        .ToList();
                     <tr class="text-center">
                         <td class="text-center" style="white-space:nowrap">
                             @item.Timestamp.ToString("dd.MM.yyyy")

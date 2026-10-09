@@ -1,17 +1,13 @@
-﻿@using MaschinenDataein.Models.ModelView
-
-<div class="container mt-4">
-    <h1 class="mb-4 text-center">Abzugsdaten</h1>
+@using MaschinenDataein.Models.ModelView
+@model List<AbzugsdatenModelView>
 @{
     Layout = "~/Views/Shared/_Layout.cshtml";
     ViewData["actionForm"] = "Index";
     ViewData["Title"] = "Abzug";
- 
-    @model List<AbzugsdatenModelView>
-
-    if(Model != null && Model.Count > 0) 
+    ViewData["IsShowId"] = true;
 }
-    @await Html.PartialAsync("_PartialFilter")
-    @{ViewData["IsShowId"] = true;}
-    @await Html.PartialAsync("_AbzugsdatenTable", Model)
-</div>
+
+<h1><i class="bi bi-arrows-expand text-primary"></i> Abzugsdaten</h1>
+
+@await Html.PartialAsync("_PartialFilter")
+@await Html.PartialAsync("_AbzugsdatenTable", Model)

@@ -1,62 +1,59 @@
 @using MaschinenDataein.Helper
 @using MaschinenDataein.Models.ModelView
 @using MaschinenDataein.Models.PaginatedModel
+@model List<AbzugsdatenModelView>
 
 @{
     bool IsShowId = Convert.ToBoolean(ViewData["IsShowId"]);
-    PaginatedListItem paginatedListItem = ViewData["PaginatedListItem"] as PaginatedListItem;
+    var paginatedListItem = ViewData["PaginatedListItem"] as PaginatedListItem;
 }
-
-@model List<AbzugsdatenModelView>
 
 @if (Model != null && Model.Count > 0)
 {
-    <table class="table table-bordered table-striped table-hover shadow">
-        <thead class="table-dark">
-            <tr>
-                @if (IsShowId)
-                {
-                    <th>Id</th>
-                }
-                
-                <th class="text-center">Zeitstempel</th>
-                <th>Maschine</th>
-                <th>PR-Name</th>
-                <th>Packungen pro Abzug</th>
-                <th>Abzuglänge</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var AbzugsDaten in Model)
-            {
-                <tr>
-                    @if (IsShowId)
+    <div class="tabelle-karte">
+        <div class="table-responsive">
+            <table class="table table-hover table-striped align-middle">
+                <thead class="table-dark">
+                    <tr>
+                        @if (IsShowId)
+                        {
+                            <th class="text-end">Id</th>
+                        }
+                        <th>Zeitstempel</th>
+                        <th>Maschine</th>
+                        <th>PR-Name</th>
+                        <th class="text-end">Packungen pro Abzug</th>
+                        <th class="text-end">Abzuglänge</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var AbzugsDaten in Model)
                     {
-                        <td>@AbzugsDaten.Id</td>
+                        <tr>
+                            @if (IsShowId)
+                            {
+                                <td class="text-end text-muted">@AbzugsDaten.Id</td>
+                            }
+                            <td class="zeit-datum">
+                                @AbzugsDaten.Timestamp.ToString("dd.MM.yyyy")<span class="zeit-uhr">@AbzugsDaten.Timestamp.ToString("HH:mm:ss")</span>
+                            </td>
+                            <td>@(AbzugsDaten.Maschine ?? "–")</td>
+                            <td>@(string.IsNullOrWhiteSpace(AbzugsDaten.Name) ? "–" : AbzugsDaten.Name)</td>
+                            <td class="text-end">@AbzugsDaten.PackungenproAbzug.ToString("N0") Stück</td>
+                            <td class="text-end">@((AbzugsDaten.Abzuglaenge / 10.0).ToString("N1")) mm</td>
+                        </tr>
                     }
-                    <td class="text-center" style="white-space:nowrap">
-                        @AbzugsDaten.Timestamp.ToString("dd.MM.yyyy")
-                        <span class="text-muted" style="font-size:11px">
-                            @AbzugsDaten.Timestamp.ToString("HH:mm:ss")
-                        </span>
-                    </td>
-                    <td>@AbzugsDaten.Maschine</td>
-                    <td>@AbzugsDaten.Name</td>
-                    <td>@AbzugsDaten.PackungenproAbzug Stück</td>
-                    <td>@(AbzugsDaten.Abzuglaenge / 10.0) mm</td>
-                </tr>
-            }
-        </tbody>
-    </table>
+                </tbody>
+            </table>
+        </div>
 
-    @if (paginatedListItem != null)
-    {
-        @await Html.PartialAsync("_PaginatedItem", paginatedListItem)
-    }
+        @if (paginatedListItem != null)
+        {
+            @await Html.PartialAsync("_PaginatedItem", paginatedListItem)
+        }
+    </div>
 }
 else
 {
-    <div class="alert alert-info text-center">
-        <strong>ℹ️ Bitte setzen Sie einen Filter, um die Abzugsdaten anzuzeigen.</strong>
-    </div>
+    @await Html.PartialAsync("_LeerHinweis", Model != null)
 }

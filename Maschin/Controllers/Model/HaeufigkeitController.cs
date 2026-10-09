@@ -2,6 +2,7 @@ using MaschinenDataein.Models;
 using MaschinenDataein.Models.Data;
 using MaschinenDataein.Models.ModelView;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using System.Linq;
 using System.Collections.Generic;
 
@@ -16,67 +17,49 @@ namespace MaschinenDataein.Controllers
             _context = context;
         }
 
-        public IActionResult Index()
+        public async Task<IActionResult> Index(CancellationToken ct)
         {
             var viewModel = new HaeufigkeitModelView();
 
-            // 1. Alarmmeldungen z‰hlen
-            var alarmCounts = new Dictionary<int, int>();
+            // 1. Alarmmeldungen z√§hlen
+            //    Nur Datens√§tze mit aktivem Alarm, ohne Change-Tracking und gestreamt:
+            //    Die Tabelle wird nicht mehr komplett in den Speicher geladen,
+            //    und statt Reflection wird direkt auf AM1 ‚Ä¶ AM94 zugegriffen.
+            var alarmCounts = new int[Alarmdaten.AnzahlAlarme + 1];
 
-            for (int i = 1; i <= 94; i++)
+            var alarme = _context.Alarmdaten
+                .AsNoTracking()
+                .Where(Alarmdaten.HatAktivenAlarm)
+                .AsAsyncEnumerable()
+                .WithCancellation(ct);
+
+            await foreach (var alarm in alarme)
             {
-                alarmCounts[i] = 0;
+                foreach (var nummer in alarm.AktiveAlarmNummern())
+                    alarmCounts[nummer]++;
             }
 
-            foreach (var alarm in _context.Alarmdaten.ToList())
-            {
-                for (int i = 1; i <= 94; i++)
-                {
-                    var prop = typeof(Alarmdaten).GetProperty($"AM{i}");
-                    if (prop != null)
-                    {
-                        var value = prop.GetValue(alarm);
-
-                        bool isActive = false;
-
-                        if (value is bool boolValue)
-                        {
-                            isActive = boolValue;
-                        }
-                        else if (value is int intValue)
-                        {
-                            isActive = intValue != 0;
-                        }
-
-                        if (isActive)
-                        {
-                            alarmCounts[i]++;
-                        }
-                    }
-                }
-            }
-
-            viewModel.TopAlarmmeldungen = alarmCounts
-                .Where(x => x.Value > 0) // Nur die Alarme zeigen, die tats‰chlich vorkommen!
-                .Select(x => new HaeufigMeldung { Meldung = $"AM{x.Key}", Anzahl = x.Value })
+            viewModel.TopAlarmmeldungen = Enumerable.Range(1, Alarmdaten.AnzahlAlarme)
+                .Where(i => alarmCounts[i] > 0) // Nur die Alarme zeigen, die tats√§chlich vorkommen!
+                .Select(i => new HaeufigMeldung { Meldung = $"AM{i}", Anzahl = alarmCounts[i] })
                 .OrderByDescending(x => x.Anzahl)
                 .ToList();
 
-            // 2. Zustandsmeldungen z‰hlen
-            viewModel.TopZustandsmeldungen = _context.Zustandsdaten
+            // 2. Zustandsmeldungen z√§hlen
+            viewModel.TopZustandsmeldungen = await _context.Zustandsdaten
                 .GroupBy(z => z.Zustandsmeldung.Meldung)
-                .Select(g => new HaeufigMeldung { Meldung = g.Key, Anzahl = g.Count() })
+                .Select(g => new HaeufigMeldung { Meldung = g.Key ?? "", Anzahl = g.Count() })
                 .OrderByDescending(x => x.Anzahl)
                 .Take(20)
-                .ToList();
+                .ToListAsync(ct);
 
-            // 3. Stˆrungsmeldungen z‰hlen
-            viewModel.TopStoerungsmeldungen = _context.Stoerungsdaten
+            // 3. St√∂rungsmeldungen z√§hlen
+            viewModel.TopStoerungsmeldungen = await _context.Stoerungsdaten
                 .GroupBy(s => s.Stoerungsmeldung.Meldung)
-                .Select(g => new HaeufigMeldung { Meldung = g.Key, Anzahl = g.Count() })
+                .Select(g => new HaeufigMeldung { Meldung = g.Key ?? "", Anzahl = g.Count() })
                 .OrderByDescending(x => x.Anzahl)
                 .Take(20)
-                .ToList();
+                .ToListAsync(ct);
 
             return View(viewModel);
         }

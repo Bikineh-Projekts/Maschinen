@@ -4,8 +4,8 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace MaschinenDataein.Models.Data
 {
-    [Table("leistungsdaten")]
-    public class Leistungsdaten  
+    [Table("Leistungsdaten")]
+    public class Leistungsdaten : IMaschinenDaten
     {
         [Key]
         [Column("Id")]

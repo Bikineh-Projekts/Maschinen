@@ -48,9 +48,11 @@ namespace MaschinenDataein.Controllers
                 var model = new DashboardModelView
                 {
                     // Neuestes Programm pro Maschine
+                    // Vorher wurde hier die komplette Planungstabelle geladen
                     ProgrammenList = await _context.Planung
                         .Include(p => p.Maschine)
                         .OrderByDescending(p => p.Id)
+                        .Take(20)
                         .AsNoTracking()
                         .ToListAsync(),
 

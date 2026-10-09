@@ -1,0 +1,18 @@
+@* Einheitlicher Hinweis, wenn keine Daten angezeigt werden.
+   Model = true  -> es wurde gefiltert, aber nichts gefunden
+   Model = false -> es wurde noch nicht gefiltert *@
+@model bool
+
+<div class="leer-hinweis">
+    @if (Model)
+    {
+        <i class="bi bi-inbox" aria-hidden="true"></i>
+        <strong>Keine Daten im gewählten Zeitraum.</strong>
+        <div class="small mt-1">Wählen Sie einen anderen Zeitraum oder eine andere Maschine.</div>
+    }
+    else
+    {
+        <i class="bi bi-funnel" aria-hidden="true"></i>
+        <strong>Zeitraum und Maschine wählen und auf „Filtern“ klicken.</strong>
+    }
+</div>

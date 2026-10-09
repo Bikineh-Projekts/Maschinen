@@ -1,5 +1,6 @@
 ﻿using MaschinenDataein.Models.Data;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace MaschinenDataein.Models
 {
@@ -10,139 +11,86 @@ namespace MaschinenDataein.Models
         {
         }
 
-        public DbSet<Planungs> Planung { get; set; } = null!;
+        // ── Stammdaten ──
+        public DbSet<Maschine> Maschinen { get; set; } = null!;
+        public DbSet<ZustandsMeldung> Zustandsmeldung { get; set; } = null!;
+        public DbSet<StoerungsMeldung> Stoerungsmeldung { get; set; } = null!;
+
+        // ── Messdaten (werden von der OPC-Anbindung geschrieben, hier nur gelesen) ──
         public DbSet<Leistungsdaten> Leistungsdaten { get; set; } = null!;
         public DbSet<TemperaturDaten> Temperaturdaten { get; set; } = null!;
         public DbSet<AbzugsDaten> Abzugsdaten { get; set; } = null!;
         public DbSet<Alarmdaten> Alarmdaten { get; set; } = null!;
         public DbSet<ZustandsDaten> Zustandsdaten { get; set; } = null!;
-        public DbSet<ZustandsMeldung> Zustandsmeldung { get; set; } = null!;
         public DbSet<StoerungsDaten> Stoerungsdaten { get; set; } = null!;
-        public DbSet<StoerungsMeldung> Stoerungsmeldung { get; set; } = null!;
-        public DbSet<Maschine> Maschinen { get; set; } = null!;
+
+        // ── Produktionsplanung (manuelle Erfassung) ──
+        public DbSet<Planungs> Planung { get; set; } = null!;
+        public DbSet<PlanungStoerungen> PlanungStoerungen { get; set; } = null!;
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
 
-            // Primärschlüssel explizit definieren
-            modelBuilder.Entity<Maschine>().HasKey(m => m.Id);
-            modelBuilder.Entity<Planungs>().HasKey(p => p.Id);
-            modelBuilder.Entity<Leistungsdaten>().HasKey(l => l.Id);
-            modelBuilder.Entity<TemperaturDaten>().HasKey(t => t.Id);
-            modelBuilder.Entity<AbzugsDaten>().HasKey(a => a.Id);
-            modelBuilder.Entity<Alarmdaten>().HasKey(a => a.Id);
-            modelBuilder.Entity<ZustandsDaten>().HasKey(z => z.Id);
-            modelBuilder.Entity<ZustandsMeldung>().HasKey(z => z.Id);
-            modelBuilder.Entity<StoerungsDaten>().HasKey(s => s.Id);
-            modelBuilder.Entity<StoerungsMeldung>().HasKey(s => s.Id);
+            // Tabellennamen, Spalten und Schlüssel kommen aus den Attributen der Modelle
+            // ([Table], [Column], [Key]). Hier stehen nur noch Beziehungen und Datentypen.
 
-            // Tabellennamen (✅ Planungs mit uppercase P wie in der DB)
+            // ───────────── Stammdaten ─────────────
             modelBuilder.Entity<Maschine>().ToTable("maschinen");
-            modelBuilder.Entity<Planungs>().ToTable("Planungs");
-            modelBuilder.Entity<Leistungsdaten>().ToTable("Leistungsdaten");
-            modelBuilder.Entity<TemperaturDaten>().ToTable("Temperaturdaten");
-            modelBuilder.Entity<AbzugsDaten>().ToTable("Abzugsdaten");
-            modelBuilder.Entity<Alarmdaten>().ToTable("Alarmdaten");
-            modelBuilder.Entity<ZustandsDaten>().ToTable("Zustandsdaten");
-            modelBuilder.Entity<ZustandsMeldung>().ToTable("Zustandsmeldung");
-            modelBuilder.Entity<StoerungsDaten>().ToTable("Stoerungsdaten");
-            modelBuilder.Entity<StoerungsMeldung>().ToTable("Stoerungsmeldung");
 
-            // Timestamp Konfigurationen
-            modelBuilder.Entity<Leistungsdaten>()
-                .Property(x => x.Timestamp)
-                .HasColumnType("timestamp without time zone");
+            // ───────────── Messdaten → Maschine ─────────────
+            MitMaschine(modelBuilder.Entity<Leistungsdaten>());
+            MitMaschine(modelBuilder.Entity<TemperaturDaten>());
+            MitMaschine(modelBuilder.Entity<AbzugsDaten>());
+            MitMaschine(modelBuilder.Entity<Alarmdaten>());
+            MitMaschine(modelBuilder.Entity<ZustandsDaten>());
+            MitMaschine(modelBuilder.Entity<StoerungsDaten>());
+            MitMaschine(modelBuilder.Entity<Planungs>());
+            MitMaschine(modelBuilder.Entity<PlanungStoerungen>());
 
-            modelBuilder.Entity<TemperaturDaten>()
-                .Property(x => x.Timestamp)
-                .HasColumnType("timestamp without time zone");
-
-            modelBuilder.Entity<Alarmdaten>()
-                .Property(x => x.Timestamp)
-                .HasColumnType("timestamp without time zone");
-
-            modelBuilder.Entity<ZustandsDaten>()
-                .Property(x => x.Timestamp)
-                .HasColumnType("timestamp without time zone");
-
-            modelBuilder.Entity<StoerungsDaten>()
-                .Property(x => x.Timestamp)
-                .HasColumnType("timestamp without time zone");
-
-            modelBuilder.Entity<AbzugsDaten>()
-                .Property(x => x.Timestamp)
-                .HasColumnType("timestamp without time zone");
-
-            modelBuilder.Entity<Planungs>()
-                .Property(x => x.Datum)
-                .HasColumnType("timestamp without time zone");
-
-            // Beziehungen konfigurieren
-            ConfigureRelationships(modelBuilder);
-        }
-
-        private void ConfigureRelationships(ModelBuilder modelBuilder)
-        {
-            // Leistungsdaten -> Maschine
-            modelBuilder.Entity<Leistungsdaten>()
-                .HasOne(x => x.Maschine)
-                .WithMany()
-                .HasForeignKey(x => x.MaschinenId)
-                .OnDelete(DeleteBehavior.Restrict);
-
-            // TemperaturDaten -> Maschine
-            modelBuilder.Entity<TemperaturDaten>()
-                .HasOne(x => x.Maschine)
-                .WithMany()
-                .HasForeignKey(x => x.MaschinenId)
-                .OnDelete(DeleteBehavior.Restrict);
-
-            // AbzugsDaten -> Maschine
-            modelBuilder.Entity<AbzugsDaten>()
-                .HasOne(x => x.Maschine)
-                .WithMany()
-                .HasForeignKey(x => x.MaschinenId)
-                .OnDelete(DeleteBehavior.Restrict);
-
-            // Alarmdaten -> Maschine
-            modelBuilder.Entity<Alarmdaten>()
-                .HasOne(x => x.Maschine)
-                .WithMany()
-                .HasForeignKey(x => x.MaschinenId)
-                .OnDelete(DeleteBehavior.Restrict);
-
-            // ZustandsDaten -> Maschine
-            modelBuilder.Entity<ZustandsDaten>()
-                .HasOne(x => x.Maschine)
-                .WithMany()
-                .HasForeignKey(x => x.MaschinenId)
-                .OnDelete(DeleteBehavior.Restrict);
-
-            // ZustandsDaten -> ZustandsMeldung
+            // ───────────── Meldungen ─────────────
             modelBuilder.Entity<ZustandsDaten>()
                 .HasOne(x => x.Zustandsmeldung)
                 .WithMany()
                 .HasForeignKey(x => x.ZustandsmeldungId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            // StoerungsDaten -> Maschine
-            modelBuilder.Entity<StoerungsDaten>()
-                .HasOne(x => x.Maschine)
-                .WithMany()
-                .HasForeignKey(x => x.MaschinenId)
-                .OnDelete(DeleteBehavior.Restrict);
-
-            // StoerungsDaten -> StoerungsMeldung
             modelBuilder.Entity<StoerungsDaten>()
                 .HasOne(x => x.Stoerungsmeldung)
                 .WithMany()
                 .HasForeignKey(x => x.StoerungsmeldungId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-             modelBuilder.Entity<Planungs>()
-            .Property(x => x.MaschinenId)
-            .HasColumnName("MaschinenId");
+            // ───────────── Uhrzeiten der Planung ─────────────
+            // In der Datenbank "time without time zone" (Standard wäre "interval")
+            modelBuilder.Entity<Planungs>(e =>
+            {
+                e.Property(x => x.Starten).HasColumnType("time without time zone");
+                e.Property(x => x.Stoppen).HasColumnType("time without time zone");
+            });
+
+            // ───────────── Datumsfelder ─────────────
+            // Alle DateTime-Spalten als "timestamp without time zone".
+            // Ersetzt die einzelnen HasColumnType-Aufrufe und deckt auch MHD ab –
+            // sonst lehnt Npgsql das Speichern von Datumswerten ohne Zeitzone ab.
+            var datumsFelder = modelBuilder.Model.GetEntityTypes()
+                .SelectMany(t => t.GetProperties())
+                .Where(p => p.ClrType == typeof(DateTime) || p.ClrType == typeof(DateTime?));
+
+            foreach (var feld in datumsFelder)
+                feld.SetColumnType("timestamp without time zone");
+        }
+
+        /// <summary>
+        /// Beziehung "Datensatz → Maschine" über MaschinenId.
+        /// Restrict: eine Maschine mit Daten kann nicht versehentlich mitgelöscht werden.
+        /// </summary>
+        private static void MitMaschine<T>(EntityTypeBuilder<T> entity) where T : class
+        {
+            entity.HasOne<Maschine>("Maschine")
+                  .WithMany()
+                  .HasForeignKey("MaschinenId")
+                  .OnDelete(DeleteBehavior.Restrict);
         }
     }
 }

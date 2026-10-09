@@ -5,7 +5,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace MaschinenDataein.Models.Data
 {
     [Table("Zustandsdaten")]
-    public class ZustandsDaten
+    public class ZustandsDaten : IMaschinenDaten
     {
         [Key]
         [Column("Id")]

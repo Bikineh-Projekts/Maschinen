@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using MaschinenDataein.Controllers.Model;
@@ -11,7 +10,6 @@ using MaschinenDataein.Models.Data;
 using MaschinenDataein.Models.ModelView;
 using MaschinenDataein.Models.PaginatedModel;
 using X.PagedList;
-
 
 namespace MaschinenDataein.Controllers
 {
@@ -39,28 +37,19 @@ namespace MaschinenDataein.Controllers
             FilterModelView model = GetFilterModelViewCookie();
             SetViewBagFilter(model, "Index", "AlarmDaten");
 
-            var datumBis = model.DatumBis.AddHours(23).AddMinutes(59).AddSeconds(59);
-
+            // "Mindestens ein Alarm aktiv" wird jetzt in SQL geprüft.
+            // Vorher wurde der ganze Zeitraum geladen und per Reflection durchsucht.
             var query = _context.Alarmdaten
                 .Include(a => a.Maschine)
-                .Where(a => a.Timestamp >= model.DatumVon && a.Timestamp <= datumBis);
-
-            if (model.MaschinenId > 0)
-                query = query.Where(a => a.MaschinenId == model.MaschinenId);
-
-            var list = query
-                .OrderByDescending(a => a.Timestamp)
-                .ToList();
-
-            // Nur Einträge mit mindestens einem aktiven Alarm
-            var mitAlarmen = list
-                .Where(a => GetAktiveAlarme(a).Any())
-                .ToList();
+                .ImZeitraum(model.DatumVon, model.DatumBis)
+                .FuerMaschine(model.MaschinenId)
+                .Where(Alarmdaten.HatAktivenAlarm)
+                .NeuesteZuerst();
 
             if (pageNumber <= 0)
                 pageNumber = 1;
 
-            var pagedList = mitAlarmen.ToPagedList(pageNumber, 50);
+            var pagedList = query.ToPagedList(pageNumber, 50);
             var pageItems = pagedList.ToList();
 
             PaginatedListItem paginatedListItem = new(
@@ -69,7 +58,12 @@ namespace MaschinenDataein.Controllers
                 pagedList.IsFirstPage,
                 pagedList.IsLastPage,
                 "Data"
-            );
+            )
+            {
+                TotalItemCount  = pagedList.TotalItemCount,
+                FirstItemOnPage = pagedList.FirstItemOnPage,
+                LastItemOnPage  = pagedList.LastItemOnPage
+            };
 
             ViewData["PaginatedListItem"] = paginatedListItem;
             ViewData["IsShowId"] = true;
@@ -77,32 +71,18 @@ namespace MaschinenDataein.Controllers
             return View("Index", pageItems);
         }
 
-        // ─── HELPER: Aktive Alarme per Reflection ────────────────────
-        // Sauberere Lösung als 94-facher switch
+        // ─── HELPER: Aktive Alarme mit Klartext ──────────────────────
         public static List<AlarmInfo> GetAktiveAlarme(Alarmdaten alarmdaten)
         {
-            var aktiveAlarme = new List<AlarmInfo>();
-            var type = alarmdaten.GetType();
-
-            for (int i = 1; i <= 94; i++)
-            {
-                PropertyInfo? prop = type.GetProperty($"AM{i}");
-                if (prop == null) continue;
-
-                var value = prop.GetValue(alarmdaten);
-                if (value is bool istAktiv && istAktiv)
+            return alarmdaten.AktiveAlarmNummern()
+                .Select(i => new AlarmInfo
                 {
-                    aktiveAlarme.Add(new AlarmInfo
-                    {
-                        Nummer = i,
-                        Beschreibung = AlarmnamenHelper.Alarmnamen.TryGetValue(i, out var name)
-                                        ? name
-                                        : $"Unbekannter Alarm {i}"
-                    });
-                }
-            }
-
-            return aktiveAlarme;
+                    Nummer = i,
+                    Beschreibung = AlarmnamenHelper.Alarmnamen.TryGetValue(i, out var name)
+                        ? name
+                        : $"Unbekannter Alarm {i}"
+                })
+                .ToList();
         }
 
         public class AlarmInfo

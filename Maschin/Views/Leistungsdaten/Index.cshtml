@@ -1,4 +1,4 @@
-@using MaschinenDataein.Models.ModelView
+﻿@using MaschinenDataein.Models.ModelView
 @model List<LeistungsdatenModelView>
 @{
     Layout = "~/Views/Shared/_Layout.cshtml";
@@ -7,8 +7,8 @@
     ViewData["IsShowId"] = true;
 }
 
-<div class="container-fluid mt-4">
-    <h1 class="mb-3 text-center"> Leistungsdaten</h1>
+<div>
+    <h1><i class="bi bi-graph-up-arrow text-primary"></i> Leistungsdaten</h1>
 
     @await Html.PartialAsync("_PartialFilter")
 
