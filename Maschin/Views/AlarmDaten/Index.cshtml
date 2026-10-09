@@ -1,4 +1,5 @@
-﻿@using MaschinenDataein.Models.Data
+@using MaschinenDataein.Models.Data
+@using MaschinenDataein.Models.ModelView
 @using MaschinenDataein.Models.PaginatedModel
 @using MaschinenDataein.Helper
 @model List<Alarmdaten>
@@ -7,61 +8,68 @@
     ViewData["actionForm"] = "Data";
     ViewData["Title"] = "Alarm";
     var paginatedListItem = ViewData["PaginatedListItem"] as PaginatedListItem;
+    var analyse = ViewBag.Analyse as AnalyseModel ?? new AnalyseModel();
 }
 
-<h1><i class="bi bi-bell text-danger"></i> Alarm</h1>
+<h1><i class="bi bi-bell"></i> Alarm</h1>
 
 @await Html.PartialAsync("_PartialFilter")
+@await Html.PartialAsync("_Reiter", "alarm")
 
-@if (Model != null && Model.Count > 0)
-{
-    <div class="tabelle-karte">
-        <div class="table-responsive">
-            <table class="table table-hover table-striped align-middle">
-                <thead class="table-dark">
-                    <tr>
-                        <th class="text-end">ID</th>
-                        <th>Zeitstempel</th>
-                        <th>Maschine</th>
-                        <th>Aktive Alarme</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach (var item in Model)
-                    {
-                        // Direkter Zugriff auf AM1 … AM94 statt Reflection
-                        var aktiveMeldungen = item.AktiveAlarmNummern()
-                            .Select(i => AlarmnamenHelper.Alarmnamen.TryGetValue(i, out var meldung)
-                                ? meldung
-                                : $"Unbekannter Alarm {i}")
-                            .Distinct()
-                            .ToList();
+<div class="tab-content">
+    <div class="tab-pane fade show active" id="reiter-analyse" role="tabpanel">
+        @await Html.PartialAsync("_Analyse", analyse)
+    </div>
 
-                        <tr>
-                            <td class="text-end text-muted">@item.Id</td>
-                            <td class="zeit-datum">
-                                @item.Timestamp.ToString("dd.MM.yyyy")<span class="zeit-uhr">@item.Timestamp.ToString("HH:mm:ss")</span>
-                            </td>
-                            <td>@(item.Maschine?.Bezeichnung ?? "–")</td>
-                            <td>
-                                @foreach (var meldung in aktiveMeldungen)
-                                {
-                                    <span class="status-marke kritisch"><i class="bi bi-exclamation-octagon-fill" aria-hidden="true"></i>@meldung</span>
-                                }
-                            </td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
-        </div>
-
-        @if (paginatedListItem != null)
+    <div class="tab-pane fade" id="reiter-tabelle" role="tabpanel">
+        @if (Model != null && Model.Count > 0)
         {
-            @await Html.PartialAsync("_PaginatedItem", paginatedListItem)
+            <div class="tabelle-karte">
+                <div class="table-responsive">
+                    <table class="table table-hover table-striped align-middle">
+                        <thead class="table-dark">
+                            <tr>
+                                <th class="text-end">ID</th>
+                                <th>Zeitstempel</th>
+                                <th>Maschine</th>
+                                <th>Aktive Alarme</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in Model)
+                            {
+                                var aktiveMeldungen = item.AktiveAlarmNummern()
+                                    .Select(i => AlarmnamenHelper.Alarmnamen.TryGetValue(i, out var meldung) ? meldung : $"Unbekannter Alarm {i}")
+                                    .Distinct()
+                                    .ToList();
+
+                                <tr>
+                                    <td class="text-end text-muted">@item.Id</td>
+                                    <td class="zeit-datum">
+                                        @item.Timestamp.ToString("dd.MM.yyyy")<span class="zeit-uhr">@item.Timestamp.ToString("HH:mm:ss")</span>
+                                    </td>
+                                    <td>@(item.Maschine?.Bezeichnung ?? "–")</td>
+                                    <td>
+                                        @foreach (var meldung in aktiveMeldungen)
+                                        {
+                                            <span class="status-marke kritisch"><i class="bi bi-exclamation-octagon-fill" aria-hidden="true"></i>@meldung</span>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+
+                @if (paginatedListItem != null)
+                {
+                    @await Html.PartialAsync("_PaginatedItem", paginatedListItem)
+                }
+            </div>
+        }
+        else
+        {
+            @await Html.PartialAsync("_LeerHinweis", Model != null)
         }
     </div>
-}
-else
-{
-    @await Html.PartialAsync("_LeerHinweis", Model != null)
-}
+</div>

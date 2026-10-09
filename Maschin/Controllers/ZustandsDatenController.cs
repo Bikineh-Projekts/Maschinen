@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Linq;
@@ -8,6 +8,8 @@ using MaschinenDataein.Models;
 using MaschinenDataein.Models.Data;
 using MaschinenDataein.Models.ModelView;
 using MaschinenDataein.Controllers.Model;
+using MaschinenDataein.Models.PaginatedModel;
+using X.PagedList;
 
 namespace MaschinenDataein.Controllers
 {
@@ -29,22 +31,34 @@ namespace MaschinenDataein.Controllers
             return View();
         }
 
-        public async Task<IActionResult> Data(CancellationToken ct)
+        public async Task<IActionResult> Data(int pageNumber, CancellationToken ct)
         {
             _actionName = "Data";
             FilterModelView model = GetFilterModelViewCookie();
             SetViewBagFilter(model, "Index", "ZustandsDaten");
 
-            // Maschinenfilter jetzt in der Datenbank statt nachträglich im Speicher
-            var list = await _context.Zustandsdaten
+            // Filter und Seitenaufteilung in der Datenbank – nur 50 Einträge pro Seite
+            var query = _context.Zustandsdaten
                 .Include(x => x.Maschine)
                 .Include(x => x.Zustandsmeldung)
                 .ImZeitraum(model.DatumVon, model.DatumBis)
                 .FuerMaschine(model.MaschinenId)
-                .NeuesteZuerst()
-                .ToListAsync(ct);
+                .NeuesteZuerst();
 
-            return View("Index", list);
+            if (pageNumber <= 0) pageNumber = 1;
+            var pagedList = query.ToPagedList(pageNumber, 50);
+
+            ViewData["PaginatedListItem"] = new PaginatedListItem(
+                pagedList.PageNumber, pagedList.PageCount,
+                pagedList.IsFirstPage, pagedList.IsLastPage, "Data")
+            {
+                TotalItemCount  = pagedList.TotalItemCount,
+                FirstItemOnPage = pagedList.FirstItemOnPage,
+                LastItemOnPage  = pagedList.LastItemOnPage
+            };
+            ViewBag.Analyse = await AnalyseHelper.ZustandAsync(_context, model, ct);
+
+            return View("Index", pagedList.ToList());
         }
     }
 }

@@ -359,6 +359,7 @@ main .table-hover > tbody > tr:hover > * { --bs-table-bg-state: var(--md-akzent-
 .status-marke.warnung  { color: var(--status-warnung-text);  background: color-mix(in srgb, var(--status-warnung) 16%, transparent);  border-color: color-mix(in srgb, var(--status-warnung) 40%, transparent); }
 .status-marke.ernst    { color: var(--status-ernst-text);    background: color-mix(in srgb, var(--status-ernst) 14%, transparent);    border-color: color-mix(in srgb, var(--status-ernst) 35%, transparent); }
 .status-marke.gut      { color: var(--status-gut-text);      background: color-mix(in srgb, var(--status-gut) 12%, transparent);      border-color: color-mix(in srgb, var(--status-gut) 30%, transparent); }
+.status-marke.info     { color: var(--md-akzent); background: var(--md-akzent-hell); border-color: color-mix(in srgb, var(--md-akzent) 25%, transparent); }
 
 /* Leistungsbalken */
 .leistungs-balken { display: flex; align-items: center; gap: .5rem; min-width: 7rem; }
@@ -690,6 +691,102 @@ main > .seiten-navigation,
     .kachel { padding: .9rem .9rem .75rem; }
     .kachel-hauptzahl strong { font-size: 1.8rem; }
     .kopfzeile form, .kopfzeile .btn { width: 100%; }
+}
+
+/* ==========================================================================
+   Datenseiten: Reiter „Analyse | Tabelle“, Kennzahlen und Diagramme
+   ========================================================================== */
+.seiten-reiter {
+    display: inline-flex;
+    gap: .25rem;
+    padding: .25rem;
+    margin-bottom: 1rem;
+    background: var(--md-flaeche-3);
+    border: 1px solid var(--md-rand);
+    border-radius: 10px;
+    list-style: none;
+}
+.seiten-reiter .nav-link {
+    border: 0;
+    border-radius: 7px;
+    padding: .45rem 1rem;
+    color: var(--md-text-2);
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: .4rem;
+    background: transparent;
+}
+.seiten-reiter .nav-link:hover { color: var(--md-text); }
+.seiten-reiter .nav-link.active {
+    background: var(--md-flaeche);
+    color: var(--md-akzent);
+    box-shadow: 0 1px 2px rgba(13, 36, 64, .12);
+}
+
+.analyse-zeitraum { color: var(--md-text-2); margin: 0 0 .75rem; font-size: .9rem; }
+.analyse-zeitraum .bi { margin-right: .2rem; }
+
+.kennzahl-reihe {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+    gap: .75rem;
+    margin-bottom: 1rem;
+}
+.kennzahl {
+    background: var(--md-flaeche);
+    border: 1px solid var(--md-rand);
+    border-radius: var(--md-radius);
+    padding: .85rem 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: .15rem;
+    min-width: 0;
+}
+.kennzahl-titel { color: var(--md-text-2); font-size: .85rem; font-weight: 500; }
+.kennzahl-titel .bi { color: var(--md-akzent); margin-right: .3rem; }
+.kennzahl-wert {
+    font-size: 1.6rem;
+    font-weight: 700;
+    line-height: 1.15;
+    letter-spacing: -.01em;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.kennzahl-hinweis { color: var(--md-text-3); font-size: .8rem; }
+
+.diagramm-raster {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem;
+    align-items: start;
+}
+.diagramm-karte {
+    margin: 0;
+    background: var(--md-flaeche);
+    border: 1px solid var(--md-rand);
+    border-radius: var(--md-radius);
+    padding: 1rem 1rem .75rem;
+    min-width: 0;
+}
+.diagramm-karte.breit { grid-column: 1 / -1; }
+.diagramm-karte figcaption { display: flex; flex-wrap: wrap; align-items: baseline; gap: .25rem .6rem; margin-bottom: .6rem; }
+.diagramm-karte h3 { font-size: 1rem; font-weight: 600; margin: 0 !important; }
+.diagramm-karte figcaption span { color: var(--md-text-3); font-size: .82rem; }
+.diagramm-flaeche { position: relative; width: 100%; }
+
+@media (max-width: 991.98px) {
+    .diagramm-raster { grid-template-columns: 1fr; }
+}
+@media (max-width: 575.98px) {
+    .seiten-reiter { display: flex; width: 100%; }
+    .seiten-reiter .nav-item { flex: 1; }
+    .seiten-reiter .nav-link { width: 100%; justify-content: center; }
+    .kennzahl-reihe { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .5rem; }
+    .kennzahl { padding: .7rem .75rem; }
+    .kennzahl-wert { font-size: 1.25rem; }
+    .diagramm-karte { padding: .8rem .7rem .6rem; }
 }
 
 /* ==========================================================================

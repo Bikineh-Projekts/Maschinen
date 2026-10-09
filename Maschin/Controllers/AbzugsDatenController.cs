@@ -27,7 +27,7 @@ namespace MaschinenDataein.Controllers
             return View();
         }
 
-        public IActionResult Data(int pageNumber)
+        public async Task<IActionResult> Data(int pageNumber, CancellationToken ct)
         {
             _actionName = "Data";
             FilterModelView model = GetFilterModelViewCookie();
@@ -69,6 +69,7 @@ namespace MaschinenDataein.Controllers
 
             ViewData["PaginatedListItem"] = paginatedListItem;
             ViewData["IsShowId"] = true;
+            ViewBag.Analyse = await AnalyseHelper.AbzugAsync(_context, model, ct);
 
             return View("Index", modelView);
         }

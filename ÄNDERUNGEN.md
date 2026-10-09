@@ -101,3 +101,17 @@ Render-Dashboard per User Secrets setzen (Rechtsklick Projekt → „Geheime Ben
   statt drei getrennter Tabellen.
 - Hausfarben: maritimes Blau als Hauptfarbe, Rot als schmaler Markenstreifen unter der Navigation.
   Ändern in `site.css` über `--md-akzent…` und `--md-marke-rot`.
+
+## Analyse-Reiter auf allen Datenseiten (Update 7)
+- Abzug, Alarm, Zustand, Störung: Reiter „Analyse | Tabelle“. Die Analyse zeigt für den
+  gefilterten Zeitraum Kennzahlen und Diagramme (Berechnung in `Helper/AnalyseHelper.cs`):
+  - Abzug: Abzuglänge im Verlauf je Maschine, Ø Packungen pro Abzug je Programm, Datensätze je Maschine
+  - Alarm: häufigste Alarme (Top 10), Alarme im Verlauf, Alarme je Maschine
+  - Störung: häufigste Störungen, Störungen im Verlauf, Störungen je Maschine
+  - Zustand: Zeit je Zustand und Maschine (gestapelt), Dauer je Zustand, häufigste Zustände
+    (ein Zustand gilt bis zum nächsten Wechsel; Lücken über 4 Std. werden nicht gezählt)
+- Zeitachse automatisch: bis 2 Tage je Stunde, sonst je Tag.
+- Zustand und Störung: Tabelle jetzt mit Seitennavigation (vorher wurde alles auf einmal geladen).
+- Leistung und Temperatur: gleiche Reiterleiste; Diagramme laden beim Öffnen des Reiters.
+- Der zuletzt gewählte Reiter wird je Seite gemerkt; beim Blättern öffnet sich die Tabelle.
+- Chart.js wird einmal zentral im Layout geladen.
