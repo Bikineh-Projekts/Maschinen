@@ -55,3 +55,13 @@ Render-Dashboard per User Secrets setzen (Rechtsklick Projekt → „Geheime Ben
 - Klare Hinweise: „Zeitraum wählen und filtern“ bzw. „Keine Daten im gewählten Zeitraum“.
 - Ladebalken beim Seitenwechsel, „Nach oben“-Knopf, Druckansicht ohne Navigation und Filter.
 - Aktive Alarme als farbige Markierungen; Startseite ohne Reflection.
+
+## Render wach halten (Update 3)
+- `/health`: antwortet sofort mit „OK“ (ohne Datenbank). `/health?db=1` prüft zusätzlich die Datenbank.
+- `WachHalteDienst`: Die App pingt sich auf Render alle 10 Minuten selbst (über `RENDER_EXTERNAL_URL`).
+- GitHub-Workflow pingt `https://maschinen.onrender.com/health` alle 5 Minuten von außen
+  (vorher wurde dort eine andere App, `market-pipeline`, angepingt). Weitere Adressen über die
+  Repository-Variable `PING_URLS`.
+- Dockerfile mit ReadyToRun: schnellerer Start nach Neustarts und Deploys.
+- Hinweis: Render gibt 750 freie Stunden pro Monat und Workspace. Ein dauerhaft wacher Dienst
+  braucht ~744 – zwei dauerhaft wache kostenlose Dienste im selben Workspace gehen sich nicht aus.

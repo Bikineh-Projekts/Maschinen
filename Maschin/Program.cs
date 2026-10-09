@@ -1,4 +1,4 @@
-using MaschinenDataein.Helper;
+﻿using MaschinenDataein.Helper;
 using MaschinenDataein.Models;
 using Microsoft.EntityFrameworkCore;
 
@@ -16,6 +16,10 @@ builder.Services.AddDbContext<MaschinenDbContext>(options =>
         // Beim Entwickeln keine Wiederholungen -> echte Fehlermeldung sofort sichtbar
         if (!istEntwicklung) npgsql.EnableRetryOnFailure(maxRetryCount: 3);
     }));
+
+// ── Render wach halten (siehe Helper/WachHalteDienst.cs) ──
+builder.Services.AddHttpClient();
+builder.Services.AddHostedService<WachHalteDienst>();
 
 builder.Services.AddDistributedMemoryCache();
 builder.Services.AddSession(options =>
@@ -45,6 +49,22 @@ using (var scope = app.Services.CreateScope())
         app.Logger.LogError("Keine Verbindung zu PostgreSQL ({Ziel}): {Fehler}", ziel, ex.GetBaseException().Message);
     }
 }
+
+// ── Health-Check: antwortet sofort, ohne Datenbank, Session oder Views ──
+// Wird vom Wachhalte-Dienst, vom GitHub-Workflow und optional von UptimeRobot aufgerufen.
+// /health?db=1 prüft zusätzlich die Datenbank (für Monitoring, nicht für den Ping).
+app.MapMethods("/health", new[] { "GET", "HEAD" }, async (HttpContext ctx, MaschinenDbContext db) =>
+{
+    ctx.Response.Headers.CacheControl = "no-store";
+
+    if (ctx.Request.Query.ContainsKey("db"))
+    {
+        var ok = await db.Database.CanConnectAsync(ctx.RequestAborted);
+        return ok ? Results.Text("OK (Datenbank erreichbar)") : Results.Text("Datenbank nicht erreichbar", statusCode: 503);
+    }
+
+    return Results.Text("OK");
+});
 
 if (!app.Environment.IsDevelopment())
 {
