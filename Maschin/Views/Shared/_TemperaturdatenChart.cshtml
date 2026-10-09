@@ -1,12 +1,13 @@
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+﻿<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 
 <style>
     .td-dashboard {
-        background: #0d1117;
-        border-radius: 14px;
+        background: var(--md-flaeche);
+        border: 1px solid var(--md-rand);
+        border-radius: 10px;
         padding: 24px;
-        color: #e6edf3;
-        font-family: 'Segoe UI', system-ui, sans-serif;
+        color: var(--md-text);
+        font-family: inherit;
         min-height: 400px;
     }
     .td-stat-grid {
@@ -16,86 +17,85 @@
         margin-bottom: 20px;
     }
     .td-stat-card {
-        background: #1c2128;
-        border: 1px solid #30363d;
+        background: var(--md-flaeche-3);
+        border: 1px solid var(--md-rand);
         border-radius: 10px;
         padding: 14px 18px;
     }
     .td-stat-label {
         font-size: 10px;
-        color: #8b949e;
-        text-transform: uppercase;
-        letter-spacing: 1.1px;
+        color: var(--md-text-2);
+        
         margin-bottom: 4px;
     }
     .td-stat-value {
         font-size: 26px;
         font-weight: 700;
-        font-family: 'Courier New', monospace;
+        font-variant-numeric:tabular-nums;
     }
-    .td-stat-unit { font-size: 13px; margin-left: 3px; color: #8b949e; }
-    .td-stat-sub  { font-size: 10px; color: #8b949e; margin-top: 3px; }
+    .td-stat-unit { font-size: 13px; margin-left: 3px; color: var(--md-text-2); }
+    .td-stat-sub  { font-size: 10px; color: var(--md-text-2); margin-top: 3px; }
     .td-chart-box {
-        background: #161b22;
-        border: 1px solid #30363d;
+        background: var(--md-flaeche-2);
+        border: 1px solid var(--md-rand);
         border-radius: 12px;
         padding: 16px 16px 10px;
         margin-bottom: 14px;
     }
-    .td-chart-title { font-size: 12px; color: #8b949e; margin-bottom: 12px; }
+    .td-chart-title { font-size: 12px; color: var(--md-text-2); margin-bottom: 12px; }
     .td-btns { display: flex; gap: 6px; margin-bottom: 16px; flex-wrap: wrap; }
     .td-btn {
         padding: 7px 16px;
         border-radius: 8px;
-        border: 1px solid #30363d;
+        border: 1px solid var(--md-rand);
         background: transparent;
-        color: #8b949e;
+        color: var(--md-text-2);
         cursor: pointer;
         font-size: 13px;
         transition: all 0.15s;
     }
     .td-btn.k-active {
-        background: #58a6ff22;
-        border-color: #58a6ff;
-        color: #58a6ff;
+        background: color-mix(in srgb, var(--md-akzent) 13%, transparent);
+        border-color: var(--md-akzent);
+        color: var(--md-akzent);
         font-weight: 600;
     }
     .td-btn.a-active {
-        background: #3fb95022;
-        border-color: #3fb950;
-        color: #3fb950;
+        background: color-mix(in srgb, var(--status-gut-text) 13%, transparent);
+        border-color: var(--status-gut-text);
+        color: var(--status-gut-text);
         font-weight: 600;
     }
     .td-info {
-        background: #1c2128;
-        border: 1px solid #30363d;
+        background: var(--md-flaeche-3);
+        border: 1px solid var(--md-rand);
         border-radius: 10px;
         padding: 12px 16px;
         font-size: 12px;
-        color: #8b949e;
+        color: var(--md-text-2);
         line-height: 1.7;
     }
-    .td-info b { color: #e6edf3; display: block; margin-bottom: 5px; }
+    .td-info b { color: var(--md-text); display: block; margin-bottom: 5px; }
     .td-loader {
         display: flex;
         align-items: center;
         justify-content: center;
         height: 220px;
-        color: #8b949e;
+        color: var(--md-text-2);
         font-size: 14px;
         gap: 10px;
     }
     .td-spin {
         width: 20px; height: 20px;
-        border: 2px solid #30363d;
-        border-top-color: #58a6ff;
+        border: 2px solid var(--md-rand);
+        border-top-color: var(--md-akzent);
         border-radius: 50%;
         animation: tdspin 0.8s linear infinite;
     }
     @@keyframes tdspin { to { transform: rotate(360deg); } }
     .td-empty {
         padding: 32px;
-        color: #8b949e;
+        color: var(--md-text-2);
         font-size: 14px;
         text-align: center;
         line-height: 1.8;
@@ -103,20 +103,20 @@
     .td-debug {
         margin-top: 12px;
         padding: 10px 14px;
-        background: #1c2128;
-        border: 1px solid #30363d;
+        background: var(--md-flaeche-3);
+        border: 1px solid var(--md-rand);
         border-radius: 8px;
-        font-family: monospace;
+        font-variant-numeric:tabular-nums;
         font-size: 11px;
-        color: #555;
+        color: var(--md-text-3);
         text-align: left;
     }
     .td-reload-btn {
         margin-top: 14px;
         padding: 8px 22px;
-        background: #58a6ff22;
-        border: 1px solid #58a6ff;
-        color: #58a6ff;
+        background: color-mix(in srgb, var(--md-akzent) 13%, transparent);
+        border: 1px solid var(--md-akzent);
+        color: var(--md-akzent);
         border-radius: 8px;
         cursor: pointer;
         font-size: 13px;
@@ -140,15 +140,16 @@
     let _chart    = null;
 
     // ── Farben ───────────────────────────────────────────────────────────────
+    // Farben aus dem Farbsystem – werden beim Zeichnen gelesen, passen also zu Hell und Dunkel
     const C = {
-        soll:   '#58a6ff',
-        ist:    '#f0883e',
-        fehler: '#3fb950',
-        neg:    '#f85149',
-        warn:   '#e3b341',
-        muted:  '#8b949e',
-        border: '#30363d',
-        purple: '#c0a4ff',
+        get soll()   { return mdFarbe('viz-1'); },
+        get ist()    { return mdFarbe('viz-2'); },
+        get fehler() { return mdFarbe('viz-3'); },
+        get neg()    { return mdFarbe('status-kritisch'); },
+        get warn()   { return mdFarbe('status-warnung'); },
+        get muted()  { return mdFarbe('md-text-2'); },
+        get border() { return mdFarbe('viz-raster'); },
+        get purple() { return mdFarbe('viz-7'); },
     };
 
     // ════════════════════════════════════════════════════════════════════════
@@ -203,24 +204,24 @@
                     document.getElementById('tdRoot').innerHTML = `
                         <div class="td-empty">
                             <div style="font-size:36px;margin-bottom:12px">📭</div>
-                            <div style="font-size:16px;color:#e6edf3;margin-bottom:8px">
+                            <div style="font-size:16px;color:var(--md-text);margin-bottom:8px">
                                 Keine Daten im gewählten Zeitraum
                             </div>
                             <div style="font-size:13px">
                                 Bitte Datumsbereich oder Maschine anpassen,
-                                <strong style="color:#58a6ff">Filtern</strong> klicken
+                                <strong style="color:var(--md-akzent)">Filtern</strong> klicken
                                 und danach erneut auf
-                                <strong style="color:#3fb950">📊 Analyse-Diagramm</strong> wechseln.
+                                <strong style="color:var(--status-gut-text)">📊 Analyse-Diagramm</strong> wechseln.
                             </div>
                             <div class="td-debug">
                                 🔍 Abgefragter Zeitraum:
-                                <span style="color:#58a6ff">${dbg.datumVonVerwendet || '?'}</span>
+                                <span style="color:var(--md-akzent)">${dbg.datumVonVerwendet || '?'}</span>
                                 bis
-                                <span style="color:#58a6ff">${dbg.datumBisVerwendet || '?'}</span>
+                                <span style="color:var(--md-akzent)">${dbg.datumBisVerwendet || '?'}</span>
                                 &nbsp;·&nbsp; Maschinen-ID:
-                                <span style="color:#f0883e">${dbg.maschinenIdFilter || 'alle'}</span>
+                                <span style="color:var(--status-ernst-text)">${dbg.maschinenIdFilter || 'alle'}</span>
                                 &nbsp;·&nbsp; Datenbankzeilen:
-                                <span style="color:#f85149">${dbg.gesamtPunkteDatenbank ?? 0}</span>
+                                <span style="color:var(--status-kritisch-text)">${dbg.gesamtPunkteDatenbank ?? 0}</span>
                             </div>
                             <button class="td-reload-btn" onclick="ladeChartDaten(true)">🔄 Neu laden</button>
                         </div>`;
@@ -232,17 +233,17 @@
             .catch(err => {
                 document.getElementById('tdRoot').innerHTML = `
                     <div class="td-empty">
-                        <div style="font-size:32px;margin-bottom:10px;color:#f85149">❌</div>
-                        <div style="font-size:15px;color:#e6edf3;margin-bottom:6px">Fehler beim Laden</div>
-                        <div class="td-debug" style="color:#f85149">
+                        <div style="font-size:32px;margin-bottom:10px;color:var(--status-kritisch-text)">❌</div>
+                        <div style="font-size:15px;color:var(--md-text);margin-bottom:6px">Fehler beim Laden</div>
+                        <div class="td-debug" style="color:var(--status-kritisch-text)">
                             ${err.message}<br>
-                            <span style="color:#555">Endpoint: ${url}</span>
+                            <span style="color:var(--md-text-3)">Endpoint: ${url}</span>
                         </div>
-                        <div style="margin-top:10px;font-size:12px;color:#8b949e">
-                            Prüfe ob <code style="color:#f0883e">GetChartData</code>
+                        <div style="margin-top:10px;font-size:12px;color:var(--md-text-2)">
+                            Prüfe ob <code style="color:var(--status-ernst-text)">GetChartData</code>
                             im Controller existiert und die App läuft.
                         </div>
-                        <button class="td-reload-btn" style="border-color:#f85149;color:#f85149;background:#f8514911"
+                        <button class="td-reload-btn" style="border-color:var(--status-kritisch-text);color:var(--status-kritisch-text);background:color-mix(in srgb, var(--status-kritisch-text) 7%, transparent)"
                             onclick="ladeChartDaten(true)">🔄 Erneut versuchen</button>
                     </div>`;
             });
@@ -289,11 +290,11 @@
             plugins: {
                 legend: { labels: { color: C.muted, font: { size: 12 }, boxWidth: 20 } },
                 tooltip: {
-                    backgroundColor: '#0d1117ee',
+                    backgroundColor: mdFarbe('md-tooltip'),
                     borderColor: C.border,
                     borderWidth: 1,
-                    titleColor: C.muted,
-                    bodyColor: '#e6edf3',
+                    titleColor: mdFarbe('md-tooltip-text'),
+                    bodyColor: mdFarbe('md-tooltip-text'),
                     callbacks: { label: c => ` ${c.dataset.label}: ${c.parsed.y}°C` }
                 }
             },
@@ -369,7 +370,7 @@
                         {
                             label: 'Nulllinie',
                             data: labels.map(() => 0),
-                            borderColor: '#ffffff22',
+                            borderColor:mdFarbe('md-rand')+'22',
                             borderWidth: 1,
                             pointRadius: 0,
                             fill: false
@@ -436,7 +437,7 @@
                 Bias: <strong style="color:${bColor}">${s.bias}°C</strong> → ${bText}
                 &nbsp;·&nbsp;
                 RMSE: <strong style="color:${rColor}">${s.rmse}°C</strong> → ${rText}
-                <div style="margin-top:8px;font-size:10px;color:#444">
+                <div style="margin-top:8px;font-size:10px;color:var(--md-text-3)">
                     Zeitraum: ${dbg.datumVonVerwendet || '–'} – ${dbg.datumBisVerwendet || '–'}
                     &nbsp;·&nbsp; Datenbankpunkte: ${dbg.gesamtPunkteDatenbank ?? '–'}
                     &nbsp;·&nbsp; Dargestellt: ${dbg.dargestelltePunkte ?? _daten.punkte.length}
@@ -485,7 +486,7 @@
         document.getElementById('tdRoot').innerHTML = `
             <div style="margin-bottom:18px">
                 <h4 style="margin:0 0 4px;font-weight:700">🌡 Temperatur-Analyse</h4>
-                <p style="margin:0;color:#8b949e;font-size:13px">
+                <p style="margin:0;color:var(--md-text-2);font-size:13px">
                     ${_daten.punkte.length} Messpunkte · Kanal ${_kanal} aktiv
                 </p>
             </div>

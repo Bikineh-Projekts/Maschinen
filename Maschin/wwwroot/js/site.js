@@ -133,3 +133,33 @@
         }
     });
 })();
+
+// ── Hell/Dunkel umschalten ───────────────────────────────────────────────────
+(function () {
+    'use strict';
+    const html = document.documentElement;
+    const knopf = document.getElementById('themaKnopf');
+
+    function istDunkel() { return html.getAttribute('data-bs-theme') === 'dark'; }
+
+    function symbolSetzen() {
+        if (!knopf) return;
+        const i = knopf.querySelector('i');
+        if (i) i.className = istDunkel() ? 'bi bi-sun' : 'bi bi-moon-stars';
+        knopf.setAttribute('aria-pressed', istDunkel() ? 'true' : 'false');
+    }
+
+    symbolSetzen();
+    if (!knopf) return;
+
+    knopf.addEventListener('click', function () {
+        const neu = istDunkel() ? 'light' : 'dark';
+        html.setAttribute('data-theme', neu);
+        html.setAttribute('data-bs-theme', neu);
+        try { localStorage.setItem('md-thema', neu); } catch (e) { }
+        symbolSetzen();
+
+        // Diagramme zeichnen ihre Farben auf ein Canvas – dafür die Seite neu laden
+        if (document.querySelector('main canvas')) window.location.reload();
+    });
+})();

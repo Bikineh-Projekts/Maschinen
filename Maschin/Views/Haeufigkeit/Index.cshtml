@@ -17,12 +17,13 @@
     }
 
     .hf-section {
-        background: #0d1117;
-        border-radius: 14px;
+        background: var(--md-flaeche);
+        border: 1px solid var(--md-rand);
+        border-radius: 10px;
         padding: 22px 22px 18px;
         margin-bottom: 28px;
-        color: #e6edf3;
-        font-family: 'Segoe UI', system-ui, sans-serif;
+        color: var(--md-text);
+        font-family: inherit;
     }
 
     /* ── Header-Zeile mit Kategorie + Toggle ─────────────────────────────── */
@@ -59,9 +60,9 @@
     .hf-toggle-btn {
         padding: 6px 14px;
         border-radius: 8px;
-        border: 1px solid #30363d;
+        border: 1px solid var(--md-rand);
         background: transparent;
-        color: #8b949e;
+        color: var(--md-text-2);
         cursor: pointer;
         font-size: 12px;
         transition: all 0.15s;
@@ -81,12 +82,12 @@
     }
 
     .hf-stat {
-        background: #1c2128;
-        border: 1px solid #30363d;
+        background: var(--md-flaeche-3);
+        border: 1px solid var(--md-rand);
         border-radius: 8px;
         padding: 10px 16px;
         font-size: 12px;
-        color: #8b949e;
+        color: var(--md-text-2);
         min-width: 110px;
     }
 
@@ -94,14 +95,14 @@
             display: block;
             font-size: 20px;
             font-weight: 700;
-            font-family: 'Courier New', monospace;
+            font-variant-numeric:tabular-nums;
             margin-bottom: 2px;
         }
 
     /* ── Chart-Container ─────────────────────────────────────────────────── */
     .hf-chart-wrap {
-        background: #161b22;
-        border: 1px solid #30363d;
+        background: var(--md-flaeche-2);
+        border: 1px solid var(--md-rand);
         border-radius: 10px;
         padding: 14px;
         margin-bottom: 14px;
@@ -119,23 +120,22 @@
     }
 
         .hf-table thead tr {
-            background: #1c2128;
+            background: var(--md-flaeche-3);
         }
 
         .hf-table th {
             padding: 10px 14px;
             text-align: left;
             font-size: 11px;
-            text-transform: uppercase;
-            letter-spacing: 0.8px;
-            color: #8b949e;
-            border-bottom: 1px solid #30363d;
+            
+            color: var(--md-text-2);
+            border-bottom: 1px solid var(--md-rand);
         }
 
         .hf-table td {
             padding: 9px 14px;
-            border-bottom: 1px solid #21262d;
-            color: #e6edf3;
+            border-bottom: 1px solid var(--md-rand-leise);
+            color: var(--md-text);
         }
 
         .hf-table tr:last-child td {
@@ -143,16 +143,16 @@
         }
 
         .hf-table tr:hover td {
-            background: #1c2128;
+            background: var(--md-flaeche-3);
         }
 
     /* Rank-Spalte */
     .hf-rank {
         width: 36px;
         text-align: center;
-        font-family: 'Courier New', monospace;
+        font-variant-numeric:tabular-nums;
         font-size: 11px;
-        color: #555;
+        color: var(--md-text-3);
     }
 
     /* Fortschrittsbalken in Tabelle */
@@ -162,7 +162,7 @@
 
     .hf-bar-bg {
         height: 6px;
-        background: #21262d;
+        background: var(--md-rand-leise);
         border-radius: 3px;
         overflow: hidden;
         margin-top: 4px;
@@ -221,14 +221,14 @@
         <div class="hf-header">
             <div class="hf-title">
                 <span>🚨 Alarmmeldungen</span>
-                <span class="hf-badge" style="background:#f8514922;color:#f85149;border:1px solid #f8514944">
+                <span class="hf-badge" style="background:color-mix(in srgb, var(--status-kritisch-text) 13%, transparent);color:var(--status-kritisch-text);border:1px solid color-mix(in srgb, var(--status-kritisch-text) 27%, transparent)">
                     @alarme.Count Typen
                 </span>
             </div>
             <div class="hf-toggle">
                 <button class="hf-toggle-btn active" id="alarm-btn-chart"
                         onclick="hfToggle('alarm','chart')"
-                        style="background:#f8514922;border-color:#f85149;color:#f85149">
+                        style="background:color-mix(in srgb, var(--status-kritisch-text) 13%, transparent);border-color:var(--status-kritisch-text);color:var(--status-kritisch-text)">
                     📊 Diagramm
                 </button>
                 <button class="hf-toggle-btn" id="alarm-btn-table"
@@ -240,17 +240,17 @@
 
         <div class="hf-stats">
             <div class="hf-stat">
-                <strong style="color:#f85149">@alarmGes</strong>
+                <strong style="color:var(--status-kritisch-text)">@alarmGes</strong>
                 Alarme gesamt
             </div>
             <div class="hf-stat">
-                <strong style="color:#f0883e">@alarme.Count</strong>
+                <strong style="color:var(--status-ernst-text)">@alarme.Count</strong>
                 Verschiedene Typen
             </div>
             @if (alarme.Any())
             {
                 <div class="hf-stat">
-                    <strong style="color:#e6edf3">
+                    <strong style="color:var(--md-text)">
                         @{
                             var topAlarm = alarme.First();
                             var topAlarmNummer = 0;
@@ -296,13 +296,13 @@
                         <tr class="@rowCls">
                             <td class="hf-rank">@aRank</td>
                             <td>@name</td>
-                            <td style="text-align:right;font-family:'Courier New',monospace;font-weight:700;color:#f85149">
+                            <td style="text-align:right;font-variant-numeric:tabular-nums;font-weight:700;color:var(--status-kritisch-text)">
                                 @item.Anzahl
                             </td>
                             <td class="hf-bar-cell">
-                                <div style="font-size:10px;color:#8b949e">@pct%</div>
+                                <div style="font-size:10px;color:var(--md-text-2)">@pct%</div>
                                 <div class="hf-bar-bg">
-                                    <div class="hf-bar-fill" style="width:@pct%;background:#f85149"></div>
+                                    <div class="hf-bar-fill" style="width:@pct%;background:var(--status-kritisch-text)"></div>
                                 </div>
                             </td>
                         </tr>
@@ -319,14 +319,14 @@
         <div class="hf-header">
             <div class="hf-title">
                 <span>🔵 Zustandsmeldungen</span>
-                <span class="hf-badge" style="background:#58a6ff22;color:#58a6ff;border:1px solid #58a6ff44">
+                <span class="hf-badge" style="background:color-mix(in srgb, var(--md-akzent) 13%, transparent);color:var(--md-akzent);border:1px solid color-mix(in srgb, var(--md-akzent) 27%, transparent)">
                     Top @zustände.Count
                 </span>
             </div>
             <div class="hf-toggle">
                 <button class="hf-toggle-btn active" id="zustand-btn-chart"
                         onclick="hfToggle('zustand','chart')"
-                        style="background:#58a6ff22;border-color:#58a6ff;color:#58a6ff">
+                        style="background:color-mix(in srgb, var(--md-akzent) 13%, transparent);border-color:var(--md-akzent);color:var(--md-akzent)">
                     📊 Diagramm
                 </button>
                 <button class="hf-toggle-btn" id="zustand-btn-table"
@@ -338,11 +338,11 @@
 
         <div class="hf-stats">
             <div class="hf-stat">
-                <strong style="color:#58a6ff">@zustandGes</strong>
+                <strong style="color:var(--md-akzent)">@zustandGes</strong>
                 Einträge gesamt
             </div>
             <div class="hf-stat">
-                <strong style="color:#8b949e">@zustände.Count</strong>
+                <strong style="color:var(--md-text-2)">@zustände.Count</strong>
                 Verschiedene Typen
             </div>
         </div>
@@ -375,13 +375,13 @@
                         <tr class="@rowCls">
                             <td class="hf-rank">@zRank</td>
                             <td>@item.Meldung</td>
-                            <td style="text-align:right;font-family:'Courier New',monospace;font-weight:700;color:#58a6ff">
+                            <td style="text-align:right;font-variant-numeric:tabular-nums;font-weight:700;color:var(--md-akzent)">
                                 @item.Anzahl
                             </td>
                             <td class="hf-bar-cell">
-                                <div style="font-size:10px;color:#8b949e">@pct%</div>
+                                <div style="font-size:10px;color:var(--md-text-2)">@pct%</div>
                                 <div class="hf-bar-bg">
-                                    <div class="hf-bar-fill" style="width:@pct%;background:#58a6ff"></div>
+                                    <div class="hf-bar-fill" style="width:@pct%;background:var(--md-akzent)"></div>
                                 </div>
                             </td>
                         </tr>
@@ -398,14 +398,14 @@
         <div class="hf-header">
             <div class="hf-title">
                 <span>⚠️ Störungsmeldungen</span>
-                <span class="hf-badge" style="background:#e3b34122;color:#e3b341;border:1px solid #e3b34144">
+                <span class="hf-badge" style="background:color-mix(in srgb, var(--status-warnung-text) 13%, transparent);color:var(--status-warnung-text);border:1px solid color-mix(in srgb, var(--status-warnung-text) 27%, transparent)">
                     Top @störungen.Count
                 </span>
             </div>
             <div class="hf-toggle">
                 <button class="hf-toggle-btn active" id="stoer-btn-chart"
                         onclick="hfToggle('stoer','chart')"
-                        style="background:#e3b34122;border-color:#e3b341;color:#e3b341">
+                        style="background:color-mix(in srgb, var(--status-warnung-text) 13%, transparent);border-color:var(--status-warnung-text);color:var(--status-warnung-text)">
                     📊 Diagramm
                 </button>
                 <button class="hf-toggle-btn" id="stoer-btn-table"
@@ -417,11 +417,11 @@
 
         <div class="hf-stats">
             <div class="hf-stat">
-                <strong style="color:#e3b341">@störGes</strong>
+                <strong style="color:var(--status-warnung-text)">@störGes</strong>
                 Störungen gesamt
             </div>
             <div class="hf-stat">
-                <strong style="color:#8b949e">@störungen.Count</strong>
+                <strong style="color:var(--md-text-2)">@störungen.Count</strong>
                 Verschiedene Typen
             </div>
         </div>
@@ -454,13 +454,13 @@
                         <tr class="@rowCls">
                             <td class="hf-rank">@sRank</td>
                             <td>@item.Meldung</td>
-                            <td style="text-align:right;font-family:'Courier New',monospace;font-weight:700;color:#e3b341">
+                            <td style="text-align:right;font-variant-numeric:tabular-nums;font-weight:700;color:var(--status-warnung-text)">
                                 @item.Anzahl
                             </td>
                             <td class="hf-bar-cell">
-                                <div style="font-size:10px;color:#8b949e">@pct%</div>
+                                <div style="font-size:10px;color:var(--md-text-2)">@pct%</div>
                                 <div class="hf-bar-bg">
-                                    <div class="hf-bar-fill" style="width:@pct%;background:#e3b341"></div>
+                                    <div class="hf-bar-fill" style="width:@pct%;background:var(--status-warnung-text)"></div>
                                 </div>
                             </td>
                         </tr>
@@ -517,13 +517,14 @@
             });
         }
 
+        // Farben aus dem Farbsystem: Alarm = kritisch, Störung = ernst, Zustand = Akzentblau
         const COLORS = {
-            alarm:   'rgb(248, 81, 73)',
-            zustand: 'rgb(88, 166, 255)',
-            stoer:   'rgb(227, 179, 65)',
-            border:  '#30363d',
-            muted:   '#8b949e',
-            bg:      '#0d1117',
+            alarm:   mdRgb('status-kritisch'),
+            zustand: mdRgb('viz-1'),
+            stoer:   mdRgb('status-ernst'),
+            border:  mdFarbe('viz-raster'),
+            muted:   mdFarbe('md-text-2'),
+            bg:      mdFarbe('md-flaeche'),
         };
 
         // ── Gemeinsame Chart-Optionen ────────────────────────────────────────────
@@ -536,11 +537,11 @@
                 plugins: {
                     legend: { display: false },
                     tooltip: {
-                        backgroundColor: '#161b22',
+                        backgroundColor: 'var(--md-flaeche-2)',
                         borderColor: COLORS.border,
                         borderWidth: 1,
-                        titleColor: COLORS.muted,
-                        bodyColor: '#e6edf3',
+                        titleColor: mdFarbe('md-tooltip-text'),
+                        bodyColor: mdFarbe('md-tooltip-text'),
                         callbacks: {
                             label: c => `  Anzahl: ${c.parsed.x.toLocaleString('de-DE')}`
                         }
@@ -549,12 +550,12 @@
                 scales: {
                     x: {
                         ticks: { color: COLORS.muted, font: { size: 10 } },
-                        grid:  { color: COLORS.border + '55' },
+                        grid:  { color: COLORS.border },
                         border:{ color: COLORS.border }
                     },
                     y: {
                         ticks: {
-                            color: '#e6edf3',
+                            color:mdFarbe('md-text'),
                             font: { size: 11 },
                             crossAlign: 'far',
                         },
@@ -608,8 +609,8 @@
             const btnC    = document.getElementById(prefix + '-btn-chart');
             const btnT    = document.getElementById(prefix + '-btn-table');
 
-            const colorMap = { alarm: '#f85149', zustand: '#58a6ff', stoer: '#e3b341' };
-            const col      = colorMap[prefix] || '#58a6ff';
+            const colorMap = { alarm: 'var(--status-kritisch-text)', zustand: 'var(--md-akzent)', stoer: 'var(--status-warnung-text)' };
+            const col      = colorMap[prefix] || 'var(--md-akzent)';
 
             if (mode === 'chart') {
                 chartEl.style.display = '';
@@ -619,8 +620,8 @@
                 btnC.style.color         = col;
                 btnC.style.fontWeight    = '600';
                 btnT.style.background    = '';
-                btnT.style.borderColor   = '#30363d';
-                btnT.style.color         = '#8b949e';
+                btnT.style.borderColor   = 'var(--md-rand)';
+                btnT.style.color         = 'var(--md-text-2)';
                 btnT.style.fontWeight    = '';
             } else {
                 chartEl.style.display = 'none';
@@ -630,8 +631,8 @@
                 btnT.style.color         = col;
                 btnT.style.fontWeight    = '600';
                 btnC.style.background    = '';
-                btnC.style.borderColor   = '#30363d';
-                btnC.style.color         = '#8b949e';
+                btnC.style.borderColor   = 'var(--md-rand)';
+                btnC.style.color         = 'var(--md-text-2)';
                 btnC.style.fontWeight    = '';
             }
         };
