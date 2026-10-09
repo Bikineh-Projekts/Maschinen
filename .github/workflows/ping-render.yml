@@ -1,13 +1,33 @@
 name: Keep Render Awake
 
+# Pingt die App alle 5 Minuten von außen, damit Render sie nicht schlafen legt
+# (Render: Einschlafen nach 15 Minuten ohne eingehende Anfragen).
+# Weitere Adressen: Repository → Settings → Secrets and variables → Actions → Variables
+#   PING_URLS = "https://maschinen.onrender.com/health https://andere-app.onrender.com/health"
+# Achtung: Jeder dauerhaft wache kostenlose Dienst verbraucht ~744 der 750 freien Stunden pro Monat.
+
 on:
   schedule:
-    - cron: "3,8,13,18,23,28,33,38,43,48,53,58 * * * *"
+    - cron: "*/5 * * * *"
   workflow_dispatch:
 
 jobs:
   ping:
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     steps:
-      - name: Call Render App
-        run: curl -fsS --retry 3 --max-time 10 "https://market-pipeline.onrender.com/health" || exit 1
+      - name: Render-Apps anpingen
+        env:
+          PING_URLS: ${{ vars.PING_URLS || 'https://maschinen.onrender.com/health' }}
+        run: |
+          fehler=0
+          for url in $PING_URLS; do
+            # Großzügiges Timeout: falls die App doch schläft, dauert das Aufwecken ~1 Minute
+            if curl -fsS --retry 3 --retry-delay 10 --max-time 90 -o /dev/null -w "$url -> %{http_code} in %{time_total}s\n" "$url"; then
+              :
+            else
+              echo "::warning::$url nicht erreichbar"
+              fehler=1
+            fi
+          done
+          exit $fehler
