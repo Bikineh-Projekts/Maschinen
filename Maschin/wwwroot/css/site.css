@@ -1,4 +1,4 @@
-/* ==========================================================================
+﻿/* ==========================================================================
    MaschinenDataein – gemeinsames Erscheinungsbild
    Farben an die Produktionsplanung angelehnt (Stahlblau + Signalblau)
    ========================================================================== */
@@ -33,7 +33,11 @@ body {
     color: var(--md-text);
 }
 
-main { flex: 1; }
+main { flex: 1; min-width: 0; width: 100%; }
+
+/* Unsichtbare Beschriftungen (visually-hidden) in scrollbaren Tabellen dürfen
+   die Seite nicht verbreitern */
+.table-responsive { position: relative; }
 
 /* ── Navigation ─────────────────────────────────────────────────────────── */
 .navbar-md {
@@ -245,4 +249,177 @@ main > .seiten-navigation,
     .navbar, .fuss, #nachOben, #ladebalken, .seiten-navigation, .filter-karte, .no-print { display: none !important; }
     body { background: #fff; }
     .tabelle-karte { box-shadow: none; border: 0; }
+}
+
+/* ==========================================================================
+   Smartphone & Tablet
+   Tabellen werden unter 768 px zu Karten: jede Zeile eine Karte,
+   jede Zelle "Bezeichnung … Wert". Die Bezeichnungen setzt site.js
+   automatisch aus dem Tabellenkopf (data-label).
+   Ausnahme: Tabelle mit Klasse "tabelle-quer" bleibt eine normale Tabelle.
+   ========================================================================== */
+@media (max-width: 767.98px) {
+
+    main.container-fluid { padding-left: .75rem; padding-right: .75rem; }
+
+    main h1:not(.page-title) { font-size: 1.3rem; }
+    main h2 { font-size: 1.2rem; }
+
+    /* iOS zoomt bei Eingabefeldern unter 16 px automatisch hinein – verhindern */
+    .form-control, .form-select { font-size: 16px; }
+
+    /* ── Tabellen als Karten ── */
+    main table.table:not(.tabelle-quer) thead { display: none; }
+
+    main table.table:not(.tabelle-quer),
+    main table.table:not(.tabelle-quer) > tbody,
+    main table.table:not(.tabelle-quer) > tfoot,
+    main table.table:not(.tabelle-quer) > tbody > tr,
+    main table.table:not(.tabelle-quer) > tfoot > tr {
+        display: block;
+        width: 100%;
+        border: 0;
+    }
+
+    main table.table:not(.tabelle-quer) > tbody > tr,
+    main table.table:not(.tabelle-quer) > tfoot > tr {
+        background: var(--md-flaeche);
+        border: 1px solid var(--md-rand);
+        border-radius: 10px;
+        box-shadow: var(--md-schatten);
+        margin-bottom: .6rem;
+        overflow: hidden;
+    }
+
+    main table.table:not(.tabelle-quer) > tbody > tr > td,
+    main table.table:not(.tabelle-quer) > tfoot > tr > td {
+        display: block;
+        position: relative;
+        min-height: 2.4rem;
+        padding: .5rem .8rem .5rem 42% !important;
+        text-align: right !important;
+        border: 0;
+        border-bottom: 1px solid #f1f5f9;
+        white-space: normal;
+        word-break: break-word;
+        --bs-table-bg-type: transparent;   /* keine Streifen in der Kartenansicht */
+    }
+
+    main table.table:not(.tabelle-quer) > tbody > tr > td:last-child,
+    main table.table:not(.tabelle-quer) > tfoot > tr > td:last-child { border-bottom: 0; }
+
+    main table.table:not(.tabelle-quer) > tbody > tr > td::before,
+    main table.table:not(.tabelle-quer) > tfoot > tr > td::before {
+        content: attr(data-label);
+        position: absolute;
+        left: .8rem;
+        top: .55rem;
+        width: calc(42% - 1.2rem);
+        text-align: left;
+        font-size: .78rem;
+        font-weight: 600;
+        color: var(--md-text-2);
+        white-space: normal;
+    }
+
+    /* Zellen ohne Bezeichnung (z. B. Löschen-Knopf) */
+    main table.table:not(.tabelle-quer) td.ohne-label { padding-left: .8rem !important; }
+    main table.table:not(.tabelle-quer) td.ohne-label::before { display: none; }
+
+    /* Eingabefelder (Planung): Bezeichnung oben, Feld volle Breite */
+    main table.table:not(.tabelle-quer) td.eingabe {
+        padding: .55rem .8rem !important;
+        text-align: left !important;
+    }
+    main table.table:not(.tabelle-quer) td.eingabe::before {
+        position: static;
+        display: block;
+        width: auto;
+        margin-bottom: .25rem;
+    }
+
+    /* Eingabezeilen zweispaltig, damit die Karte nicht zu lang wird */
+    main table.table:not(.tabelle-quer) > tbody > tr.eingabe-zeile {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    main table.table:not(.tabelle-quer) > tbody > tr.eingabe-zeile > td { border-bottom: 1px solid #f1f5f9; }
+    main table.table:not(.tabelle-quer) > tbody > tr.eingabe-zeile > td.ohne-label,
+    main table.table:not(.tabelle-quer) > tbody > tr.eingabe-zeile > td.breit { grid-column: 1 / -1; }
+    main table.table:not(.tabelle-quer) > tbody > tr.eingabe-zeile > td:not(.eingabe):not(.ohne-label) {
+        padding: .55rem .8rem !important;
+        text-align: left !important;
+    }
+    main table.table:not(.tabelle-quer) > tbody > tr.eingabe-zeile > td:not(.eingabe):not(.ohne-label)::before {
+        position: static; display: block; width: auto; margin-bottom: .25rem;
+    }
+
+    /* Leere Zellen (z. B. Platzhalter in Summenzeilen) ausblenden */
+    main table.table:not(.tabelle-quer) td:empty { display: none; }
+
+    /* Erste Zelle als Kartenkopf hervorheben, wenn es die ID ist */
+    main table.table:not(.tabelle-quer) > tbody > tr > td.kartenkopf {
+        background: #f8fafc;
+        font-weight: 600;
+    }
+
+    /* Karten-Container: Rahmen übernehmen jetzt die einzelnen Karten */
+    .tabelle-karte {
+        background: transparent;
+        border: 0;
+        box-shadow: none;
+        overflow: visible;
+    }
+    .tabelle-karte .table-responsive { overflow: visible; }
+
+    .tabelle-karte .seiten-navigation {
+        border: 1px solid var(--md-rand);
+        border-radius: var(--md-radius);
+        background: var(--md-flaeche);
+    }
+
+    /* ── Seitennavigation ── */
+    .seiten-navigation { justify-content: center; text-align: center; padding: .75rem; }
+    .seiten-info { width: 100%; }
+    .seiten-navigation .pagination { gap: .15rem; flex-wrap: nowrap; }
+    .seiten-navigation .page-link { min-width: 2.35rem; height: 2.5rem; padding: 0 .35rem; }   /* große Tippfläche */
+    .seiten-navigation .page-link.luecke { min-width: 1rem; padding: 0; }
+
+    /* ── Filter ── */
+    .filter-karte { padding: .9rem .9rem .1rem; }
+    .filter-karte .row > [class*="col-"] { margin-bottom: .75rem; }
+    .filter-karte .text-end { display: flex; gap: .5rem; }
+    .filter-karte .text-end > * { flex: 1; }
+
+    /* ── Diagramm-Bereiche (Leistung, Temperatur, Häufigkeit) ── */
+    main .lc-dashboard,
+    main .td-dashboard { padding: 14px; border-radius: 12px; }
+    main .hf-section { padding: 14px 12px; }
+    main .hf-page { padding: 8px 0; }
+    main .lc-stat-grid,
+    main .td-stat-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+    main .lc-stat-val { font-size: 19px; }
+    main .td-stat-value { font-size: 20px; }
+    main .lc-box,
+    main .hf-table-wrap,
+    main .td-chart-box { overflow-x: auto; }
+    main .lc-leist-grid { grid-template-columns: 1fr !important; }
+
+    /* ── Produktionsplanung ── */
+    main .group { padding: .75rem; border-radius: 12px; }
+    main .group .modern-card-body { padding: .75rem; }
+    main .group .modern-card-body.p-0 { padding: 0; background: transparent; }
+    main .group .button-group > .btn,
+    main .group .group-head > .btn { flex: 1 1 auto; justify-content: center; }
+    main .page-title { font-size: 1.3rem; }
+
+    /* ── Sonstiges ── */
+    .nav-tabs .nav-link { padding: .5rem .7rem; font-size: .9rem; }
+    #nachOben { right: .9rem; bottom: .9rem; }
+    .fuss .tastatur-tipp { display: none; }
+}
+
+/* Mittlere Bildschirme: Navigation mit Text, aber kompakter */
+@media (min-width: 1200px) and (max-width: 1399.98px) {
+    .navbar-md .nav-link { padding: .45rem .5rem !important; font-size: .92rem; }
 }
