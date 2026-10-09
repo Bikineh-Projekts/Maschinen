@@ -5,9 +5,19 @@
     ViewData["actionForm"] = "Index";
     ViewData["Title"] = "Abzug";
     ViewData["IsShowId"] = true;
+    var analyse = ViewBag.Analyse as AnalyseModel ?? new AnalyseModel();
 }
 
-<h1><i class="bi bi-arrows-expand text-primary"></i> Abzugsdaten</h1>
+<h1><i class="bi bi-arrows-expand"></i> Abzugsdaten</h1>
 
 @await Html.PartialAsync("_PartialFilter")
-@await Html.PartialAsync("_AbzugsdatenTable", Model)
+@await Html.PartialAsync("_Reiter", "abzug")
+
+<div class="tab-content">
+    <div class="tab-pane fade show active" id="reiter-analyse" role="tabpanel">
+        @await Html.PartialAsync("_Analyse", analyse)
+    </div>
+    <div class="tab-pane fade" id="reiter-tabelle" role="tabpanel">
+        @await Html.PartialAsync("_AbzugsdatenTable", Model)
+    </div>
+</div>

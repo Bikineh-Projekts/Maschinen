@@ -163,3 +163,131 @@
         if (document.querySelector('main canvas')) window.location.reload();
     });
 })();
+
+// ── Reiter "Analyse | Tabelle" ───────────────────────────────────────────────
+// Merkt die Auswahl je Seite. Beim Blättern in der Tabelle (pageNumber in der
+// Adresse) öffnet sich automatisch der Tabellen-Reiter.
+(function () {
+    'use strict';
+    document.addEventListener('DOMContentLoaded', function () {
+        document.querySelectorAll('[data-reiter]').forEach(function (leiste) {
+            const name = 'md-reiter-' + leiste.getAttribute('data-reiter');
+            const knoepfe = leiste.querySelectorAll('[data-bs-toggle="tab"]');
+            if (!knoepfe.length || !window.bootstrap) return;
+
+            let ziel = null;
+            if (/[?&]pageNumber=/.test(location.search)) ziel = 'tabelle';
+            else { try { ziel = localStorage.getItem(name); } catch (e) { } }
+
+            knoepfe.forEach(function (k) {
+                k.addEventListener('shown.bs.tab', function () {
+                    try { localStorage.setItem(name, k.getAttribute('data-reiter-id')); } catch (e) { }
+                    // Seiten mit eigenem Diagramm-Lader (Leistung, Temperatur)
+                    const lader = k.getAttribute('data-beim-zeigen');
+                    if (lader && typeof window[lader] === 'function') window[lader]();
+                    window.mdAnalyseZeichnen && window.mdAnalyseZeichnen();
+                });
+                if (ziel && k.getAttribute('data-reiter-id') === ziel) bootstrap.Tab.getOrCreateInstance(k).show();
+            });
+        });
+        window.mdAnalyseZeichnen && window.mdAnalyseZeichnen();
+    });
+})();
+
+// ── Analyse-Diagramme zeichnen (Partial _Analyse) ────────────────────────────
+(function () {
+    'use strict';
+
+    function kurz(text, max) {
+        text = String(text);
+        return text.length > max ? text.slice(0, max - 1) + '…' : text;
+    }
+    function zahl(v) {
+        return v == null ? '–' : Number(v).toLocaleString('de-DE', { maximumFractionDigits: 1 });
+    }
+
+    function zeichne(def) {
+        const canvas = document.getElementById(def.id);
+        if (!canvas || canvas.dataset.gezeichnet) return;
+        if (!canvas.offsetParent) return;          // in verstecktem Reiter: später zeichnen
+        canvas.dataset.gezeichnet = '1';
+
+        const text2 = mdFarbe('md-text-2');
+        const raster = mdFarbe('viz-raster');
+        const flaeche = mdFarbe('md-flaeche');
+        const waagrecht = def.art === 'BalkenWaagrecht' || def.art === 'GestapeltWaagrecht';
+        const gestapelt = def.art === 'GestapeltWaagrecht';
+        const linie = def.art === 'Linie';
+        const mehrere = def.reihen.length > 1;
+
+        Chart.defaults.font.family = getComputedStyle(document.body).fontFamily;
+        Chart.defaults.color = text2;
+
+        const datasets = def.reihen.map(function (r) {
+            const farbe = mdFarbe(r.farbe) || mdFarbe('viz-1');
+            const basis = { label: r.name, data: r.werte };
+            if (linie) return Object.assign(basis, {
+                borderColor: farbe, backgroundColor: farbe, borderWidth: 2,
+                pointRadius: 0, pointHoverRadius: 5, pointHitRadius: 12, tension: .25, spanGaps: false   // Lücken = keine Daten, nicht verbinden
+            });
+            return Object.assign(basis, {
+                backgroundColor: farbe, borderColor: flaeche,
+                borderWidth: gestapelt ? { right: 2 } : 0,
+                borderRadius: gestapelt ? 0 : 4, borderSkipped: 'start',
+                maxBarThickness: waagrecht ? 22 : 28
+            });
+        });
+
+        const wertAchse = {
+            // Mengen beginnen bei 0; Verläufe (Linie) zoomen auf den Wertebereich
+            beginAtZero: !linie, grace: linie ? '10%' : 0, stacked: gestapelt,
+            grid: { color: raster, drawTicks: false },
+            border: { display: false },
+            ticks: { padding: 6, callback: function (v) { return zahl(v); } }
+        };
+        const kategorieAchse = {
+            stacked: gestapelt,
+            grid: { display: false },
+            border: { color: mdFarbe('md-rand') },
+            ticks: {
+                autoSkip: !waagrecht, maxRotation: 0, padding: 4,
+                // schmale Bildschirme: kürzere Namen, der volle Name steht im Tooltip
+                callback: function (v) { return kurz(this.getLabelForValue(v), waagrecht ? (canvas.clientWidth < 520 ? 18 : 34) : 14); }
+            }
+        };
+
+        new Chart(canvas, {
+            type: linie ? 'line' : 'bar',
+            data: { labels: def.beschriftungen, datasets: datasets },
+            options: {
+                indexAxis: waagrecht ? 'y' : 'x',
+                responsive: true, maintainAspectRatio: false,
+                animation: { duration: 400 },
+                interaction: { mode: linie || gestapelt ? 'index' : 'nearest', axis: waagrecht ? 'y' : 'x', intersect: false },
+                scales: waagrecht ? { x: wertAchse, y: kategorieAchse } : { x: kategorieAchse, y: wertAchse },
+                plugins: {
+                    legend: { display: mehrere, position: 'bottom', labels: { usePointStyle: true, pointStyle: 'rectRounded', boxWidth: 10, padding: 14 } },
+                    tooltip: {
+                        backgroundColor: mdFarbe('md-tooltip'), titleColor: mdFarbe('md-tooltip-text'), bodyColor: mdFarbe('md-tooltip-text'),
+                        padding: 10, cornerRadius: 6, boxPadding: 4,
+                        callbacks: {
+                            label: function (c) {
+                                const v = waagrecht ? c.parsed.x : c.parsed.y;
+                                return ' ' + (mehrere ? c.dataset.label + ': ' : '') + zahl(v) + ' ' + def.einheit;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    window.mdAnalyseZeichnen = function () {
+        if (!window.Chart) return;
+        document.querySelectorAll('[data-analyse] .analyse-daten').forEach(function (s) {
+            let defs = [];
+            try { defs = JSON.parse(s.textContent); } catch (e) { return; }
+            defs.forEach(zeichne);
+        });
+    };
+})();

@@ -1,0 +1,69 @@
+﻿@using MaschinenDataein.Models.ModelView
+@model AnalyseModel
+@*
+    Analyse-Reiter: Kennzahlen + Diagramme. Gezeichnet von mdAnalyse() in site.js
+    mit Chart.js; Farben kommen als Namen aus dem Farbsystem (hell/dunkel).
+*@
+@if (Model == null || !Model.HatDaten)
+{
+    @* Ohne Zeitraum wurde noch nicht gefiltert; mit Zeitraum gab es keine Daten *@
+    @await Html.PartialAsync("_LeerHinweis", !string.IsNullOrEmpty(Model?.Zeitraum))
+}
+else
+{
+    var daten = Model.Diagramme.Select(d => new
+    {
+        id = d.Id,
+        art = d.Art.ToString(),
+        einheit = d.Einheit,
+        beschriftungen = d.Beschriftungen,
+        reihen = d.Reihen.Select(r => new { name = r.Name, farbe = r.Farbe, werte = r.Werte })
+    });
+
+    <section class="analyse" data-analyse>
+        <p class="analyse-zeitraum"><i class="bi bi-calendar3" aria-hidden="true"></i> Zeitraum: <strong>@Model.Zeitraum</strong></p>
+
+        <div class="kennzahl-reihe">
+            @foreach (var k in Model.Kennzahlen)
+            {
+                <div class="kennzahl">
+                    <span class="kennzahl-titel">
+                        @if (k.Icon != null)
+                        {
+                            <i class="bi @k.Icon" aria-hidden="true"></i>
+                        }
+                        @k.Titel
+                    </span>
+                    <strong class="kennzahl-wert" title="@k.Wert">@k.Wert</strong>
+                    @if (k.Hinweis != null)
+                    {
+                        <span class="kennzahl-hinweis">@k.Hinweis</span>
+                    }
+                </div>
+            }
+        </div>
+
+        <div class="diagramm-raster">
+            @foreach (var d in Model.Diagramme)
+            {
+                var waagrecht = d.Art is DiagrammArt.BalkenWaagrecht or DiagrammArt.GestapeltWaagrecht;
+                var hoehe = waagrecht ? Math.Max(170, d.Beschriftungen.Count * 30 + (d.Reihen.Count > 1 ? 80 : 50)) : 280;
+
+                <figure class="diagramm-karte @(d.Breit ? "breit" : "")">
+                    <figcaption>
+                        <h3>@d.Titel</h3>
+                        @if (d.Hinweis != null)
+                        {
+                            <span>@d.Hinweis</span>
+                        }
+                    </figcaption>
+                    <div class="diagramm-flaeche" style="height:@(hoehe)px">
+                        <canvas id="@d.Id" role="img" aria-label="@d.Titel"></canvas>
+                    </div>
+                </figure>
+            }
+        </div>
+
+        <script type="application/json" class="analyse-daten">@Html.Raw(System.Text.Json.JsonSerializer.Serialize(daten))</script>
+    </section>
+}

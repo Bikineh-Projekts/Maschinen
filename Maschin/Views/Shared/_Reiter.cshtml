@@ -1,0 +1,16 @@
+@* Reiterleiste "Analyse | Tabelle". Model = Name zum Merken der Auswahl, z. B. "alarm". *@
+@model string
+<ul class="nav seiten-reiter no-print" data-reiter="@Model" role="tablist">
+    <li class="nav-item" role="presentation">
+        <button class="nav-link active" type="button" role="tab" data-bs-toggle="tab"
+                data-bs-target="#reiter-analyse" data-reiter-id="analyse" aria-controls="reiter-analyse" aria-selected="true">
+            <i class="bi bi-bar-chart-line" aria-hidden="true"></i> Analyse
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" type="button" role="tab" data-bs-toggle="tab"
+                data-bs-target="#reiter-tabelle" data-reiter-id="tabelle" aria-controls="reiter-tabelle" aria-selected="false">
+            <i class="bi bi-table" aria-hidden="true"></i> Tabelle
+        </button>
+    </li>
+</ul>

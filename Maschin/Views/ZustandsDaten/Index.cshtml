@@ -1,52 +1,64 @@
 @using MaschinenDataein.Models.Data
+@using MaschinenDataein.Models.ModelView
+@using MaschinenDataein.Models.PaginatedModel
 @model List<ZustandsDaten>
 @{
     Layout = "~/Views/Shared/_Layout.cshtml";
     ViewData["actionForm"] = "Index";
     ViewData["Title"] = "Zustand";
+    var paginatedListItem = ViewData["PaginatedListItem"] as PaginatedListItem;
+    var analyse = ViewBag.Analyse as AnalyseModel ?? new AnalyseModel();
 }
 
-<div class="d-flex flex-wrap align-items-baseline justify-content-between gap-2">
-    <h1><i class="bi bi-activity text-primary"></i> Zustand</h1>
-    @if (Model != null && Model.Count > 0)
-    {
-        <span class="text-muted">@Model.Count.ToString("N0") Einträge</span>
-    }
-</div>
+<h1><i class="bi bi-activity"></i> Zustand</h1>
 
 @await Html.PartialAsync("_PartialFilter")
+@await Html.PartialAsync("_Reiter", "zustand")
 
-@if (Model != null && Model.Count > 0)
-{
-    <div class="tabelle-karte">
-        <div class="table-responsive">
-            <table class="table table-hover table-striped align-middle">
-                <thead class="table-dark">
-                    <tr>
-                        <th class="text-end">ID</th>
-                        <th>Zeitstempel</th>
-                        <th>Maschine</th>
-                        <th>Meldung</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach (var item in Model)
-                    {
-                        <tr>
-                            <td class="text-end text-muted">@item.Id</td>
-                            <td class="zeit-datum">
-                                @item.Timestamp.ToString("dd.MM.yyyy")<span class="zeit-uhr">@item.Timestamp.ToString("HH:mm:ss")</span>
-                            </td>
-                            <td>@(item.Maschine?.Bezeichnung ?? "–")</td>
-                            <td>@(item.Zustandsmeldung?.Meldung ?? "–")</td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
-        </div>
+<div class="tab-content">
+    <div class="tab-pane fade show active" id="reiter-analyse" role="tabpanel">
+        @await Html.PartialAsync("_Analyse", analyse)
     </div>
-}
-else
-{
-    @await Html.PartialAsync("_LeerHinweis", Model != null)
-}
+
+    <div class="tab-pane fade" id="reiter-tabelle" role="tabpanel">
+        @if (Model != null && Model.Count > 0)
+        {
+            <div class="tabelle-karte">
+                <div class="table-responsive">
+                    <table class="table table-hover table-striped align-middle">
+                        <thead class="table-dark">
+                            <tr>
+                                <th class="text-end">ID</th>
+                                <th>Zeitstempel</th>
+                                <th>Maschine</th>
+                                <th>Meldung</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in Model)
+                            {
+                                <tr>
+                                    <td class="text-end text-muted">@item.Id</td>
+                                    <td class="zeit-datum">
+                                        @item.Timestamp.ToString("dd.MM.yyyy")<span class="zeit-uhr">@item.Timestamp.ToString("HH:mm:ss")</span>
+                                    </td>
+                                    <td>@(item.Maschine?.Bezeichnung ?? "–")</td>
+                                    <td><span class="status-marke info"><i class="bi bi-activity" aria-hidden="true"></i>@(item.Zustandsmeldung?.Meldung ?? "–")</span></td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+
+                @if (paginatedListItem != null)
+                {
+                    @await Html.PartialAsync("_PaginatedItem", paginatedListItem)
+                }
+            </div>
+        }
+        else
+        {
+            @await Html.PartialAsync("_LeerHinweis", Model != null)
+        }
+    </div>
+</div>

@@ -13,20 +13,17 @@
     @await Html.PartialAsync("_PartialFilter")
 
     @* Tab-Navigation *@
-    <ul class="nav nav-tabs mb-3" id="leistungTabs" role="tablist">
+    <ul class="nav seiten-reiter no-print" data-reiter="leistung" role="tablist">
         <li class="nav-item" role="presentation">
-            <button class="nav-link active" id="tabelle-tab"
-                    data-bs-toggle="tab" data-bs-target="#leistTabelle"
-                    type="button" role="tab">
-                📋 Tabelle
+            <button class="nav-link active" type="button" role="tab" data-bs-toggle="tab"
+                    data-bs-target="#leistTabelle" data-reiter-id="tabelle">
+                <i class="bi bi-table" aria-hidden="true"></i> Tabelle
             </button>
         </li>
         <li class="nav-item" role="presentation">
-            <button class="nav-link" id="chart-tab"
-                    data-bs-toggle="tab" data-bs-target="#leistChart"
-                    type="button" role="tab"
-                    onclick="ladeLeistungChart()">
-                📊 Leistungs-Analyse
+            <button class="nav-link" type="button" role="tab" data-bs-toggle="tab"
+                    data-bs-target="#leistChart" data-reiter-id="analyse" data-beim-zeigen="ladeLeistungChart">
+                <i class="bi bi-bar-chart-line" aria-hidden="true"></i> Analyse
             </button>
         </li>
     </ul>
