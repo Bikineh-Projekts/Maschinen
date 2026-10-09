@@ -3,7 +3,7 @@ WORKDIR /src
 
 COPY . ./
 
-RUN dotnet restore "Maschin/MaschinenDataein.csproj" -r linux-x64
+RUN dotnet restore "Maschin/MaschinenDataein.csproj" -r linux-x64 -p:PublishReadyToRun=true
 
 # ReadyToRun: Code wird vorab kompiliert -> deutlich schnellerer Start nach einem Neustart
 RUN dotnet publish "Maschin/MaschinenDataein.csproj" -c Release -o /app/publish \
