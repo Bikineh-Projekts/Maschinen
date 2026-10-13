@@ -137,3 +137,8 @@ Render-Dashboard per User Secrets setzen (Rechtsklick Projekt → „Geheime Ben
   komplett verschwinden. Jetzt wird je Maschine getrennt ausgedünnt.
 - Zeitverläufe ohne Einblend-Animation: wurde sie durch eine Größenänderung (Reiterwechsel,
   Drehen des Handys) unterbrochen, blieb die Linie nur teilweise gezeichnet.
+
+## Update 11 – Realistische Temperaturen
+- Jeder Temperaturwert wird so lange durch 10 geteilt, bis er unter 1000 °C liegt
+  (1000 → 100,0 °C, 10000 → 100,0 °C, 20000 → 200,0 °C). Isstemp2 wird vorher wie bisher ÷ 10 geteilt.
+- Gilt überall: Startseite, Temperatur-Tabelle, Diagramme, Abweichung, Bias und RMSE (alles über SiteHelper).
