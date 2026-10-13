@@ -1,4 +1,4 @@
-@using MaschinenDataein.Helper
+﻿@using MaschinenDataein.Helper
 @using MaschinenDataein.Models.ModelView
 @using MaschinenDataein.Models.PaginatedModel
 @model List<TemperaturdatenModelView>
@@ -7,9 +7,9 @@
     bool IsShowId = Convert.ToBoolean(ViewData["IsShowId"]);
     var paginatedListItem = ViewData["PaginatedListItem"] as PaginatedListItem;
 
-    // Maschine 4 liefert ganze Grad, alle anderen Zehntelgrad
+    // REGEL: jeder Temperaturwert IMMER ÷ 10, alle Maschinen (siehe SiteHelper)
     string Temp(TemperaturdatenModelView t, int wert) =>
-        (t.MaschinenId == 4 ? wert.ToString() : SiteHelper.ConvertTemperaturToString(wert)) + " °C";
+        SiteHelper.ConvertTemperaturToString(wert) + " °C";
 }
 
 @if (Model != null && Model.Count > 0)

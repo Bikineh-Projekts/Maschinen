@@ -124,3 +124,9 @@ Render-Dashboard per User Secrets setzen (Rechtsklick Projekt → „Geheime Ben
 - Produktionszeitreihe zeigt Takte und Packungen getrennt je Maschine und verwendet getrennte Achsen für die beiden Einheiten.
 - Relative Paketzahl wird nicht mehr als echte Anlagenleistung/OEE bezeichnet, da Soll-Takt- und Laufzeitdaten fehlen.
 - Leistungs- und Temperaturdiagramme wurden für schmale Smartphone-Ansichten verbessert.
+
+## Update 9 – Temperaturregel
+- Jeder Temperaturwert (Soll und Ist, Kanal 1 und 2) wird immer durch 10 geteilt – für alle Maschinen.
+  Die frühere Ausnahme für Maschine 4 (ganze Grad) ist entfernt.
+- Umrechnung zentral in `Helper/SiteHelper.cs` (`TemperaturTeiler = 10`); genutzt von Startseite,
+  Temperatur-Tabelle und Temperatur-Analyse (Diagramme, Abweichung, Bias, RMSE).

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Linq;
 using System.Collections.Generic;
 using System.Globalization;
@@ -170,9 +170,9 @@ namespace MaschinenDataein.Controllers
             var sampled = list.Where((_, i) => i % step == 0).ToList();
 
             // ── 6. Einheit vereinheitlichen, BEVOR Diagramme oder Statistiken berechnet werden.
-            // In den Quelldaten sind Temperaturwerte bei Maschinen außer Maschine 4 in Zehntelgrad
-            // gespeichert. Maschine 4 liefert laut Datenmodell ganze Grad. Rohdaten bleiben unverändert.
-            double Grad(long maschinenId, int wert) => maschinenId == 4 ? wert : wert / 10.0;
+            // REGEL: JEDER Temperaturwert (Soll und Ist) wird IMMER durch 10 geteilt –
+            // für alle Maschinen, ohne Ausnahme (1000 → 100,0 °C). Siehe SiteHelper.
+            double Grad(long maschinenId, int wert) => SiteHelper.TemperaturGrad(wert);
 
             var chartPoints = sampled.Select(x =>
             {
