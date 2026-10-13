@@ -7,9 +7,8 @@
     bool IsShowId = Convert.ToBoolean(ViewData["IsShowId"]);
     var paginatedListItem = ViewData["PaginatedListItem"] as PaginatedListItem;
 
-    // REGEL: jeder Temperaturwert IMMER ÷ 10, alle Maschinen (siehe SiteHelper)
-    string Temp(TemperaturdatenModelView t, int wert) =>
-        SiteHelper.ConvertTemperaturToString(wert) + " °C";
+    // REGEL (siehe SiteHelper): NUR Isstemp2 ÷ 10, alle anderen unverändert
+    string Temp(decimal grad) => SiteHelper.Text(grad) + " °C";
 }
 
 @if (Model != null && Model.Count > 0)
@@ -45,10 +44,10 @@
                             </td>
                             <td>@(TemperaturDaten.Maschine ?? "–")</td>
                             <td>@(string.IsNullOrWhiteSpace(TemperaturDaten.Name) ? "–" : TemperaturDaten.Name)</td>
-                            <td class="text-end text-muted">@Temp(TemperaturDaten, TemperaturDaten.Solltemp1)</td>
-                            <td class="text-end fw-semibold">@Temp(TemperaturDaten, TemperaturDaten.Isstemp1)</td>
-                            <td class="text-end text-muted">@Temp(TemperaturDaten, TemperaturDaten.Solltemp2)</td>
-                            <td class="text-end fw-semibold">@Temp(TemperaturDaten, TemperaturDaten.Isstemp2)</td>
+                            <td class="text-end text-muted">@Temp(SiteHelper.Temperatur(TemperaturDaten.Solltemp1))</td>
+                            <td class="text-end fw-semibold">@Temp(SiteHelper.Temperatur(TemperaturDaten.Isstemp1))</td>
+                            <td class="text-end text-muted">@Temp(SiteHelper.Temperatur(TemperaturDaten.Solltemp2))</td>
+                            <td class="text-end fw-semibold">@Temp(SiteHelper.Isstemp2(TemperaturDaten.Isstemp2))</td>
                         </tr>
                     }
                 </tbody>

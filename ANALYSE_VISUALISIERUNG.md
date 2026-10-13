@@ -23,7 +23,7 @@ Bei sehr großen Zeiträumen lädt das Leistungsdiagramm maximal 2.000 jüngste 
 - „Relativer Paketausstoß“ vergleicht die Paketzahl je Maschine/Programm mit der größten Paketzahl im gewählten Zeitraum. Das ist kein OEE- oder Wirkungsgradwert. Dafür fehlen im aktuellen Schema insbesondere Laufzeit, geplante Taktzeit und definierte Produktions-/Schichtgrenzen.
 - Alarmtabellen enthalten Momentaufnahmen der Bits `AM1`–`AM94`. Ein aktiver Alarm in einem Snapshot ist nicht automatisch ein neuer, eindeutiger Alarmstart.
 - Zustandsdauer wird aus Zustandswechseln geschätzt; lange Datenlücken werden nicht vollständig als Betriebs- oder Stillstandszeit gewertet.
-- **Temperaturregel:** Jeder Temperaturwert (`Solltemp1/2`, `Isstemp1/2`) wird **immer durch 10 geteilt** – für alle Maschinen, ohne Ausnahme (Rohwert 1000 → 100,0 °C). Die Umrechnung steht zentral in `Helper/SiteHelper.cs` (`TemperaturTeiler = 10`). Rohwerte in der Datenbank bleiben unverändert.
+- **Temperaturregel:** Nur `Isstemp2` wird **immer durch 10 geteilt** – für alle Maschinen (Rohwert 1000 → 100,0 °C). `Solltemp1`, `Isstemp1` und `Solltemp2` werden unverändert verwendet. Die Regel steht zentral in `Helper/SiteHelper.cs` (`Isstemp2Teiler = 10`). Rohwerte in der Datenbank bleiben unverändert.
 - `Timestamp` ist als Datum/Uhrzeit modelliert und wird nicht pauschal durch 10 oder 1.000 geteilt.
 
 ## Testhinweis

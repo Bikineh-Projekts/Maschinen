@@ -170,16 +170,15 @@ namespace MaschinenDataein.Controllers
             var sampled = list.Where((_, i) => i % step == 0).ToList();
 
             // ── 6. Einheit vereinheitlichen, BEVOR Diagramme oder Statistiken berechnet werden.
-            // REGEL: JEDER Temperaturwert (Soll und Ist) wird IMMER durch 10 geteilt –
-            // für alle Maschinen, ohne Ausnahme (1000 → 100,0 °C). Siehe SiteHelper.
-            double Grad(long maschinenId, int wert) => SiteHelper.TemperaturGrad(wert);
+            // REGEL (siehe SiteHelper): NUR Isstemp2 wird IMMER durch 10 geteilt.
+            // Solltemp1, Isstemp1 und Solltemp2 bleiben unverändert.
 
             var chartPoints = sampled.Select(x =>
             {
-                double soll1 = Grad(x.MaschinenId, x.Solltemp1);
-                double ist1 = Grad(x.MaschinenId, x.Isstemp1);
-                double soll2 = Grad(x.MaschinenId, x.Solltemp2);
-                double ist2 = Grad(x.MaschinenId, x.Isstemp2);
+                double soll1 = SiteHelper.TemperaturGrad(x.Solltemp1);
+                double ist1 = SiteHelper.TemperaturGrad(x.Isstemp1);
+                double soll2 = SiteHelper.TemperaturGrad(x.Solltemp2);
+                double ist2 = SiteHelper.Isstemp2Grad(x.Isstemp2);      // ÷ 10
 
                 return new
                 {
@@ -196,10 +195,10 @@ namespace MaschinenDataein.Controllers
             }).ToList();
 
             // ── 7. Statistik in °C berechnen, nicht auf den gespeicherten Rohwerten.
-            var f1 = sampled.Select(x => Grad(x.MaschinenId, x.Isstemp1)
-                                      - Grad(x.MaschinenId, x.Solltemp1)).ToList();
-            var f2 = sampled.Select(x => Grad(x.MaschinenId, x.Isstemp2)
-                                      - Grad(x.MaschinenId, x.Solltemp2)).ToList();
+            var f1 = sampled.Select(x => SiteHelper.TemperaturGrad(x.Isstemp1)
+                                      - SiteHelper.TemperaturGrad(x.Solltemp1)).ToList();
+            var f2 = sampled.Select(x => SiteHelper.Isstemp2Grad(x.Isstemp2)      // ÷ 10
+                                      - SiteHelper.TemperaturGrad(x.Solltemp2)).ToList();
 
             return Json(new
             {
