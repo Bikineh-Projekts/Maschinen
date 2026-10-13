@@ -468,6 +468,8 @@
     // Dashboard komplett rendern
     // ════════════════════════════════════════════════════════════════════════
     function renderDashboard() {
+        // Anzahl Maschinen hier selbst ermitteln – 'maschinen' existiert nur in drawChart()
+        const anzahlMaschinen = new Set((_daten.punkte || []).map(p => p.maschinenId)).size;
         const s = _kanal === 1 ? _daten.statistik.kanal1 : _daten.statistik.kanal2;
 
         function sc(label, value, unit, color, sub) {
@@ -506,7 +508,7 @@
             <div style="margin-bottom:18px">
                 <h4 style="margin:0 0 4px;font-weight:700">🌡 Temperatur-Analyse</h4>
                 <p style="margin:0;color:var(--md-text-2);font-size:13px">
-                    ${_daten.punkte.length} Messpunkte · ${maschinen.length} ${maschinen.length === 1 ? 'Maschine' : 'Maschinen'} · Kanal ${_kanal} aktiv
+                    ${_daten.punkte.length} Messpunkte · ${anzahlMaschinen} ${anzahlMaschinen === 1 ? 'Maschine' : 'Maschinen'} · Kanal ${_kanal} aktiv
                 </p>
             </div>
 
