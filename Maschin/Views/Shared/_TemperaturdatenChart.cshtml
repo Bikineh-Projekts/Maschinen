@@ -299,7 +299,7 @@
         const baseOpts = {
             responsive: true,
             maintainAspectRatio: false,
-            animation: { duration: 250 },
+            animation: false,   // keine Einblend-Animation: bei Unterbrechung (Größenänderung) bliebe die Linie halb gezeichnet
             plugins: {
                 legend: { labels: { color: C.muted, font: { size: 12 }, boxWidth: 20 } },
                 tooltip: {

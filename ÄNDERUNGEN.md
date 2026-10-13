@@ -130,3 +130,10 @@ Render-Dashboard per User Secrets setzen (Rechtsklick Projekt → „Geheime Ben
   `Solltemp1`, `Isstemp1` und `Solltemp2` bleiben unverändert. Die frühere Ausnahme für Maschine 4 ist entfernt.
 - Regel zentral in `Helper/SiteHelper.cs` (`Isstemp2Teiler = 10`); genutzt von Startseite,
   Temperatur-Tabelle und Temperatur-Analyse (Diagramme, Abweichung, Bias, RMSE).
+
+## Update 10 – Fehler in den Zeitverläufen behoben
+- Leistung und Temperatur: Bei mehr als 500 Messpunkten wurde über die gemeinsame Liste beider
+  Maschinen ausgedünnt („jeder n-te Punkt“). Da die Punkte abwechselnd liegen, konnte eine Maschine
+  komplett verschwinden. Jetzt wird je Maschine getrennt ausgedünnt.
+- Zeitverläufe ohne Einblend-Animation: wurde sie durch eine Größenänderung (Reiterwechsel,
+  Drehen des Handys) unterbrochen, blieb die Linie nur teilweise gezeichnet.

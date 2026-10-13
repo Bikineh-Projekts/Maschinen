@@ -323,8 +323,17 @@ namespace MaschinenDataein.Controllers
 
                 // Downsampling nur für die Zeitreihe; Summen und Ranglisten basieren weiter
                 // auf allen bis zu 2.000 geladenen Messpunkten.
+                // Je Maschine getrennt ausdünnen: Die Punkte beider Maschinen liegen abwechselnd
+                // in einer Liste. "Jeder n-te Punkt" über die gemeinsame Liste würde sonst eine
+                // Maschine komplett verlieren (z. B. bei Schritt 2 nur Maschine A).
                 var chartSchritt = Math.Max(1, (int)Math.Ceiling(zeitreihe.Count / 500.0));
-                var zeitreiheChart = zeitreihe.Where((_, i) => i % chartSchritt == 0).ToList();
+                var zeitreiheChart = zeitreihe
+                    .Select((punkt, index) => (punkt, index))
+                    .GroupBy(x => x.punkt.maschinenId)
+                    .SelectMany(g => g.Where((_, i) => i % chartSchritt == 0))
+                    .OrderBy(x => x.index)
+                    .Select(x => x.punkt)
+                    .ToList();
 
                 return Json(new
                 {

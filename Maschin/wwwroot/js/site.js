@@ -262,7 +262,7 @@
             options: {
                 indexAxis: waagrecht ? 'y' : 'x',
                 responsive: true, maintainAspectRatio: false,
-                animation: { duration: 400 },
+                animation: linie ? false : { duration: 400 },   // Verläufe ohne Animation (siehe Leistung/Temperatur)
                 interaction: { mode: linie || gestapelt ? 'index' : 'nearest', axis: waagrecht ? 'y' : 'x', intersect: false },
                 scales: waagrecht ? { x: wertAchse, y: kategorieAchse } : { x: kategorieAchse, y: wertAchse },
                 plugins: {
