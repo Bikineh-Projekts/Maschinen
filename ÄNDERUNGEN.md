@@ -142,3 +142,4 @@ Render-Dashboard per User Secrets setzen (Rechtsklick Projekt → „Geheime Ben
 - Jeder Temperaturwert wird so lange durch 10 geteilt, bis er unter 1000 °C liegt
   (1000 → 100,0 °C, 10000 → 100,0 °C, 20000 → 200,0 °C). Isstemp2 wird vorher wie bisher ÷ 10 geteilt.
 - Gilt überall: Startseite, Temperatur-Tabelle, Diagramme, Abweichung, Bias und RMSE (alles über SiteHelper).
+- Obergrenze auf 250 °C gesenkt (Form-/Siegeltemperaturen ca. 20–200 °C): 900 → 90,0 °C, 450 → 45,0 °C.

@@ -5,11 +5,14 @@ namespace MaschinenDataein.Helper
     ///
     ///   1. Isstemp2 wird IMMER zuerst durch 10 geteilt (alle Maschinen, ohne Ausnahme).
     ///   2. Danach wird JEDER Temperaturwert so lange durch 10 geteilt, bis er realistisch
-    ///      ist, also unter 1000 °C liegt. Vierstellige und größere Werte gibt es in der
-    ///      Produktion nicht – sie sind Zehntel- oder Hundertstelgrad aus der SPS.
+    ///      ist, also höchstens 250 °C beträgt. Form- und Siegeltemperaturen der
+    ///      Verpackungsmaschinen liegen etwa zwischen 20 und 200 °C; größere Werte sind
+    ///      Zehntel- oder Hundertstelgrad aus der SPS. So passen Soll und Ist zusammen.
     ///
-    ///   Beispiele:   1000 → 100,0 °C    10000 → 100,0 °C    20000 → 200,0 °C
-    ///                 450 → 450,0 °C    (Isstemp2: 1200 → 120,0 °C)
+    ///   Beispiele:   900 → 90,0 °C     1200 → 120,0 °C    10000 → 100,0 °C
+    ///                450 → 45,0 °C     20000 → 200,0 °C   120 → 120,0 °C
+    ///
+    ///   Obergrenze anpassen: nur RealistischeObergrenze ändern.
     ///
     /// Die Rohwerte in der Datenbank bleiben unverändert. Temperaturen deshalb NIE direkt
     /// aus der Datenbank anzeigen oder berechnen, sondern immer über diese Methoden.
@@ -19,8 +22,8 @@ namespace MaschinenDataein.Helper
         /// <summary>Feste Teilung NUR für Isstemp2 (Schritt 1).</summary>
         public const int Isstemp2Teiler = 10;
 
-        /// <summary>Ab diesem Betrag gilt ein Wert als unrealistisch und wird weiter ÷ 10 geteilt.</summary>
-        public const decimal RealistischeObergrenze = 1000m;
+        /// <summary>Höchste realistische Temperatur in °C. Darüber wird weiter ÷ 10 geteilt.</summary>
+        public const decimal RealistischeObergrenze = 250m;
 
         // ── Isstemp2: erst ÷ 10, dann auf realistischen Bereich bringen ───────
         public static decimal Isstemp2(int rohwert) => Realistisch((decimal)rohwert / Isstemp2Teiler);
@@ -30,10 +33,10 @@ namespace MaschinenDataein.Helper
         public static decimal Temperatur(int rohwert) => Realistisch(rohwert);
         public static double TemperaturGrad(int rohwert) => (double)Temperatur(rohwert);
 
-        /// <summary>Teilt durch 10, bis der Betrag unter 1000 liegt (1000 → 100, 20000 → 200).</summary>
+        /// <summary>Teilt durch 10, bis der Betrag höchstens 250 °C ist (900 → 90, 20000 → 200).</summary>
         public static decimal Realistisch(decimal wert)
         {
-            while (Math.Abs(wert) >= RealistischeObergrenze)
+            while (Math.Abs(wert) > RealistischeObergrenze)
                 wert /= 10m;
             return wert;
         }
