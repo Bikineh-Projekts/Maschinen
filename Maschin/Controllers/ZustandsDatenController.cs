@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Linq;
@@ -38,11 +38,13 @@ namespace MaschinenDataein.Controllers
             SetViewBagFilter(model, "Index", "ZustandsDaten");
 
             // Filter und Seitenaufteilung in der Datenbank – nur 50 Einträge pro Seite
+            var aktiveMaschinenIds = DropDownListHelper.GetAktiveMaschinen(_context).Select(m => m.Id).ToList();
+
             var query = _context.Zustandsdaten
                 .Include(x => x.Maschine)
                 .Include(x => x.Zustandsmeldung)
                 .ImZeitraum(model.DatumVon, model.DatumBis)
-                .FuerMaschine(model.MaschinenId)
+                .FuerAktiveMaschinen(model.MaschinenId, aktiveMaschinenIds)
                 .NeuesteZuerst();
 
             if (pageNumber <= 0) pageNumber = 1;

@@ -115,3 +115,12 @@ Render-Dashboard per User Secrets setzen (Rechtsklick Projekt → „Geheime Ben
 - Leistung und Temperatur: gleiche Reiterleiste; Diagramme laden beim Öffnen des Reiters.
 - Der zuletzt gewählte Reiter wird je Seite gemerkt; beim Blättern öffnet sich die Tabelle.
 - Chart.js wird einmal zentral im Layout geladen.
+
+## Update 8 – Grafana als Vorlage, Code bleibt in ASP.NET
+- Kein separates Grafana-Import-Dashboard: Die Grafana-Website dient nur als Designreferenz. Diagramme und Kennzahlen bleiben in Chart.js innerhalb der vorhandenen MVC-Anwendung.
+- Startseite, Filter, Planung und Analyse begrenzen die Oberfläche auf die zwei zuletzt aktiven Maschinen; leere Demo-Stammdatensätze ohne Messdaten erscheinen nicht als dritte Maschine.
+- Temperaturverläufe unterscheiden beide Maschinen bei gemeinsamer Auswahl in separaten Serien. Soll- und Istlinien sind durch Strichmuster und Beschriftung unterscheidbar.
+- Leistungsanalyse berechnet Differenzen aus Zählerständen statt Zähler-Snapshots zu summieren. Zähler-Resets werden erkannt; bei leeren Zeiträumen wird kein fremder Zeitraum als Ersatz angezeigt.
+- Produktionszeitreihe zeigt Takte und Packungen getrennt je Maschine und verwendet getrennte Achsen für die beiden Einheiten.
+- Relative Paketzahl wird nicht mehr als echte Anlagenleistung/OEE bezeichnet, da Soll-Takt- und Laufzeitdaten fehlen.
+- Leistungs- und Temperaturdiagramme wurden für schmale Smartphone-Ansichten verbessert.

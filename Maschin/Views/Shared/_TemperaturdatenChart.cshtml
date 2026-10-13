@@ -1,4 +1,4 @@
-﻿
+
 <style>
     .td-dashboard {
         background: var(--md-flaeche);
@@ -92,6 +92,15 @@
         animation: tdspin 0.8s linear infinite;
     }
     @@keyframes tdspin { to { transform: rotate(360deg); } }
+    @@media (max-width: 640px) {
+        .td-dashboard { padding: 12px; }
+        .td-stat-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+        .td-stat-card { padding: 10px; min-width: 0; }
+        .td-stat-value { font-size: 20px; overflow-wrap: anywhere; }
+        .td-btns { gap: 5px; }
+        .td-btn { flex: 1 1 auto; padding: 8px 10px; font-size: 12px; }
+        .td-chart-box { padding: 10px; }
+    }
     .td-empty {
         padding: 32px;
         color: var(--md-text-2);
@@ -279,6 +288,11 @@
         const punkte    = _daten.punkte;
         const labels    = punkte.map(p => p.t);
         const s         = _kanal === 1 ? _daten.statistik.kanal1 : _daten.statistik.kanal2;
+        // Bei der Auswahl "Beide Maschinen" werden Messreihen getrennt dargestellt,
+        // damit keine Linie Messwerte unterschiedlicher Maschinen miteinander verbindet.
+        const maschinen = [...new Map(punkte.map(p => [p.maschinenId, p.maschine || `Maschine ${p.maschinenId}`])).entries()];
+        const datenJeMaschine = (id, key) => punkte.map(p => p.maschinenId === id ? p[key] : null);
+        const maschinenFarbe = i => mdFarbe(`viz-${(i % 8) + 1}`);
 
         Chart.defaults.color = C.muted;
 
@@ -315,28 +329,33 @@
                 type: 'line',
                 data: {
                     labels,
-                    datasets: [
-                        {
-                            label: `Soll${_kanal}`,
-                            data: punkte.map(p => p[sollKey]),
-                            borderColor: C.soll,
-                            backgroundColor: C.soll + '18',
-                            borderDash: [6, 3],
-                            borderWidth: 2,
-                            pointRadius: 0,
-                            fill: true,
-                            tension: 0.3
-                        },
-                        {
-                            label: `Ist${_kanal}`,
-                            data: punkte.map(p => p[istKey]),
-                            borderColor: C.ist,
-                            backgroundColor: 'transparent',
-                            borderWidth: 2,
-                            pointRadius: 0,
-                            tension: 0.3
-                        }
-                    ]
+                    datasets: maschinen.flatMap(([id, name], i) => {
+                        const farbe = maschinenFarbe(i);
+                        return [
+                            {
+                                label: `${name} · Soll${_kanal}`,
+                                data: datenJeMaschine(id, sollKey),
+                                borderColor: farbe,
+                                backgroundColor: 'transparent',
+                                borderDash: [6, 3],
+                                borderWidth: 1.5,
+                                pointRadius: 0,
+                                spanGaps: true,
+                                fill: false,
+                                tension: 0.2
+                            },
+                            {
+                                label: `${name} · Ist${_kanal}`,
+                                data: datenJeMaschine(id, istKey),
+                                borderColor: farbe,
+                                backgroundColor: 'transparent',
+                                borderWidth: 2.5,
+                                pointRadius: 0,
+                                spanGaps: true,
+                                tension: 0.2
+                            }
+                        ];
+                    })
                 },
                 options: baseOpts
             });
@@ -347,18 +366,19 @@
                 data: {
                     labels,
                     datasets: [
-                        {
-                            label: `Fehler Kanal${_kanal}`,
-                            data: punkte.map(p => p[fehlerKey]),
-                            borderColor: C.fehler,
-                            backgroundColor: C.fehler + '22',
-                            borderWidth: 1.5,
+                        ...maschinen.map(([id, name], i) => ({
+                            label: `${name} · Fehler Kanal${_kanal}`,
+                            data: datenJeMaschine(id, fehlerKey),
+                            borderColor: maschinenFarbe(i),
+                            backgroundColor: 'transparent',
+                            borderWidth: 1.8,
                             pointRadius: 0,
-                            fill: true,
+                            spanGaps: true,
+                            fill: false,
                             tension: 0.2
-                        },
+                        })),
                         {
-                            label: `Bias (${s.bias}°C)`,
+                            label: `Bias aller ausgewählten Maschinen (${s.bias} °C)`,
                             data: labels.map(() => s.bias),
                             borderColor: C.warn,
                             borderDash: [5, 4],
@@ -369,7 +389,7 @@
                         {
                             label: 'Nulllinie',
                             data: labels.map(() => 0),
-                            borderColor:mdFarbe('md-rand')+'22',
+                            borderColor: mdFarbe('md-rand'),
                             borderWidth: 1,
                             pointRadius: 0,
                             fill: false
@@ -479,14 +499,14 @@
         const titles = {
             verlauf    : 'Soll-Temperatur (Zielkurve) vs. Ist-Temperatur — Abstand = Regelabweichung',
             fehler     : `Fehler(t) = Ist${_kanal}(t) − Soll${_kanal}(t) &nbsp;·&nbsp; Positiv = zu warm &nbsp;·&nbsp; Negativ = zu kalt`,
-            histogramm : 'Häufigkeitsverteilung der Fehler — Ideal: schmale Glocke zentriert um 0°C'
+            histogramm : 'Häufigkeitsverteilung der Fehler aller ausgewählten Maschinen — idealerweise eng um 0 °C verteilt'
         };
 
         document.getElementById('tdRoot').innerHTML = `
             <div style="margin-bottom:18px">
                 <h4 style="margin:0 0 4px;font-weight:700">🌡 Temperatur-Analyse</h4>
                 <p style="margin:0;color:var(--md-text-2);font-size:13px">
-                    ${_daten.punkte.length} Messpunkte · Kanal ${_kanal} aktiv
+                    ${_daten.punkte.length} Messpunkte · ${maschinen.length} ${maschinen.length === 1 ? 'Maschine' : 'Maschinen'} · Kanal ${_kanal} aktiv
                 </p>
             </div>
 
@@ -504,7 +524,7 @@
 
             <div class="td-chart-box">
                 <div class="td-chart-title">${titles[_ansicht]}</div>
-                <div style="position:relative;height:320px">
+                <div style="position:relative;height:clamp(240px, 55vw, 320px)">
                     <canvas id="tdCanvas"></canvas>
                 </div>
             </div>

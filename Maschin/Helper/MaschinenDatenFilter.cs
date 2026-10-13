@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using MaschinenDataein.Models.Data;
 using Microsoft.EntityFrameworkCore;
 
@@ -20,7 +21,17 @@ namespace MaschinenDataein.Helper
             return query.Where(x => x.Timestamp >= start && x.Timestamp < ende);
         }
 
-        /// <summary>Filtert auf eine Maschine; 0 bedeutet "alle Maschinen".</summary>
+        /// <summary>Filtert auf eine Maschine; 0 bedeutet die zwei zuletzt aktiven Maschinen.</summary>
+        public static IQueryable<T> FuerAktiveMaschinen<T>(
+            this IQueryable<T> query,
+            long maschinenId,
+            IReadOnlyCollection<long> aktiveMaschinenIds)
+            where T : class, IMaschinenDaten
+            => maschinenId > 0
+                ? query.Where(x => x.MaschinenId == maschinenId)
+                : query.Where(x => aktiveMaschinenIds.Contains(x.MaschinenId));
+
+        /// <summary>Kompatibilitätsmethode für Stellen, die explizit alle Daten benötigen.</summary>
         public static IQueryable<T> FuerMaschine<T>(this IQueryable<T> query, long maschinenId)
             where T : class, IMaschinenDaten
             => maschinenId > 0 ? query.Where(x => x.MaschinenId == maschinenId) : query;
