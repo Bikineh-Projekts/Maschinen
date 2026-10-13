@@ -1,4 +1,4 @@
-﻿<script src="https://cdn.jsdelivr.net/npm/hammerjs@2.0.8/hammer.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/hammerjs@2.0.8/hammer.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.1/dist/chartjs-plugin-zoom.min.js"></script>
 
 <style>
@@ -32,6 +32,17 @@
     .lc-empty{padding:32px;color:var(--md-text-2);text-align:center;font-size:14px;}
     .lc-debug{margin-top:10px;padding:8px 12px;background:var(--md-flaeche-3);border:1px solid var(--md-rand);border-radius:6px;font-variant-numeric:tabular-nums;font-size:11px;color:var(--md-text-3);}
     .lc-reload-btn{margin-top:12px;padding:7px 20px;background:color-mix(in srgb, var(--md-akzent) 13%, transparent);border:1px solid var(--md-akzent);color:var(--md-akzent);border-radius:8px;cursor:pointer;font-size:13px;}
+    @@media (max-width: 640px) {
+        .lc-dashboard { padding: 12px; }
+        .lc-stat-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+        .lc-stat { padding: 10px; min-width: 0; }
+        .lc-stat-val { font-size: 20px; overflow-wrap: anywhere; }
+        .lc-box { padding: 10px; }
+        .lc-leist-grid { grid-template-columns: minmax(0, 1fr) !important; }
+        .lc-perf-table { font-size: 11px; }
+        .lc-perf-table th, .lc-perf-table td { padding: 7px 8px; }
+        .lc-tab-btn { flex: 1 1 100%; text-align: left; }
+    }
 </style>
 
 <div id="lcRoot" class="lc-dashboard">
@@ -110,7 +121,7 @@
                 ${stat('Pakete gesamt',gesPack.toLocaleString('de-DE'),C.pack,'Alle Programme')}
                 ${stat('Takte gesamt',gesTakte.toLocaleString('de-DE'),C.takte,'Maschinentakte')}
                 ${stat('&#216; Pakete/Tag',tage>0?Math.round(gesPack/tage).toLocaleString('de-DE'):'&ndash;',C.warn,'Tagesdurchschnitt')}
-                ${stat('Top Leistung',topLeist.name||'&ndash;','var(--viz-7)',topLeist.leistungPct!=null?topLeist.leistungPct+'%':'')}
+                ${stat('Relativer Ausstoß',topLeist.name||'&ndash;','var(--viz-7)',topLeist.leistungPct!=null?topLeist.leistungPct+'% · kein OEE':'Kein Ausstoß im Zeitraum')}
                 ${stat('Tage',tage,C.muted,'im Zeitraum')}
             </div>
             <div class="lc-tabs">
@@ -144,18 +155,23 @@
         const pane=document.getElementById('lcPane_pakete');
         const tp=_daten.tagesPackungen||[];
         const lp=_daten.leistungProzent||[];
-        const tage=[...new Set(tp.map(x=>x.datum))].sort();
-        const prNummern=[...new Set(tp.map(x=>x.prNummer))];
+        const tage=[...new Set(tp.map(x=>x.datum))].sort((a,b)=>{
+            const pa=a.split('.'), pb=b.split('.');
+            return new Date(+pa[2],+pa[1]-1,+pa[0]) - new Date(+pb[2],+pb[1]-1,+pb[0]);
+        });
+        // Ein Programm auf Maschine A ist nicht zwangsläufig dasselbe wie dieselbe PR auf B.
+        const programmSchluessel=[...new Set(tp.map(x=>x.key))];
         const maxPak=tp.length>0?Math.max(...tp.map(x=>x.packungen)):1;
         const hoehe=Math.max(280,tage.length*40+60);
 
-        const datasets=prNummern.map((pr,i)=>{
-            const progInfo=lp.find(p=>p.prNummer===pr);
+        const datasets=programmSchluessel.map((key,i)=>{
+            const progInfo=lp.find(p=>p.key===key);
+            const beispiel=tp.find(x=>x.key===key);
             const col=mdSerie(i);
             return {
-                label:progInfo?.name||'PR'+pr,
-                data:tage.map(tag=>{const e=tp.find(x=>x.datum===tag&&x.prNummer===pr);return e?.packungen||0;}),
-                backgroundColor:col+'cc',borderColor:col,borderWidth:1,borderRadius:3,prNummer:pr
+                label:progInfo?.name||beispiel?.name||('Programm '+key),
+                data:tage.map(tag=>{const e=tp.find(x=>x.datum===tag&&x.key===key);return e?.packungen||0;}),
+                backgroundColor:col+'cc',borderColor:col,borderWidth:1,borderRadius:3,key
             };
         });
 
@@ -171,7 +187,7 @@
                     <table class="lc-perf-table">
                         <thead><tr><th>Tag</th><th>Programm</th><th style="text-align:right">Pakete</th><th style="text-align:right">Takte</th><th style="min-width:150px">Anteil</th></tr></thead>
                         <tbody>${tp.map((row)=>{
-                            const prIdx=prNummern.indexOf(row.prNummer);
+                            const prIdx=programmSchluessel.indexOf(row.key);
                             const col=mdSerie(prIdx);
                             const pct=Math.round(row.packungen/maxPak*100);
                             return `<tr>
@@ -220,12 +236,12 @@
 
         pane.innerHTML=`
             <div class="lc-box">
-                <div class="lc-box-title">&#128202; Leistung % pro Programm</div>
-                <div class="lc-box-hint">100% = bestes Programm im Zeitraum &middot; Farbe: &#128994; &ge;80% &nbsp; &#128993; &ge;50% &nbsp; &#128308; &lt;50%</div>
+                <div class="lc-box-title">&#128202; Relativer Paketausstoß je Maschine / Programm</div>
+                <div class="lc-box-hint">100% = größte Paketzahl im gewählten Zeitraum. Das ist kein OEE- oder Wirkungsgradwert; dafür fehlen Laufzeit- und Solltakt-Daten.</div>
                 <div class="lc-leist-grid" style="display:grid;grid-template-columns:1fr 1.6fr;gap:16px;align-items:start">
                     <div style="position:relative;height:${hoehe}px"><canvas id="lcLeistCanvas"></canvas></div>
                     <table class="lc-perf-table">
-                        <thead><tr><th>#</th><th>Programm</th><th style="text-align:right">Pakete</th><th style="min-width:160px">Leistung</th></tr></thead>
+                        <thead><tr><th>#</th><th>Maschine / Programm</th><th style="text-align:right">Pakete</th><th style="min-width:160px">Relativ</th></tr></thead>
                         <tbody>${lp.map((p,i)=>{
                             const col=mdSerie(i);
                             const pct=p.leistungPct||0;
@@ -245,17 +261,19 @@
         if(_chartLeist){_chartLeist.destroy();_chartLeist=null;}
         const canvas=document.getElementById('lcLeistCanvas');
         if(canvas&&lp.length>0){
-            const bgCols=lp.map(p=>{const pct=p.leistungPct||0;return pct>=80?C.gut+'cc':pct>=50?C.warn+'cc':C.neg+'cc';});
-            const brCols=lp.map(p=>{const pct=p.leistungPct||0;return pct>=80?C.gut:pct>=50?C.warn:C.neg;});
+            // Relative Mengen sind kein Status: deshalb neutrale, stabile Serienfarben statt
+            // Grün/Gelb/Rot, die fälschlich eine Qualitäts- oder Effizienzbewertung suggerieren.
+            const bgCols=lp.map((p,i)=>mdSerie(i)+'cc');
+            const brCols=lp.map((p,i)=>mdSerie(i));
             _chartLeist=new Chart(canvas.getContext('2d'),{
                 type:'bar',
-                data:{labels:lp.map(p=>p.name||'PR'+p.prNummer),datasets:[{label:'Leistung %',data:lp.map(p=>p.leistungPct),backgroundColor:bgCols,borderColor:brCols,borderWidth:1,borderRadius:4}]},
+                data:{labels:lp.map(p=>p.name||'PR'+p.prNummer),datasets:[{label:'Relativer Paketausstoß (%)',data:lp.map(p=>p.leistungPct),backgroundColor:bgCols,borderColor:brCols,borderWidth:1,borderRadius:4}]},
                 options:{
                     indexAxis:'y',responsive:true,maintainAspectRatio:false,animation:{duration:600},
                     plugins:{legend:{display:false},tooltip:{backgroundColor:mdFarbe('md-tooltip'),borderColor:C.border,borderWidth:1,titleColor: mdFarbe('md-tooltip-text'),bodyColor: mdFarbe('md-tooltip-text'),
                         callbacks:{label:ctx=>[`  Leistung: ${ctx.parsed.x}%`,`  Pakete: ${lp[ctx.dataIndex].packungen.toLocaleString('de-DE')}`,`  Takte: ${lp[ctx.dataIndex].takteSumme.toLocaleString('de-DE')}`]}}},
                     scales:{
-                        x:{min:0,max:100,ticks:{color:C.muted,font:{size:10},callback:v=>v+'%'},grid:{color:C.raster},title:{display:true,text:'Leistung (%)',color:C.muted}},
+                        x:{min:0,max:100,ticks:{color:C.muted,font:{size:10},callback:v=>v+'%'},grid:{color:C.raster},title:{display:true,text:'Relativer Paketausstoß (%)',color:C.muted}},
                         y:{ticks:{color:mdFarbe('md-text'),font:{size:11},crossAlign:'far'},grid:{display:false}}
                     }
                 }
@@ -269,7 +287,7 @@
     function baueZeitPane(){
         document.getElementById('lcPane_zeit').innerHTML=`
             <div class="lc-box">
-                <div class="lc-box-title">&#128200; Maschinentakte &uuml;ber Zeit</div>
+                <div class="lc-box-title">&#128200; Produktionsdeltas im Zeitverlauf je Maschine</div>
                 <div class="lc-box-hint">&#128432; Maus ziehen = zoomen &nbsp;&middot;&nbsp; Doppelklick = zur&uuml;cksetzen &nbsp;&middot;&nbsp; Scroll = rein/rauszoomen</div>
                 <div class="lc-zoom-row">
                     <button class="lc-zoom-btn" onclick="lcZoomReset()">&#128260; Zur&uuml;cksetzen</button>
@@ -287,13 +305,20 @@
         const canvas=document.getElementById('lcZeitCanvas');
         if(!canvas) return;
         const punkte=_daten.zeitreihe||[];
+        const maschinen=[...new Map(punkte.map(p=>[p.maschinenId,p.maschine||('Maschine '+p.maschinenId)])).entries()];
+        const labels=punkte.map(p=>p.ts);
+        const serienfarbe=i=>mdSerie(i);
         Chart.defaults.color=C.muted;
+        const datasets=maschinen.flatMap(([id,name],i)=>{
+            const col=serienfarbe(i);
+            return [
+                {label:`${name} · Takte`,data:punkte.map(p=>p.maschinenId===id?p.takte:null),yAxisID:'yTakte',borderColor:col,backgroundColor:'transparent',borderWidth:2,pointRadius:0,spanGaps:true,fill:false,tension:0.2},
+                {label:`${name} · Packungen`,data:punkte.map(p=>p.maschinenId===id?p.packungen:null),yAxisID:'yPackungen',borderColor:col,borderWidth:1.5,pointRadius:0,spanGaps:true,fill:false,tension:0.2,borderDash:[5,3]}
+            ];
+        });
         _chartZeit=new Chart(canvas.getContext('2d'),{
             type:'line',
-            data:{labels:punkte.map(p=>p.ts),datasets:[
-                {label:'Maschinentakte',data:punkte.map(p=>p.takte),borderColor:C.takte,backgroundColor:C.takte+'22',borderWidth:2,pointRadius:punkte.length<100?3:0,pointHoverRadius:5,fill:true,tension:0.3},
-                {label:'Packungen',data:punkte.map(p=>p.packungen),borderColor:C.pack,backgroundColor:'transparent',borderWidth:1.5,pointRadius:0,fill:false,tension:0.3,borderDash:[4,3]}
-            ]},
+            data:{labels,datasets},
             options:{
                 responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},animation:{duration:300},
                 plugins:{
@@ -304,7 +329,8 @@
                 },
                 scales:{
                     x:{ticks:{color:C.muted,maxTicksLimit:12,font:{size:10}},grid:{color:C.raster}},
-                    y:{ticks:{color:C.muted,font:{size:10}},grid:{color:C.raster},title:{display:true,text:'Takte',color:C.muted}}
+                    yTakte:{type:'linear',position:'left',ticks:{color:C.muted,font:{size:10}},grid:{color:C.raster},title:{display:true,text:'Takte pro Messintervall',color:C.muted}},
+                    yPackungen:{type:'linear',position:'right',ticks:{color:C.muted,font:{size:10}},grid:{drawOnChartArea:false},title:{display:true,text:'Packungen pro Messintervall',color:C.muted}}
                 }
             }
         });

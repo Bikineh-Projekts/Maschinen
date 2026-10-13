@@ -285,4 +285,5 @@ Die Kernkomponenten – Datenbankschema, OPC-DA-Datenerfassung über die Softing
 
 Masterarbeit von Mohammadhossein Bikineh (Master ITTI, Universität Rostock) in Kooperation mit der Rostocker Wurst- und Schinkenspezialitäten GmbH.
 
-
+## Maschinen-Dashboard und Analyse
+Die Visualisierungen bleiben vollständig in der ASP.NET-Core-Anwendung; Grafana dient nur als gestalterische Referenz. Details zu Kennzahlen, Zähler-Differenzen, Temperatur-Skalierung und der Begrenzung auf zwei zuletzt aktive Maschinen stehen in `ANALYSE_VISUALISIERUNG.md`.

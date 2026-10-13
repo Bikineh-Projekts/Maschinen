@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Linq;
 using System.Collections.Generic;
 using Microsoft.AspNetCore.Mvc;
@@ -35,10 +35,12 @@ namespace MaschinenDataein.Controllers
 
             // Filter, Sortierung und Seitenaufteilung laufen in der Datenbank –
             // es werden nur die 50 Datensätze der aktuellen Seite geladen.
+            var aktiveMaschinenIds = DropDownListHelper.GetAktiveMaschinen(_context).Select(m => m.Id).ToList();
+
             var query = _context.Abzugsdaten
                 .Include(x => x.Maschine)
                 .ImZeitraum(model.DatumVon, model.DatumBis)
-                .FuerMaschine(model.MaschinenId)
+                .FuerAktiveMaschinen(model.MaschinenId, aktiveMaschinenIds)
                 .NeuesteZuerst();
 
             if (pageNumber <= 0)

@@ -26,15 +26,15 @@ namespace MaschinenDataein.Controllers
 
             try
             {
-                var maschinen = await _context.Maschinen
-                    .AsNoTracking()
-                    .OrderBy(m => m.Id)
-                    .ToListAsync(ct);
+                // Die Startseite soll genau die zwei zuletzt aktiven Maschinen zeigen.
+                // So erscheinen leere Demo-Stammdatensätze nicht als zusätzliche Maschine.
+                var maschinen = DropDownListHelper.GetAktiveMaschinen(_context);
+                var maschinenIds = maschinen.Select(m => m.Id).ToList();
 
                 foreach (var maschine in maschinen)
                     model.Kacheln.Add(await BaueKachelAsync(maschine, ct));
 
-                model.Ereignisse = await LadeEreignisseAsync(ct);
+                model.Ereignisse = await LadeEreignisseAsync(maschinenIds, ct);
             }
             catch (Exception ex)
             {
@@ -79,13 +79,35 @@ namespace MaschinenDataein.Controllers
 
                 var tagesWerte = await _context.Leistungsdaten.AsNoTracking()
                     .Where(x => x.MaschinenId == id && x.Timestamp >= tag && x.Timestamp < folgetag)
+                    .OrderBy(x => x.Timestamp).ThenBy(x => x.Id)
                     .Select(x => new { x.Timestamp, x.Packungszaeler, x.Maschinentakte })
                     .ToListAsync(ct);
 
-                kachel.Packungen = tagesWerte.Sum(x => x.Packungszaeler);
-                kachel.Takte = tagesWerte.Sum(x => x.Maschinentakte);
+                // Packungszaeler und Maschinentakte sind Zählerstände, keine Ereigniswerte.
+                // Sie dürfen daher nicht über sämtliche Mess-Snapshots aufsummiert werden.
+                // Der letzte Stand vor Tagesbeginn hilft, Tagesgrenzen und Zähler-Resets korrekt
+                // zu behandeln. Bei einem Reset wird der neue Zählerstand als Delta gezählt.
+                var letzterStandVorTag = await _context.Leistungsdaten.AsNoTracking()
+                    .Where(x => x.MaschinenId == id && x.Timestamp < tag)
+                    .OrderByDescending(x => x.Timestamp).ThenByDescending(x => x.Id)
+                    .Select(x => new { x.Packungszaeler, x.Maschinentakte })
+                    .FirstOrDefaultAsync(ct);
+
+                int? vorherPackungen = letzterStandVorTag?.Packungszaeler;
+                int? vorherTakte = letzterStandVorTag?.Maschinentakte;
+
                 foreach (var w in tagesWerte)
-                    kachel.TakteProStunde[w.Timestamp.Hour] += w.Maschinentakte;
+                {
+                    var deltaPackungen = ZaehlerDelta(vorherPackungen, w.Packungszaeler);
+                    var deltaTakte = ZaehlerDelta(vorherTakte, w.Maschinentakte);
+
+                    kachel.Packungen += deltaPackungen;
+                    kachel.Takte += deltaTakte;
+                    kachel.TakteProStunde[w.Timestamp.Hour] += deltaTakte;
+
+                    vorherPackungen = w.Packungszaeler;
+                    vorherTakte = w.Maschinentakte;
+                }
 
                 var soll = await _context.Planung.AsNoTracking()
                     .Where(p => p.MaschinenId == id && p.Datum >= tag && p.Datum < folgetag)
@@ -135,6 +157,20 @@ namespace MaschinenDataein.Controllers
         /// aktiver Alarm im neuesten Alarmdatensatz → kritisch,
         /// Störung kurz vor dem letzten Stand → Warnung, sonst gut (mit Zustandstext).
         /// </summary>
+        /// <summary>
+        /// Differenz zweier SPS-Zählerstände. Wenn der neue Wert kleiner ist, wurde
+        /// der Zähler vermutlich zurückgesetzt; der neue Stand ist dann die Menge seit Reset.
+        /// Wenn es keinen Vorwert gibt, kann nur der aktuelle Stand als Näherung dienen.
+        /// </summary>
+        private static long ZaehlerDelta(int? vorher, int aktuell)
+        {
+            var neu = Math.Max(0, aktuell);
+            if (!vorher.HasValue) return neu;
+
+            var alt = Math.Max(0, vorher.Value);
+            return neu >= alt ? (long)neu - alt : neu;
+        }
+
         private static void BestimmeStatus(MaschinenKachel k, Alarmdaten? alarm, StoerungsDaten? stoerung)
         {
             if (k.Stand is null)
@@ -167,20 +203,24 @@ namespace MaschinenDataein.Controllers
         // ─────────────────────────────────────────────────────────────────────
         // Ereignisverlauf: Alarme, Störungen und Zustandswechsel zusammen
         // ─────────────────────────────────────────────────────────────────────
-        private async Task<List<Ereignis>> LadeEreignisseAsync(CancellationToken ct)
+        private async Task<List<Ereignis>> LadeEreignisseAsync(List<long> maschinenIds, CancellationToken ct)
         {
             const int anzahl = 15;
+            if (maschinenIds.Count == 0) return new List<Ereignis>();
 
             var alarme = await _context.Alarmdaten.AsNoTracking().Include(a => a.Maschine)
+                .Where(a => maschinenIds.Contains(a.MaschinenId))
                 .Where(Alarmdaten.HatAktivenAlarm)
                 .OrderByDescending(a => a.Timestamp).Take(anzahl).ToListAsync(ct);
 
             var stoerungen = await _context.Stoerungsdaten.AsNoTracking()
                 .Include(s => s.Maschine).Include(s => s.Stoerungsmeldung)
+                .Where(s => maschinenIds.Contains(s.MaschinenId))
                 .OrderByDescending(s => s.Timestamp).Take(anzahl).ToListAsync(ct);
 
             var zustaende = await _context.Zustandsdaten.AsNoTracking()
                 .Include(z => z.Maschine).Include(z => z.Zustandsmeldung)
+                .Where(z => maschinenIds.Contains(z.MaschinenId))
                 .OrderByDescending(z => z.Timestamp).Take(anzahl).ToListAsync(ct);
 
             var liste = new List<Ereignis>();

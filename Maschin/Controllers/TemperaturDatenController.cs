@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Linq;
 using System.Collections.Generic;
 using System.Globalization;
@@ -36,10 +36,12 @@ namespace MaschinenDataein.Controllers
             FilterModelView model = GetFilterModelViewCookie();
             SetViewBagFilter(model, "Index", "TemperaturDaten");
 
+            var aktiveMaschinenIds = DropDownListHelper.GetAktiveMaschinen(_context).Select(m => m.Id).ToList();
+
             var query = _context.Temperaturdaten
                 .Include(x => x.Maschine)
                 .ImZeitraum(model.DatumVon, model.DatumBis)
-                .FuerMaschine(model.MaschinenId)
+                .FuerAktiveMaschinen(model.MaschinenId, aktiveMaschinenIds)
                 .NeuesteZuerst();
 
             if (pageNumber <= 0)
@@ -110,7 +112,7 @@ namespace MaschinenDataein.Controllers
                 if (parsed.HasValue) model.DatumBis = parsed.Value;
             }
 
-            if (maschinenId.HasValue && maschinenId.Value > 0)
+            if (maschinenId.HasValue && maschinenId.Value >= 0)
                 model.MaschinenId = maschinenId.Value;
 
             // ── 3. Sicherheits-Check: Datum plausibel? ─────────────────────────
@@ -147,36 +149,57 @@ namespace MaschinenDataein.Controllers
             var bisEnd    = model.DatumBis.Date.AddHours(23).AddMinutes(59).AddSeconds(59);
 
             // ── 4. Datenbankabfrage ────────────────────────────────────────────
+            var aktiveIds = DropDownListHelper.GetAktiveMaschinen(_context).Select(m => m.Id).ToList();
             var query = _context.Temperaturdaten
                 .AsNoTracking()
-                .Where(x => x.Timestamp >= vonStart && x.Timestamp <= bisEnd);
+                .Include(x => x.Maschine)
+                .Where(x => x.Timestamp >= vonStart && x.Timestamp < bisEnd.AddSeconds(1));
 
             if (model.MaschinenId > 0)
                 query = query.Where(x => x.MaschinenId == model.MaschinenId);
+            else
+                query = query.Where(x => aktiveIds.Contains(x.MaschinenId));
 
             var list = query
                 .OrderBy(x => x.Timestamp)
                 .ToList();
 
-            // ── 5. Downsampling: max. 500 Punkte fuer Chart-Performance ────────
-            int step    = Math.Max(1, list.Count / 500);
+            // ── 5. Downsampling: höchstens 500 Punkte, gleichmäßig über den Zeitraum verteilt.
+            // Ceiling verhindert, dass z. B. 700 Datensätze versehentlich ungekürzt bleiben.
+            int step = Math.Max(1, (int)Math.Ceiling(list.Count / 500.0));
             var sampled = list.Where((_, i) => i % step == 0).ToList();
 
-            // ── 6. Chart-Datenpunkte ───────────────────────────────────────────
-            var chartPoints = sampled.Select(x => new
+            // ── 6. Einheit vereinheitlichen, BEVOR Diagramme oder Statistiken berechnet werden.
+            // In den Quelldaten sind Temperaturwerte bei Maschinen außer Maschine 4 in Zehntelgrad
+            // gespeichert. Maschine 4 liefert laut Datenmodell ganze Grad. Rohdaten bleiben unverändert.
+            double Grad(long maschinenId, int wert) => maschinenId == 4 ? wert : wert / 10.0;
+
+            var chartPoints = sampled.Select(x =>
             {
-                t       = x.Timestamp.ToString("dd.MM HH:mm"),
-                soll1   = x.Solltemp1,
-                ist1    = x.Isstemp1,
-                fehler1 = x.Isstemp1 - x.Solltemp1,
-                soll2   = x.Solltemp2,
-                ist2    = x.Isstemp2,
-                fehler2 = x.Isstemp2 - x.Solltemp2
+                double soll1 = Grad(x.MaschinenId, x.Solltemp1);
+                double ist1 = Grad(x.MaschinenId, x.Isstemp1);
+                double soll2 = Grad(x.MaschinenId, x.Solltemp2);
+                double ist2 = Grad(x.MaschinenId, x.Isstemp2);
+
+                return new
+                {
+                    t = x.Timestamp.ToString("dd.MM HH:mm:ss"),
+                    maschinenId = x.MaschinenId,
+                    maschine = x.Maschine?.Bezeichnung ?? $"Maschine {x.MaschinenId}",
+                    soll1,
+                    ist1,
+                    fehler1 = ist1 - soll1,
+                    soll2,
+                    ist2,
+                    fehler2 = ist2 - soll2
+                };
             }).ToList();
 
-            // ── 7. Statistik ───────────────────────────────────────────────────
-            var f1 = sampled.Select(x => (double)(x.Isstemp1 - x.Solltemp1)).ToList();
-            var f2 = sampled.Select(x => (double)(x.Isstemp2 - x.Solltemp2)).ToList();
+            // ── 7. Statistik in °C berechnen, nicht auf den gespeicherten Rohwerten.
+            var f1 = sampled.Select(x => Grad(x.MaschinenId, x.Isstemp1)
+                                      - Grad(x.MaschinenId, x.Solltemp1)).ToList();
+            var f2 = sampled.Select(x => Grad(x.MaschinenId, x.Isstemp2)
+                                      - Grad(x.MaschinenId, x.Solltemp2)).ToList();
 
             return Json(new
             {

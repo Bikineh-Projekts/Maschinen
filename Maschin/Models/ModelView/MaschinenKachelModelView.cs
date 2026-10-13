@@ -25,11 +25,11 @@ namespace MaschinenDataein.Models.ModelView
 
         // Produktion am Tag des neuesten Datensatzes
         public DateTime? ProduktionsTag { get; set; }
-        public int Packungen { get; set; }
-        public int Takte { get; set; }
+        public long Packungen { get; set; }
+        public long Takte { get; set; }
 
         /// <summary>Takte je Stunde (0–23) für den Verlauf in der Kachel.</summary>
-        public int[] TakteProStunde { get; set; } = new int[24];
+        public long[] TakteProStunde { get; set; } = new long[24];
 
         /// <summary>Summe der Soll-Mengen aus der Produktionsplanung für diesen Tag (falls geplant).</summary>
         public int? SollMenge { get; set; }

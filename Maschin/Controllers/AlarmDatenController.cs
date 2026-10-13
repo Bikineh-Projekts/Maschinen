@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.AspNetCore.Mvc;
@@ -39,10 +39,12 @@ namespace MaschinenDataein.Controllers
 
             // "Mindestens ein Alarm aktiv" wird jetzt in SQL geprüft.
             // Vorher wurde der ganze Zeitraum geladen und per Reflection durchsucht.
+            var aktiveMaschinenIds = DropDownListHelper.GetAktiveMaschinen(_context).Select(m => m.Id).ToList();
+
             var query = _context.Alarmdaten
                 .Include(a => a.Maschine)
                 .ImZeitraum(model.DatumVon, model.DatumBis)
-                .FuerMaschine(model.MaschinenId)
+                .FuerAktiveMaschinen(model.MaschinenId, aktiveMaschinenIds)
                 .Where(Alarmdaten.HatAktivenAlarm)
                 .NeuesteZuerst();
 

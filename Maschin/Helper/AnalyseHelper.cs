@@ -56,9 +56,10 @@ namespace MaschinenDataein.Helper
         // ═════════════════════════════════════════════════════════════════════
         public static async Task<AnalyseModel> AbzugAsync(MaschinenDbContext db, FilterModelView f, CancellationToken ct = default)
         {
+            var aktiveMaschinenIds = DropDownListHelper.GetAktiveMaschinen(db).Select(m => m.Id).ToList();
             var a = new AnalyseModel { Zeitraum = ZeitraumText(f.DatumVon, f.DatumBis) };
             var daten = await db.Abzugsdaten.AsNoTracking()
-                .ImZeitraum(f.DatumVon, f.DatumBis).FuerMaschine(f.MaschinenId)
+                .ImZeitraum(f.DatumVon, f.DatumBis).FuerAktiveMaschinen(f.MaschinenId, aktiveMaschinenIds)
                 .Select(x => new { x.Timestamp, x.MaschinenId, x.PRnummer, x.PackungenproAbzug, x.Abzuglaenge, Maschine = x.Maschine!.Bezeichnung })
                 .ToListAsync(ct);
             if (daten.Count == 0) return a;
@@ -125,6 +126,7 @@ namespace MaschinenDataein.Helper
         // ═════════════════════════════════════════════════════════════════════
         public static async Task<AnalyseModel> AlarmAsync(MaschinenDbContext db, FilterModelView f, CancellationToken ct = default)
         {
+            var aktiveMaschinenIds = DropDownListHelper.GetAktiveMaschinen(db).Select(m => m.Id).ToList();
             var a = new AnalyseModel { Zeitraum = ZeitraumText(f.DatumVon, f.DatumBis) };
             var achse = BaueZeitachse(f.DatumVon, f.DatumBis);
 
@@ -134,7 +136,7 @@ namespace MaschinenDataein.Helper
             int datensaetze = 0;
 
             var strom = db.Alarmdaten.AsNoTracking().Include(x => x.Maschine)
-                .ImZeitraum(f.DatumVon, f.DatumBis).FuerMaschine(f.MaschinenId)
+                .ImZeitraum(f.DatumVon, f.DatumBis).FuerAktiveMaschinen(f.MaschinenId, aktiveMaschinenIds)
                 .Where(Alarmdaten.HatAktivenAlarm)
                 .AsAsyncEnumerable().WithCancellation(ct);
 
@@ -177,9 +179,10 @@ namespace MaschinenDataein.Helper
         // ═════════════════════════════════════════════════════════════════════
         public static async Task<AnalyseModel> StoerungAsync(MaschinenDbContext db, FilterModelView f, CancellationToken ct = default)
         {
+            var aktiveMaschinenIds = DropDownListHelper.GetAktiveMaschinen(db).Select(m => m.Id).ToList();
             var a = new AnalyseModel { Zeitraum = ZeitraumText(f.DatumVon, f.DatumBis) };
             var daten = await db.Stoerungsdaten.AsNoTracking()
-                .ImZeitraum(f.DatumVon, f.DatumBis).FuerMaschine(f.MaschinenId)
+                .ImZeitraum(f.DatumVon, f.DatumBis).FuerAktiveMaschinen(f.MaschinenId, aktiveMaschinenIds)
                 .Select(x => new { x.Timestamp, Maschine = x.Maschine!.Bezeichnung, Meldung = x.Stoerungsmeldung.Meldung })
                 .ToListAsync(ct);
             if (daten.Count == 0) return a;
@@ -216,9 +219,10 @@ namespace MaschinenDataein.Helper
         // ═════════════════════════════════════════════════════════════════════
         public static async Task<AnalyseModel> ZustandAsync(MaschinenDbContext db, FilterModelView f, CancellationToken ct = default)
         {
+            var aktiveMaschinenIds = DropDownListHelper.GetAktiveMaschinen(db).Select(m => m.Id).ToList();
             var a = new AnalyseModel { Zeitraum = ZeitraumText(f.DatumVon, f.DatumBis) };
             var daten = await db.Zustandsdaten.AsNoTracking()
-                .ImZeitraum(f.DatumVon, f.DatumBis).FuerMaschine(f.MaschinenId)
+                .ImZeitraum(f.DatumVon, f.DatumBis).FuerAktiveMaschinen(f.MaschinenId, aktiveMaschinenIds)
                 .OrderBy(x => x.MaschinenId).ThenBy(x => x.Timestamp)
                 .Select(x => new { x.Timestamp, x.MaschinenId, Maschine = x.Maschine!.Bezeichnung, Meldung = x.Zustandsmeldung.Meldung })
                 .ToListAsync(ct);

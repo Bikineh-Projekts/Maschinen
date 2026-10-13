@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using MaschinenDataein.Models;
 using MaschinenDataein.Models.Data;
+using MaschinenDataein.Helper;
 
 namespace MaschinenDataein.Controllers
 {
@@ -37,12 +38,9 @@ namespace MaschinenDataein.Controllers
             var folgetag = tag.AddDays(1);
             var id = maschinenId ?? 0;
 
-            // Maschinen-Dropdown (Platzhalter setzt die View)
-            ViewBag.Maschinen = await _context.Maschinen
-                .AsNoTracking()
-                .OrderBy(m => m.Bezeichnung)
-                .Select(m => new SelectListItem { Value = m.Id.ToString(), Text = m.Bezeichnung })
-                .ToListAsync(ct);
+            // Dieselbe Zwei-Maschinen-Auswahl wie im Leitstand verwenden.
+            // So tauchen Seed-/Demo-Maschinen ohne Telemetrie nicht im Formular auf.
+            ViewBag.Maschinen = DropDownListHelper.GetMaschinen(_context);
             ViewBag.Datum = tag.ToString("yyyy-MM-dd", Inv);
             ViewBag.MaschinenId = id;
 
