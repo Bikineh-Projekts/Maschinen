@@ -126,7 +126,7 @@ Render-Dashboard per User Secrets setzen (Rechtsklick Projekt → „Geheime Ben
 - Leistungs- und Temperaturdiagramme wurden für schmale Smartphone-Ansichten verbessert.
 
 ## Update 9 – Temperaturregel
-- Jeder Temperaturwert (Soll und Ist, Kanal 1 und 2) wird immer durch 10 geteilt – für alle Maschinen.
-  Die frühere Ausnahme für Maschine 4 (ganze Grad) ist entfernt.
-- Umrechnung zentral in `Helper/SiteHelper.cs` (`TemperaturTeiler = 10`); genutzt von Startseite,
+- Nur `Isstemp2` wird immer durch 10 geteilt (alle Maschinen, 1000 → 100,0 °C).
+  `Solltemp1`, `Isstemp1` und `Solltemp2` bleiben unverändert. Die frühere Ausnahme für Maschine 4 ist entfernt.
+- Regel zentral in `Helper/SiteHelper.cs` (`Isstemp2Teiler = 10`); genutzt von Startseite,
   Temperatur-Tabelle und Temperatur-Analyse (Diagramme, Abweichung, Bias, RMSE).

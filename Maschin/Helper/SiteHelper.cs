@@ -1,29 +1,29 @@
 namespace MaschinenDataein.Helper
 {
     /// <summary>
-    /// ZENTRALE REGEL FÜR ALLE TEMPERATURWERTE (Solltemp1/2 und Isstemp1/2):
-    /// Die SPS speichert Temperaturen in Zehntelgrad. JEDER Temperaturwert MUSS
-    /// IMMER durch 10 geteilt werden, bevor er angezeigt oder berechnet wird –
-    /// für ALLE Maschinen, ohne Ausnahme. Beispiel: 1000 → 100,0 °C.
-    /// Die Rohwerte in der Datenbank bleiben unverändert.
-    /// Temperaturen deshalb NIE direkt aus der Datenbank verwenden, sondern immer
-    /// über diese Methoden umrechnen.
+    /// ZENTRALE REGEL FÜR TEMPERATURWERTE:
+    ///   - Isstemp2 MUSS IMMER durch 10 geteilt werden (alle Maschinen, ohne Ausnahme).
+    ///     Beispiel: 1000 → 100,0 °C.
+    ///   - Solltemp1, Isstemp1 und Solltemp2 werden NICHT geteilt, sondern so verwendet,
+    ///     wie sie in der Datenbank stehen.
+    /// Die Rohwerte in der Datenbank bleiben unverändert. Temperaturen deshalb immer über
+    /// diese Methoden umrechnen und nie direkt aus der Datenbank anzeigen.
     /// </summary>
     public static class SiteHelper
     {
-        /// <summary>Teiler für alle Temperaturwerte (Zehntelgrad → °C).</summary>
-        public const int TemperaturTeiler = 10;
+        /// <summary>Teiler NUR für Isstemp2.</summary>
+        public const int Isstemp2Teiler = 10;
 
-        /// <summary>Rohwert ÷ 10 → °C (für Anzeige und Berechnungen).</summary>
-        public static decimal ConvertTemperatur(int temp)
-            => (decimal)temp / TemperaturTeiler;
+        // ── Isstemp2: immer ÷ 10 ──────────────────────────────────────────────
+        public static decimal Isstemp2(int rohwert) => (decimal)rohwert / Isstemp2Teiler;
+        public static double Isstemp2Grad(int rohwert) => (double)rohwert / Isstemp2Teiler;
 
-        /// <summary>Rohwert ÷ 10 → °C als double (für Diagramme und Statistik).</summary>
-        public static double TemperaturGrad(int temp)
-            => (double)temp / TemperaturTeiler;
+        // ── Solltemp1, Isstemp1, Solltemp2: unverändert ───────────────────────
+        public static decimal Temperatur(int rohwert) => rohwert;
+        public static double TemperaturGrad(int rohwert) => rohwert;
 
-        /// <summary>Rohwert ÷ 10 → Text mit einer Nachkommastelle, z. B. "100,0".</summary>
-        public static string ConvertTemperaturToString(int temp)
-            => ConvertTemperatur(temp).ToString("0.0", System.Globalization.CultureInfo.GetCultureInfo("de-DE"));
+        /// <summary>Temperatur als Text mit einer Nachkommastelle, z. B. "100,0".</summary>
+        public static string Text(decimal grad)
+            => grad.ToString("0.0", System.Globalization.CultureInfo.GetCultureInfo("de-DE"));
     }
 }

@@ -137,12 +137,11 @@ namespace MaschinenDataein.Controllers
 
             if (temperatur != null)
             {
-                // REGEL: jeder Temperaturwert IMMER ÷ 10, alle Maschinen (siehe SiteHelper)
-                decimal Grad(int wert) => SiteHelper.ConvertTemperatur(wert);
-                kachel.Soll1 = Grad(temperatur.Solltemp1);
-                kachel.Ist1 = Grad(temperatur.Isstemp1);
-                kachel.Soll2 = Grad(temperatur.Solltemp2);
-                kachel.Ist2 = Grad(temperatur.Isstemp2);
+                // REGEL (siehe SiteHelper): NUR Isstemp2 ÷ 10, alle anderen unverändert
+                kachel.Soll1 = SiteHelper.Temperatur(temperatur.Solltemp1);
+                kachel.Ist1 = SiteHelper.Temperatur(temperatur.Isstemp1);
+                kachel.Soll2 = SiteHelper.Temperatur(temperatur.Solltemp2);
+                kachel.Ist2 = SiteHelper.Isstemp2(temperatur.Isstemp2);      // ÷ 10
             }
 
             kachel.Stand = new DateTime?[] { leistung?.Timestamp, alarm?.Timestamp, zustand?.Timestamp, stoerung?.Timestamp, temperatur?.Timestamp }
