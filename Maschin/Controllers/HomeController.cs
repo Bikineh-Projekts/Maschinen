@@ -1,4 +1,4 @@
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using MaschinenDataein.Models;
 using MaschinenDataein.Models.Data;
 using MaschinenDataein.Models.ModelView;
@@ -153,11 +153,6 @@ namespace MaschinenDataein.Controllers
         }
 
         /// <summary>
-        /// Status aus dem letzten bekannten Stand:
-        /// aktiver Alarm im neuesten Alarmdatensatz → kritisch,
-        /// Störung kurz vor dem letzten Stand → Warnung, sonst gut (mit Zustandstext).
-        /// </summary>
-        /// <summary>
         /// Differenz zweier SPS-Zählerstände. Wenn der neue Wert kleiner ist, wurde
         /// der Zähler vermutlich zurückgesetzt; der neue Stand ist dann die Menge seit Reset.
         /// Wenn es keinen Vorwert gibt, kann nur der aktuelle Stand als Näherung dienen.
@@ -171,6 +166,11 @@ namespace MaschinenDataein.Controllers
             return neu >= alt ? (long)neu - alt : neu;
         }
 
+        /// <summary>
+        /// Status aus dem letzten bekannten Stand:
+        /// aktiver Alarm im neuesten Alarmdatensatz → kritisch,
+        /// Störung kurz vor dem letzten Stand → Warnung, sonst gut (mit Zustandstext).
+        /// </summary>
         private static void BestimmeStatus(MaschinenKachel k, Alarmdaten? alarm, StoerungsDaten? stoerung)
         {
             if (k.Stand is null)
