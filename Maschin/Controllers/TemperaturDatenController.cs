@@ -166,8 +166,14 @@ namespace MaschinenDataein.Controllers
 
             // ── 5. Downsampling: höchstens 500 Punkte, gleichmäßig über den Zeitraum verteilt.
             // Ceiling verhindert, dass z. B. 700 Datensätze versehentlich ungekürzt bleiben.
+            // Je Maschine getrennt ausdünnen – sonst kann bei zwei Maschinen mit abwechselnden
+            // Messpunkten eine Maschine komplett herausfallen (z. B. bei Schritt 2).
             int step = Math.Max(1, (int)Math.Ceiling(list.Count / 500.0));
-            var sampled = list.Where((_, i) => i % step == 0).ToList();
+            var sampled = list
+                .GroupBy(x => x.MaschinenId)
+                .SelectMany(g => g.Where((_, i) => i % step == 0))
+                .OrderBy(x => x.Timestamp)
+                .ToList();
 
             // ── 6. Einheit vereinheitlichen, BEVOR Diagramme oder Statistiken berechnet werden.
             // REGEL (siehe SiteHelper): NUR Isstemp2 wird IMMER durch 10 geteilt.

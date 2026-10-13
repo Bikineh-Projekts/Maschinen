@@ -320,7 +320,8 @@
             type:'line',
             data:{labels,datasets},
             options:{
-                responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},animation:{duration:300},
+                responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},animation:false, // keine Einblend-Animation: wird sie durch Größenänderung unterbrochen, bleibt die Linie halb gezeichnet
+                
                 plugins:{
                     legend:{labels:{color:C.muted,font:{size:12},boxWidth:20}},
                     tooltip:{backgroundColor:mdFarbe('md-tooltip'),borderColor:C.border,borderWidth:1,titleColor: mdFarbe('md-tooltip-text'),bodyColor: mdFarbe('md-tooltip-text'),
