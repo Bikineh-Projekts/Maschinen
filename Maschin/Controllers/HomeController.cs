@@ -137,8 +137,8 @@ namespace MaschinenDataein.Controllers
 
             if (temperatur != null)
             {
-                // Maschine 4 liefert ganze Grad, alle anderen Zehntelgrad
-                decimal Grad(int wert) => id == 4 ? wert : SiteHelper.ConvertTemperatur(wert);
+                // REGEL: jeder Temperaturwert IMMER ÷ 10, alle Maschinen (siehe SiteHelper)
+                decimal Grad(int wert) => SiteHelper.ConvertTemperatur(wert);
                 kachel.Soll1 = Grad(temperatur.Solltemp1);
                 kachel.Ist1 = Grad(temperatur.Isstemp1);
                 kachel.Soll2 = Grad(temperatur.Solltemp2);
